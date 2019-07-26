@@ -1,0 +1,33 @@
+{
+  "name": "ms-business",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "author": "Silas Silva <silas.ti2010@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "dotenv": "^8.0.0",
+    "express": "^4.17.1",
+    "express-validator": "^5.3.1",
+    "file-type": "^12.1.0",
+    "mongoose": "^5.6.6",
+    "read-chunk": "^3.2.0",
+    "run.env": "^1.1.0",
+    "s3": "^4.4.0"
+  },
+  "devDependencies": {
+    "eslint": "^6.1.0",
+    "eslint-config-standard": "^13.0.1",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-node": "^9.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.0",
+    "tap-spec": "^5.0.0",
+    "tape": "^4.11.0"
+  }
+}
