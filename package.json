@@ -12,10 +12,12 @@
   "dependencies": {
     "body-parser": "^1.19.0",
     "connect-multiparty": "^2.2.0",
+    "cors": "^2.8.5",
     "dotenv": "^8.0.0",
     "express": "^4.17.1",
     "express-validator": "^5.3.1",
     "file-type": "^12.1.0",
+    "helmet": "^3.20.0",
     "mongodb": "^2.2.33",
     "mongoose": "^5.6.6",
     "read-chunk": "^3.2.0",
