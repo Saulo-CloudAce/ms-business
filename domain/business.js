@@ -13,7 +13,8 @@ class Business {
       if (valids.length === 0) {
         return new Error('Todas as linhas estão inválidas')
       }
-      const filePath = await this.uploader.upload(file)
+      // const filePath = await this.uploader.upload(file)
+      const filePath = null
       const businessId = await this.repository.save(name, filePath, fields, product, valids.length)
 
       await this.crmService.sendData(valids, businessId)
