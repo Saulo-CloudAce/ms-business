@@ -5,16 +5,18 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "./node_modules/.bin/run.env nodemon index.js"
   },
   "author": "Silas Silva <silas.ti2010@gmail.com>",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.19.0",
+    "connect-multiparty": "^2.2.0",
     "dotenv": "^8.0.0",
     "express": "^4.17.1",
     "express-validator": "^5.3.1",
     "file-type": "^12.1.0",
+    "mongodb": "^2.2.33",
     "mongoose": "^5.6.6",
     "read-chunk": "^3.2.0",
     "run.env": "^1.1.0",

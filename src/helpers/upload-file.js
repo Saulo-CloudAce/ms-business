@@ -16,15 +16,15 @@ module.exports = async (dirBucket, dirFile, fileName, bucket) => new Promise((re
     }
   })
 
-  if(bucket){
+  if (bucket) {
     fileInfos = {
       localFile: dirFile,
       s3Params: {
         Bucket: bucket,
         Key: `${dirBucket}/${fileName}`
-      },
+      }
     }
-  }else{
+  } else {
     fileInfos = {
       localFile: dirFile,
       s3Params: {
@@ -36,11 +36,11 @@ module.exports = async (dirBucket, dirFile, fileName, bucket) => new Promise((re
   }
 
   const uploader = client.uploadFile(fileInfos)
-  uploader.on('error', (err) => console.error("unable to upload:", err.stack))
+  uploader.on('error', (err) => console.error('unable to upload:', err.stack))
   uploader.on('end', () => {
     try {
       fs.unlinkSync(dirFile)
-      resolve(`https://s3.amazonaws.com/${bucket ? bucket : process.env.BUCKET}/${dirBucket}/${fileName}`)
+      resolve(`https://s3.amazonaws.com/${process.env.BUCKET}/${dirBucket}/${fileName}`)
     } catch (err) {
       console.log(err)
     }
