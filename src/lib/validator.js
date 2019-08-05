@@ -43,6 +43,8 @@ class Validator {
     data.forEach((el, i) => {
       if (rules[i].required && el.length === 0) {
         valid = false
+      } else if (rules[i].data === 'customer_cpfcnpj' && el.length === 0) {
+        valid = false
       }
     })
     return valid
@@ -51,7 +53,13 @@ class Validator {
   format (data, rules) {
     var formatted = {}
     data.forEach((el, i) => {
-      formatted[`${rules[i].data}`] = el
+      var elText = el
+      if (rules[i].data === 'customer_cpfcnpj') {
+        elText = elText.replace(/\./g, '')
+        elText = elText.replace(/-/g, '')
+        elText = elText.replace(/\\/g, '')
+      }
+      formatted[`${rules[i].data}`] = elText
     })
     return formatted
   }

@@ -6,6 +6,7 @@ const helmet = require('helmet')
 const cors = require('cors')
 
 const businessRoutes = require('../src/routes/business')
+const companyRoutes = require('../src/routes/company')
 
 const app = express()
 app.use(bodyParser.json({ limit: '250mb' }))
@@ -16,6 +17,7 @@ app.use(helmet())
 app.use(cors())
 
 businessRoutes(app)
+companyRoutes(app)
 
 const port = 3000 || process.env.PORT
 

@@ -19,6 +19,8 @@
     "express-validator": "^5.3.1",
     "file-type": "^12.1.0",
     "helmet": "^3.20.0",
+    "md5": "^2.2.1",
+    "moment": "^2.24.0",
     "mongodb": "^2.2.33",
     "mongoose": "^5.6.6",
     "read-chunk": "^3.2.0",

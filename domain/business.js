@@ -6,7 +6,7 @@ class Business {
     this.crmService = crmService
   }
 
-  async create (name, file, fields, product) {
+  async create (companyId, name, file, fields) {
     try {
       const { invalids, valids } = await this.validator.validateAndFormat(file.path, fields)
 
@@ -15,13 +15,29 @@ class Business {
       }
       // const filePath = await this.uploader.upload(file)
       const filePath = null
-      const businessId = await this.repository.save(name, filePath, fields, product, valids.length)
+      const businessId = await this.repository.save(companyId, name, filePath, fields, valids.length, valids)
 
       await this.crmService.sendData(valids, businessId)
 
       return { businessId, invalids }
     } catch (e) {
       return e
+    }
+  }
+
+  async getAll (companyId) {
+    try {
+      return this.repository.getAll(companyId)
+    } catch (err) {
+      return err
+    }
+  }
+
+  async getById (companyId, id) {
+    try {
+      return this.repository.getById(companyId, id)
+    } catch (err) {
+      return err
     }
   }
 }
