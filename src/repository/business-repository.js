@@ -5,8 +5,8 @@ class BusinessRepository {
     this.mongodb = mongodb
   }
 
-  async save (companyId, name, filePath, fields, quantityRows, fieldsData) {
-    const data = { companyId, name, filePath, fields, quantityRows, data: fieldsData }
+  async save (companyToken, name, filePath, fields, quantityRows, fieldsData) {
+    const data = { companyToken, name, filePath, fields, quantityRows, data: fieldsData }
 
     try {
       const db = await this.mongodb.connect()
@@ -21,11 +21,11 @@ class BusinessRepository {
     }
   }
 
-  async getAll (companyId) {
+  async getAll (companyToken) {
     try {
       const db = await this.mongodb.connect()
 
-      const businessList = await db.collection('business').find({ companyId: new ObjectID(companyId) }).toArray()
+      const businessList = await db.collection('business').find({ companyId: companyToken }).toArray()
 
       await this.mongodb.disconnect()
 
@@ -35,11 +35,11 @@ class BusinessRepository {
     }
   }
 
-  async getById (companyId, id) {
+  async getById (companyToken, id) {
     try {
       const db = await this.mongodb.connect()
 
-      const business = await db.collection('business').findOne({ _id: new ObjectID(id), companyId: new ObjectID(companyId) })
+      const business = await db.collection('business').findOne({ _id: new ObjectID(id), companyId: companyToken })
 
       await this.mongodb.disconnect()
 

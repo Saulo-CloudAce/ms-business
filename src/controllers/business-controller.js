@@ -32,7 +32,7 @@ class BusinessController {
 
       const fields = JSON.parse(req.body.fields)
 
-      const { businessId, invalids } = await this.newBusiness.create(company._id, req.body.name, req.files.file, fields)
+      const { businessId, invalids } = await this.newBusiness.create(companyToken, req.body.name, req.files.file, fields)
 
       return res.status(201).send({ businessId, invalids })
     } catch (e) {
@@ -47,7 +47,7 @@ class BusinessController {
       const company = await this.companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
-      const businessList = await this.newBusiness.getAll(company._id)
+      const businessList = await this.newBusiness.getAll(companyToken)
 
       return res.status(201).send(businessList)
     } catch (e) {
@@ -62,7 +62,7 @@ class BusinessController {
       const company = await this.companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
-      const business = await this.newBusiness.getById(company._id, req.params.id)
+      const business = await this.newBusiness.getById(companyToken, req.params.id)
 
       return res.status(201).send(business)
     } catch (e) {
