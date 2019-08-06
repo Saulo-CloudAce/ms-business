@@ -25,7 +25,7 @@ class BusinessRepository {
     try {
       const db = await this.mongodb.connect()
 
-      const businessList = await db.collection('business').find({ companyId: companyToken }).toArray()
+      const businessList = await db.collection('business').find({ companyToken: companyToken }).toArray()
 
       await this.mongodb.disconnect()
 
@@ -39,7 +39,7 @@ class BusinessRepository {
     try {
       const db = await this.mongodb.connect()
 
-      const business = await db.collection('business').findOne({ _id: new ObjectID(id), companyId: companyToken })
+      const business = await db.collection('business').findOne({ _id: new ObjectID(id), companyToken: companyToken })
 
       await this.mongodb.disconnect()
 
