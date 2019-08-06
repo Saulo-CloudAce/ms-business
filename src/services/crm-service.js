@@ -2,7 +2,6 @@ const axios = require('axios')
 
 async function sendData (data, companyToken, businessId) {
   const payload = {
-    business_id: businessId,
     customers: data
   }
   try {
