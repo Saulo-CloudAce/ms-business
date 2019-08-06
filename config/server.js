@@ -19,7 +19,7 @@ app.use(cors())
 businessRoutes(app)
 companyRoutes(app)
 
-const port = 3000 || process.env.PORT
+const port = process.env.PORT || 3000
 
 app.listen(port, () => {
   console.log(`API is live on port ${port}`)
