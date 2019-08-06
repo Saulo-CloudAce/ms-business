@@ -14,7 +14,7 @@ async function sendData (data, companyToken, businessId) {
 function getAxiosInstance (companyToken) {
   return axios.create({
     baseURL: process.env.CRM_URL,
-    headers: { 'company_token' : `${companyToken}` }
+    headers: { 'token' : `${companyToken}` }
   })
 }
 

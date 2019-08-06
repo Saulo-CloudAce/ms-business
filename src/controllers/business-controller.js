@@ -24,7 +24,7 @@ class BusinessController {
       return res.status(400).send({ errors: req.validationErrors() })
     }
 
-    const companyToken = req.headers['company_token']
+    const companyToken = req.headers['token']
 
     try {
       const company = await this.companyRepository.getByToken(companyToken)
@@ -41,7 +41,7 @@ class BusinessController {
   }
 
   async getAll (req, res) {
-    const companyToken = req.headers['company_token']
+    const companyToken = req.headers['token']
 
     try {
       const company = await this.companyRepository.getByToken(companyToken)
@@ -56,7 +56,7 @@ class BusinessController {
   }
 
   async getById (req, res) {
-    const companyToken = req.headers['company_token']
+    const companyToken = req.headers['token']
 
     try {
       const company = await this.companyRepository.getByToken(companyToken)
