@@ -6,7 +6,7 @@ class Validator {
     var lineInvalids = []
     var lineValids = []
 
-    data.forEach(line => {
+    data.forEach((line, i) => {
       var lineValues = Object.keys(line).map(key => line[key])
       if (this.validate(lineValues, fields)) {
         var lineFormatted = this.format(lineValues, fields)
@@ -60,14 +60,34 @@ class Validator {
 
   validate (data, rules) {
     var valid = true
-    if (data.length !== rules.length) return false
+
     data.forEach((el, i) => {
       if (rules[i].required && el.length === 0) {
         valid = false
       } else if (rules[i].data === 'customer_cpfcnpj' && el.length === 0) {
         valid = false
+      } else if (rules[i].type === 'int' && !Number.isInteger(parseInt(el))) {
+        valid = false
+      } else if (rules[i].type === 'array') {
+        if (!Array.isArray(el)) {
+          valid = false
+        } else if (!this.validateArray(rules[i], el)) {
+          valid = false
+        }
       }
     })
+    return valid
+  }
+
+  validateArray (rule, line) {
+    var valid = true
+    // if (rule.fields) {
+    //   line.forEach((l, i) => {
+    //     rule.fields.forEach((field, x) => {
+
+    //     })
+    //   })
+    // }
     return valid
   }
 
@@ -79,6 +99,24 @@ class Validator {
         elText = elText.replace(/\./g, '')
         elText = elText.replace(/-/g, '')
         elText = elText.replace(/\\/g, '')
+      } else if (rules[i].type === 'array') {
+        var arrData = []
+        if (!rules[i].fields) {
+          el.forEach((element, x) => {
+            var item = {}
+            item[rules[i].data] = element
+            arrData.push(item)
+          })
+        } else {
+          el.forEach((element, x) => {
+            var item = {}
+            rules[i].fields.forEach((field, y) => {
+              item[field.data] = element[field.column]
+            })
+            arrData.push(item)
+          })
+        }
+        elText = arrData
       }
       formatted[`${rules[i].data}`] = elText
     })
