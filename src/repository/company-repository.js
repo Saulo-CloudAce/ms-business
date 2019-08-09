@@ -9,17 +9,13 @@ class CompanyRepository {
   async save (name, callback, token) {
     const newCompany = { name, callback, token, activated: true, created_at: moment().format(), updated_at: moment().format() }
 
-    try {
-      const db = await this.mongodb.connect()
-      var r = await db.collection('company').insertOne(newCompany)
-      const company = r.ops[0]
+    const db = await this.mongodb.connect()
+    var r = await db.collection('company').insertOne(newCompany)
+    var company = r.ops[0]
 
-      await this.mongodb.disconnect()
+    await this.mongodb.disconnect()
 
-      return company
-    } catch (err) {
-      return err
-    }
+    return company
   }
 
   async getAll () {

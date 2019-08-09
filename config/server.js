@@ -7,6 +7,7 @@ const cors = require('cors')
 
 const businessRoutes = require('../src/routes/business')
 const companyRoutes = require('../src/routes/company')
+const templateRoutes = require('../src/routes/template')
 
 const app = express()
 app.use(bodyParser.json({ limit: '250mb' }))
@@ -18,6 +19,7 @@ app.use(cors())
 
 businessRoutes(app)
 companyRoutes(app)
+templateRoutes(app)
 
 const port = process.env.PORT || 3000
 

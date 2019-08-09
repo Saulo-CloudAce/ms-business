@@ -17,7 +17,7 @@ async function connect () {
     })
   })
 
-  if (result.err) return null
+  if (result.err) throw result.err
   return result.db
 }
 

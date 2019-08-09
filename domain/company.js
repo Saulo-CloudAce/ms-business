@@ -6,14 +6,10 @@ class Company {
   }
 
   async create (name, callback) {
-    try {
-      const token = md5(name + callback + new Date())
-      const company = await this.repository.save(name, callback, token)
+    const token = md5(name + callback + new Date())
+    const company = await this.repository.save(name, callback, token)
 
-      return company
-    } catch (err) {
-      return err
-    }
+    return company
   }
 
   async getAll () {
