@@ -7,6 +7,8 @@ const businessRoute = (app) => {
   app.post('/api/v1/business_json', (req, res) => businessController.createFromJson(req, res))
   app.get('/api/v1/business', (req, res) => businessController.getAll(req, res))
   app.get('/api/v1/business/:id', (req, res) => businessController.getByIdWithData(req, res))
+  app.put('/api/v1/business/:id/activate', (req, res) => businessController.activateBusiness(req, res))
+  app.put('/api/v1/business/:id/deactivate', (req, res) => businessController.deactivateBusiness(req, res))
 }
 
 module.exports = businessRoute

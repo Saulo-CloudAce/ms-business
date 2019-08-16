@@ -6,8 +6,8 @@ class BusinessRepository {
     this.mongodb = mongodb
   }
 
-  async save (companyToken, name, filePath, templateId, quantityRows, fieldsData) {
-    const data = { companyToken, name, filePath, templateId, quantityRows, data: fieldsData, createdAt: moment().format() }
+  async save (companyToken, name, filePath, templateId, quantityRows, fieldsData, activeUntil) {
+    const data = { companyToken, name, filePath, templateId, quantityRows, data: fieldsData, activeUntil, active: true, createdAt: moment().format(), updatedAt: moment().format() }
 
     const db = await this.mongodb.connect()
     var r = await db.collection('business').insertOne(data)
@@ -18,11 +18,37 @@ class BusinessRepository {
     return id
   }
 
+  async activate (businessId, activeUntil) {
+    try {
+      const db = await this.mongodb.connect()
+
+      await db.collection('business').update({ _id: new ObjectID(businessId) }, { $set: { active: true, activeUntil, updatedAt: moment().format() } })
+
+      await this.mongodb.disconnect()
+    } catch (err) {
+      console.log(err)
+      return err
+    }
+  }
+
+  async deactivate (businessId) {
+    try {
+      const db = await this.mongodb.connect()
+
+      await db.collection('business').update({ _id: new ObjectID(businessId) }, { $set: { active: false, updatedAt: moment().format() } })
+
+      await this.mongodb.disconnect()
+    } catch (err) {
+      console.log(err)
+      return err
+    }
+  }
+
   async getAll (companyToken) {
     try {
       const db = await this.mongodb.connect()
 
-      const businessList = await db.collection('business').find({ companyToken: companyToken }, ['_id', 'name', 'createdAt']).toArray()
+      const businessList = await db.collection('business').find({ companyToken: companyToken }, ['_id', 'name', 'activeUntil', 'active', 'createdAt', 'updatedAt']).toArray()
 
       await this.mongodb.disconnect()
 
@@ -36,7 +62,7 @@ class BusinessRepository {
     try {
       const db = await this.mongodb.connect()
 
-      const businessList = await db.collection('business').find({ templateId, companyToken }, ['_id', 'name', 'data', 'createdAt']).toArray()
+      const businessList = await db.collection('business').find({ templateId, companyToken }, ['_id', 'name', 'data', 'activeUntil', 'active', 'createdAt', 'updatedAt']).toArray()
 
       await this.mongodb.disconnect()
 
@@ -50,7 +76,7 @@ class BusinessRepository {
     try {
       const db = await this.mongodb.connect()
 
-      const business = await db.collection('business').findOne({ _id: new ObjectID(id), companyToken: companyToken }, ['_id', 'name', 'templateId', 'createdAt'])
+      const business = await db.collection('business').findOne({ _id: new ObjectID(id), companyToken: companyToken }, ['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt'])
 
       await this.mongodb.disconnect()
 
@@ -69,6 +95,20 @@ class BusinessRepository {
       await this.mongodb.disconnect()
 
       return business
+    } catch (err) {
+      return err
+    }
+  }
+
+  async getExpiredBusiness (date) {
+    try {
+      const db = await this.mongodb.connect()
+
+      const businessList = await db.collection('business').find({ activeUntil: date, active: true }, ['_id']).toArray()
+
+      await this.mongodb.disconnect()
+
+      return businessList
     } catch (err) {
       return err
     }

@@ -46,7 +46,7 @@ class TemplateController {
       var template = await templateRepository.getNameById(templateId, companyToken)
       if (!template) return res.status(400).send({ err: 'Template não identificado' })
 
-      await templateRepository.update(templateId, true)
+      await templateRepository.updateActive(templateId, true)
 
       return res.status(200).send(template)
     } catch (err) {
