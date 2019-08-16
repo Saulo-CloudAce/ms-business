@@ -16,7 +16,7 @@ class Business {
     const filePath = await this.uploader.upload(file)
     const businessId = await this.repository.save(companyToken, name, filePath, templateId, valids.length, valids)
 
-    await this.crmService.sendData(valids, companyToken, businessId)
+    await this.crmService.sendData(valids, companyToken, businessId, templateId)
 
     return { businessId, invalids }
   }
@@ -30,7 +30,7 @@ class Business {
 
     const businessId = await this.repository.save(companyToken, name, null, templateId, valids.length, valids)
 
-    await this.crmService.sendData(valids, companyToken, businessId)
+    await this.crmService.sendData(valids, companyToken, businessId, templateId)
 
     return { businessId, invalids }
   }

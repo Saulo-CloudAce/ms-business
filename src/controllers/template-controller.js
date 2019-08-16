@@ -1,3 +1,4 @@
+const moment = require('moment')
 const mongodb = require('../../config/mongodb')
 const CompanyRepository = require('../repository/company-repository')
 const TemplateRepository = require('../repository/template-repository')
@@ -25,9 +26,49 @@ class TemplateController {
       const templatesCreated = await templateRepository.getAllByName(name, companyToken)
       if (templatesCreated.length > 0) return res.status(400).send({ err: `(${name}) já foi cadastrado.` })
 
-      const template = await templateRepository.save(name, fields, companyToken)
+      const template = await templateRepository.save(name, fields, companyToken, true)
 
       return res.status(201).send(template)
+    } catch (err) {
+      console.log(err)
+      return res.status(500).send({ err: err.message })
+    }
+  }
+
+  async activateTemplate (req, res) {
+    const companyToken = req.headers['token']
+    const templateId = req.params.id
+
+    try {
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+
+      var template = await templateRepository.getNameById(templateId, companyToken)
+      if (!template) return res.status(400).send({ err: 'Template não identificado' })
+
+      await templateRepository.update(templateId, true)
+
+      return res.status(200).send(template)
+    } catch (err) {
+      console.log(err)
+      return res.status(500).send({ err: err.message })
+    }
+  }
+
+  async deactivateTemplate (req, res) {
+    const companyToken = req.headers['token']
+    const templateId = req.params.id
+
+    try {
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+
+      var template = await templateRepository.getNameById(templateId, companyToken)
+      if (!template) return res.status(400).send({ err: 'Template não identificado' })
+
+      await templateRepository.updateActive(templateId, false)
+
+      return res.status(200).send(template)
     } catch (err) {
       console.log(err)
       return res.status(500).send({ err: err.message })
