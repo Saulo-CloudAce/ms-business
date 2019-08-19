@@ -43,6 +43,14 @@ class Business {
     }
   }
 
+  async getAllByTemplateId (companyToken, templateId) {
+    try {
+      return this.repository.getAllByTemplate(companyToken, templateId)
+    } catch (err) {
+      return err
+    }
+  }
+
   async getDataById (companyToken, id) {
     try {
       return this.repository.getDataById(companyToken, id)

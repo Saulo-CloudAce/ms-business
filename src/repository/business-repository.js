@@ -48,7 +48,10 @@ class BusinessRepository {
     try {
       const db = await this.mongodb.connect()
 
-      const businessList = await db.collection('business').find({ companyToken: companyToken }, ['_id', 'name', 'activeUntil', 'active', 'createdAt', 'updatedAt']).toArray()
+      const businessList = await db.collection('business')
+        .find({ companyToken: companyToken }, ['_id', 'name', 'activeUntil', 'active', 'createdAt', 'updatedAt'])
+        .sort({ createdAt: -1 })
+        .toArray()
 
       await this.mongodb.disconnect()
 
@@ -62,7 +65,9 @@ class BusinessRepository {
     try {
       const db = await this.mongodb.connect()
 
-      const businessList = await db.collection('business').find({ templateId, companyToken }, ['_id', 'name', 'data', 'activeUntil', 'active', 'createdAt', 'updatedAt']).toArray()
+      const businessList = await db.collection('business').find({ templateId, companyToken }, ['_id', 'name', 'data', 'activeUntil', 'active', 'createdAt', 'updatedAt'])
+        .sort({ createdAt: -1 })
+        .toArray()
 
       await this.mongodb.disconnect()
 

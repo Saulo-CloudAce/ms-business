@@ -175,6 +175,72 @@ class BusinessController {
       return true
     }
   }
+
+  async getBusinessRegisterById (req, res) {
+    const companyToken = req.headers['token']
+    const templateId = req.headers['template_id']
+
+    try {
+      const company = await this.companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+
+      const template = await this.templateRepository.getById(templateId, companyToken)
+      if (!template) return res.status(400).send({ err: 'Template não identificado' })
+
+      const business = await this.newBusiness.getDataById(companyToken, req.params.businessId)
+      if (!business) return res.status(400).send({ err: 'Business não identificado.' })
+      var data = business.data.filter(d => d._id === req.params.registerId)
+
+      var respBusiness = {
+        _id: business._id,
+        name: business.name
+      }
+      if (data && data.length > 0) respBusiness.data = data[0]
+
+      return res.status(200).send(respBusiness)
+    } catch (err) {
+      return res.status(500).send({ err: err.message })
+    }
+  }
+
+  async getBusinessAndRegisterIdByCpf (req, res) {
+    const companyToken = req.headers['token']
+    const templateId = req.headers['template_id']
+
+    console.log(templateId)
+
+    try {
+      const company = await this.companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+
+      const template = await this.templateRepository.getById(templateId, companyToken)
+      if (!template) return res.status(400).send({ err: 'Template não identificado' })
+
+      var businessList = await this.newBusiness.getAllByTemplateId(companyToken, templateId)
+      if (!businessList) return res.status(400).send({ err: 'Erro ao listar os business deste template.' })
+
+      var cpfcnpj = req.query.cpfcnpj
+      var response = {}
+
+      var resBusiness = businessList.filter(b => {
+        var res = {}
+        var reg = b.data.filter(d => d.customer_cpfcnpj == cpfcnpj)
+        if (reg && reg.length > 0) {
+          res._id = b._id
+          res.name = b.name
+          res.createdAt = b.createdAt
+          res.data = reg[0]
+          return res
+        }
+      })
+      if (resBusiness && resBusiness.length > 0) response = resBusiness[0]
+      console.log(response.data)
+
+      return res.status(200).send(response)
+    } catch (err) {
+      return res.status(500).send({ err: err.message })
+    }
+  }
 }
 
 module.exports = BusinessController

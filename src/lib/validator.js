@@ -1,5 +1,6 @@
 const fs = require('fs')
 const readline = require('readline')
+const md5 = require('md5')
 
 class Validator {
   async validateAndFormatFromJson (data, fields) {
@@ -122,6 +123,7 @@ class Validator {
       }
       formatted[`${rules[i].data}`] = elText
     })
+    formatted._id = md5(new Date() + Math.random())
     return formatted
   }
 }
