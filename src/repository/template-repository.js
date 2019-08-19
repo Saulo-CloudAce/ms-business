@@ -89,6 +89,20 @@ class TemplateRepository {
       return err
     }
   }
+
+  async getNameById (id, companyToken) {
+    try {
+      const db = await this.mongodb.connect()
+
+      var result = await db.collection('business_template').findOne({ _id: new ObjectID(id), companyToken }, ['_id', 'name'])
+
+      await this.mongodb.disconnect()
+
+      return result
+    } catch (err) {
+      return err
+    }
+  }
 }
 
 module.exports = TemplateRepository

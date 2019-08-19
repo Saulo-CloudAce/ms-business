@@ -72,6 +72,20 @@ class BusinessRepository {
     }
   }
 
+  async getAllBasicByTemplate (companyToken, templateId) {
+    try {
+      const db = await this.mongodb.connect()
+
+      const businessList = await db.collection('business').find({ templateId, companyToken }, ['_id', 'name', 'activeUntil', 'active', 'createdAt']).toArray()
+
+      await this.mongodb.disconnect()
+
+      return businessList
+    } catch (err) {
+      return err
+    }
+  }
+
   async getById (companyToken, id) {
     try {
       const db = await this.mongodb.connect()

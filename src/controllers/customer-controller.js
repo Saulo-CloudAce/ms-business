@@ -5,11 +5,15 @@ const {
   getAllCustomersByCompany,
   updateCustomer } = require('../services/crm-service')
 const CompanyRepository = require('../repository/company-repository')
+const TemplateRepository = require('../repository/template-repository')
+const BusinessRepository = require('../repository/business-repository')
 
 
 class CustomerController {
   constructor () {
     this.companyRepository = new CompanyRepository(mongodb)
+    this.templateRepository = new TemplateRepository(mongodb)
+    this.businessRepository = new BusinessRepository(mongodb)
   }
 
   async create (req, res) {
@@ -82,7 +86,24 @@ class CustomerController {
       }
 
       if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
-      return res.status(200).send(request.data)
+
+      let customer = request.data
+      var templateList = customer.business_template_list
+      var templates = []
+      var templates = await Promise.all(templateList.map(async templateId => {
+        var template = await this.templateRepository.getNameById(templateId, companyToken)
+        if (template) {
+          var data = await this.businessRepository.getAllBasicByTemplate(companyToken, templateId)
+          template.lote_data_list = data
+          return template
+        }
+      }))
+
+      customer.schema_list = templates.filter(t => t)
+      delete customer.business_list
+      delete customer.business_template_list
+
+      return res.status(200).send(customer)
     } catch (err) {
       return res.status(500).send({ err: err.message })
     }
