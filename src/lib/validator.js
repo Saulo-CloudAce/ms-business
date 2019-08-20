@@ -123,7 +123,7 @@ class Validator {
       }
       formatted[`${rules[i].data}`] = elText
     })
-    formatted._id = md5(new Date() + Math.random())
+    formatted['_id'] = md5(new Date() + Math.random())
     return formatted
   }
 }
