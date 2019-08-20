@@ -3,11 +3,11 @@ const {
   createSingleCustomer,
   getByCpfCnpj,
   getAllCustomersByCompany,
+  searchCustomer,
   updateCustomer } = require('../services/crm-service')
 const CompanyRepository = require('../repository/company-repository')
 const TemplateRepository = require('../repository/template-repository')
 const BusinessRepository = require('../repository/business-repository')
-
 
 class CustomerController {
   constructor () {
@@ -104,6 +104,23 @@ class CustomerController {
       delete customer.business_template_list
 
       return res.status(200).send(customer)
+    } catch (err) {
+      return res.status(500).send({ err: err.message })
+    }
+  }
+
+  async search (req, res) {
+    const companyToken = req.headers['token']
+
+    try {
+      const company = await this.companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+
+      const search = req.query.search
+      var request = await searchCustomer(search, companyToken)
+      if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
+
+      return res.status(200).send(request.data)
     } catch (err) {
       return res.status(500).send({ err: err.message })
     }
