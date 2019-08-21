@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "./node_modules/.bin/run.env nodemon index.js"
+    "dev": "nodemon index.js"
   },
   "author": "Silas Silva <silas.ti2010@gmail.com>",
   "license": "ISC",
@@ -24,6 +24,8 @@
     "moment": "^2.24.0",
     "mongodb": "^2.2.33",
     "mongoose": "^5.6.6",
+    "multipart": "^0.1.5",
+    "node-fetch": "^2.6.0",
     "read-chunk": "^3.2.0",
     "run.env": "^1.1.0",
     "s3": "^4.4.0"

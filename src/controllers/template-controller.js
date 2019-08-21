@@ -99,6 +99,8 @@ class TemplateController {
   async getAll (req, res) {
     const companyToken = req.headers['token']
 
+    console.log(companyToken)
+
     try {
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })

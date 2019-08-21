@@ -21,6 +21,20 @@ class Business {
     return { businessId, invalids }
   }
 
+  async createFromUrlFile (companyToken, name, filepath, fields, templateId, activeUntil) {
+    const { invalids, valids } = await this.validator.validateAndFormatFromUrlFile(filepath, fields)
+
+    if (valids.length === 0) {
+      throw new Error('Todas as linhas estão inválidas')
+    }
+
+    const businessId = await this.repository.save(companyToken, name, filepath, templateId, valids.length, valids, activeUntil)
+
+    await this.crmService.sendData(valids, companyToken, businessId, templateId)
+
+    return { businessId, invalids }
+  }
+
   async createFromJson (companyToken, name, fields, templateId, data, activeUntil) {
     const { invalids, valids } = await this.validator.validateAndFormatFromJson(data, fields)
 
