@@ -178,8 +178,7 @@ class BusinessController {
 
   async getBusinessRegisterById (req, res) {
     const companyToken = req.headers['token']
-    const templateId = req.headers['template_id']
-
+    const templateId = req.headers['templateid']
     try {
       const company = await this.companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
@@ -205,7 +204,7 @@ class BusinessController {
 
   async getBusinessAndRegisterIdByCpf (req, res) {
     const companyToken = req.headers['token']
-    const templateId = req.headers['template_id']
+    const templateId = req.headers['templateid']
 
     console.log(templateId)
 
