@@ -103,6 +103,46 @@ class BusinessController {
     }
   }
 
+  async markBusinessFlowPassed (req, res) {
+    const companyToken = req.headers['token']
+
+    try {
+      const company = await this.companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+
+      const businessId = req.params.id
+
+      const business = await this.businessRepository.getById(companyToken, businessId)
+      if (!business) return res.status(400).send({ err: 'Business não identificado' })
+
+      await this.businessRepository.markFlowPassed(businessId)
+
+      return res.sendStatus(200)
+    } catch (e) {
+      return res.status(500).send({ err: e.message })
+    }
+  }
+
+  async unmarkBusinessFlowPassed (req, res) {
+    const companyToken = req.headers['token']
+
+    try {
+      const company = await this.companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+
+      const businessId = req.params.id
+
+      const business = await this.businessRepository.getById(companyToken, businessId)
+      if (!business) return res.status(400).send({ err: 'Business não identificado' })
+
+      await this.businessRepository.unmarkFlowPassed(businessId)
+
+      return res.sendStatus(200)
+    } catch (e) {
+      return res.status(500).send({ err: e.message })
+    }
+  }
+
   async activateBusiness (req, res) {
     req.assert('active_until', 'O active until deve ser informado').notEmpty()
 

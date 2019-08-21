@@ -7,7 +7,7 @@ class BusinessRepository {
   }
 
   async save (companyToken, name, filePath, templateId, quantityRows, fieldsData, activeUntil) {
-    const data = { companyToken, name, filePath, templateId, quantityRows, data: fieldsData, activeUntil, active: true, createdAt: moment().format(), updatedAt: moment().format() }
+    const data = { companyToken, name, filePath, templateId, quantityRows, data: fieldsData, activeUntil, flow_passed: false, active: true, createdAt: moment().format(), updatedAt: moment().format() }
 
     const db = await this.mongodb.connect()
     var r = await db.collection('business').insertOne(data)
@@ -16,6 +16,32 @@ class BusinessRepository {
     await this.mongodb.disconnect()
 
     return id
+  }
+
+  async markFlowPassed (businessId) {
+    try {
+      const db = await this.mongodb.connect()
+
+      await db.collection('business').update({ _id: new ObjectID(businessId) }, { $set: { flow_passed: true, updatedAt: moment().format() } })
+
+      await this.mongodb.disconnect()
+    } catch (err) {
+      console.log(err)
+      return err
+    }
+  }
+
+  async unmarkFlowPassed (businessId) {
+    try {
+      const db = await this.mongodb.connect()
+
+      await db.collection('business').update({ _id: new ObjectID(businessId) }, { $set: { flow_passed: false, updatedAt: moment().format() } })
+
+      await this.mongodb.disconnect()
+    } catch (err) {
+      console.log(err)
+      return err
+    }
   }
 
   async activate (businessId, activeUntil) {

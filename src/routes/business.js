@@ -11,6 +11,8 @@ const businessRoute = (app) => {
   app.get('/api/v1/business/:businessId/data/:registerId', (req, res) => businessController.getBusinessRegisterById(req, res))
   app.put('/api/v1/business/:id/activate', (req, res) => businessController.activateBusiness(req, res))
   app.put('/api/v1/business/:id/deactivate', (req, res) => businessController.deactivateBusiness(req, res))
+  app.put('/api/v1/business/:id/mark_flow_passed', (req, res) => businessController.markBusinessFlowPassed(req, res))
+  app.put('/api/v1/business/:id/unmark_flow_passed', (req, res) => businessController.unmarkBusinessFlowPassed(req, res))
 }
 
 module.exports = businessRoute
