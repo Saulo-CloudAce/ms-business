@@ -179,6 +179,7 @@ class BusinessController {
   async getBusinessRegisterById (req, res) {
     const companyToken = req.headers['token']
     const templateId = req.headers['templateid']
+console.log(companyToken)
     try {
       const company = await this.companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
