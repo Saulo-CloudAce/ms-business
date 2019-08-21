@@ -94,7 +94,12 @@ class CustomerController {
         templates = await Promise.all(templateList.map(async templateId => {
           var template = await this.templateRepository.getNameById(templateId, companyToken)
           if (template) {
-            var data = await this.businessRepository.getAllBasicByTemplate(companyToken, templateId)
+            var data = await this.businessRepository.getAllByTemplate(companyToken, templateId)
+            if (data && data.length > 0) {
+              data.map(m => {
+                m.data = m.data.filter(md => md.customer_cpfcnpj === cpfcnpj)
+              })
+            }
             template.lote_data_list = data
             return template
           }
