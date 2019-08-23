@@ -75,7 +75,7 @@ function getAxiosInstance (companyToken) {
 function getAxiosInstanceByCompanyElastic (companyToken, prefixIndexElastic) {
   return axios.create({
     baseURL: process.env.CRM_URL,
-    headers: { 'token' : `${companyToken}`, 'prefix_index_elastic': prefixIndexElastic }
+    headers: { 'token' : `${companyToken}`, 'prefix-index-elastic': prefixIndexElastic }
   })
 }
 
