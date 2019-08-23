@@ -1,5 +1,5 @@
-const moment = require('moment')
 const mongodb = require('../../config/mongodb')
+const { validateFields } = require('../lib/template-validator')
 const CompanyRepository = require('../repository/company-repository')
 const TemplateRepository = require('../repository/template-repository')
 const BusinessRepository = require('../repository/business-repository')
@@ -26,7 +26,9 @@ class TemplateController {
       const templatesCreated = await templateRepository.getAllByName(name, companyToken)
       if (templatesCreated.length > 0) return res.status(400).send({ err: `(${name}) já foi cadastrado.` })
 
-      const template = await templateRepository.save(name, fields, companyToken, true)
+      var fieldsValidated = validateFields(fields)
+
+      const template = await templateRepository.save(name, fieldsValidated, companyToken, true)
 
       return res.status(201).send(template)
     } catch (err) {

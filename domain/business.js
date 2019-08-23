@@ -72,6 +72,14 @@ class Business {
       return err
     }
   }
+
+  async updateDataBusiness (businessId, data) {
+    try {
+      return this.repository.updateDataBusiness(businessId, data)
+    } catch (err) {
+      return err
+    }
+  }
 }
 
 module.exports = Business

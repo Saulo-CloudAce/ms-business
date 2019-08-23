@@ -252,6 +252,42 @@ class BusinessController {
     }
   }
 
+  async updateBusinessRegisterById (req, res) {
+    const companyToken = req.headers['token']
+    const templateId = req.headers['templateid']
+    const registerId = req.params.registerId
+    const businessId = req.params.businessId
+
+    try {
+      const company = await this.companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+
+      const template = await this.templateRepository.getById(templateId, companyToken)
+      if (!template) return res.status(400).send({ err: 'Template não identificado' })
+
+      var fieldEditableList = template.fields.filter(f => f.editable)
+      if (!Array.isArray(fieldEditableList)) fieldEditableList = []
+
+      const business = await this.newBusiness.getDataById(companyToken, businessId)
+      if (!business) return res.status(400).send({ err: 'Business não identificado.' })
+
+      var register = null
+
+      business.data.forEach(d => {
+        if (d._id === registerId) {
+          fieldEditableList.forEach(f => { d[f.data] = req.body[f.data] })
+          register = d
+        }
+      })
+
+      await this.newBusiness.updateDataBusiness(businessId, business.data)
+
+      return res.status(200).send(register)
+    } catch (err) {
+      return res.status(500).send({ err: err.message })
+    }
+  }
+
   async getBusinessRegisterById (req, res) {
     const companyToken = req.headers['token']
     const templateId = req.headers['templateid']

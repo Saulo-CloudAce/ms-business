@@ -37,6 +37,14 @@ async function getByCpfCnpj (cpfcnpj, companyToken) {
   }
 }
 
+async function getCustomerById (id, companyToken) {
+  try {
+    return await getAxiosInstance(companyToken).get(`${process.env.CRM_URL}/customers/${id}`)
+  } catch (err) {
+    return err
+  }
+}
+
 async function searchCustomer (search, companyToken) {
   try {
     return await getAxiosInstance(companyToken).get(`${process.env.CRM_URL}/customers/search?search=${search}`)
@@ -60,4 +68,4 @@ function getAxiosInstance (companyToken) {
   })
 }
 
-module.exports = { sendData, createSingleCustomer, getByCpfCnpj, getAllCustomersByCompany, updateCustomer, searchCustomer }
+module.exports = { sendData, createSingleCustomer, getByCpfCnpj, getAllCustomersByCompany, updateCustomer, searchCustomer, getCustomerById }

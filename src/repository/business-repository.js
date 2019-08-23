@@ -44,6 +44,19 @@ class BusinessRepository {
     }
   }
 
+  async updateDataBusiness (businessId, data) {
+    try {
+      const db = await this.mongodb.connect()
+
+      await db.collection('business').update({ _id: new ObjectID(businessId) }, { $set: { data, updatedAt: moment().format() } })
+
+      await this.mongodb.disconnect()
+    } catch (err) {
+      console.log(err)
+      return err
+    }
+  }
+
   async activate (businessId, activeUntil) {
     try {
       const db = await this.mongodb.connect()
