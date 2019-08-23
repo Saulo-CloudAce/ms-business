@@ -5,9 +5,9 @@ class Company {
     this.repository = repository
   }
 
-  async create (name, callback) {
+  async create (name, prefixIndexElastic, callback) {
     const token = md5(name + callback + new Date())
-    const company = await this.repository.save(name, callback, token)
+    const company = await this.repository.save(name, prefixIndexElastic, callback, token)
 
     return company
   }

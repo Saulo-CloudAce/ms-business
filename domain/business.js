@@ -6,7 +6,7 @@ class Business {
     this.crmService = crmService
   }
 
-  async create (companyToken, name, file, fields, templateId, activeUntil) {
+  async create (companyToken, name, file, fields, templateId, activeUntil, prefixIndexElastic) {
     const { invalids, valids } = await this.validator.validateAndFormat(file.path, fields)
 
     if (valids.length === 0) {
@@ -16,12 +16,12 @@ class Business {
     const filePath = await this.uploader.upload(file)
     const businessId = await this.repository.save(companyToken, name, filePath, templateId, valids.length, valids, activeUntil)
 
-    await this.crmService.sendData(valids, companyToken, businessId, templateId)
+    await this.crmService.sendData(valids, companyToken, businessId, templateId, prefixIndexElastic)
 
     return { businessId, invalids }
   }
 
-  async createFromUrlFile (companyToken, name, filepath, fields, templateId, activeUntil) {
+  async createFromUrlFile (companyToken, name, filepath, fields, templateId, activeUntil, prefixIndexElastic) {
     const { invalids, valids } = await this.validator.validateAndFormatFromUrlFile(filepath, fields)
 
     if (valids.length === 0) {
@@ -30,12 +30,14 @@ class Business {
 
     const businessId = await this.repository.save(companyToken, name, filepath, templateId, valids.length, valids, activeUntil)
 
-    await this.crmService.sendData(valids, companyToken, businessId, templateId)
+    var listFieldKey = fields.filter(f => f.key).map(f => f.data)
+
+    await this.crmService.sendData(valids, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic)
 
     return { businessId, invalids }
   }
 
-  async createFromJson (companyToken, name, fields, templateId, data, activeUntil) {
+  async createFromJson (companyToken, name, fields, templateId, data, activeUntil, prefixIndexElastic) {
     const { invalids, valids } = await this.validator.validateAndFormatFromJson(data, fields)
 
     if (valids.length === 0) {
@@ -44,7 +46,9 @@ class Business {
 
     const businessId = await this.repository.save(companyToken, name, null, templateId, valids.length, valids, activeUntil)
 
-    await this.crmService.sendData(valids, companyToken, businessId, templateId)
+    var listFieldKey = fields.filter(f => f.key).map(f => f.data)
+
+    await this.crmService.sendData(valids, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic)
 
     return { businessId, invalids }
   }

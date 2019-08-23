@@ -111,7 +111,7 @@ class Validator {
     data.forEach((el, i) => {
       if (rules[i].required && el.length === 0) {
         valid = false
-      } else if (rules[i].data === 'customer_cpfcnpj' && el.length === 0) {
+      } else if (rules[i].key && el.length === 0) {
         valid = false
       } else if (rules[i].type === 'int' && !Number.isInteger(parseInt(el))) {
         valid = false

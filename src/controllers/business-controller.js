@@ -45,9 +45,7 @@ class BusinessController {
 
       const activeUntil = req.body.active_until
 
-      console.log(req.body)
-
-      const { businessId, invalids } = await this.newBusiness.createFromUrlFile(companyToken, req.body.name, req.body.file, template.fields, req.body.templateId, activeUntil)
+      const { businessId, invalids } = await this.newBusiness.createFromUrlFile(companyToken, req.body.name, req.body.file, template.fields, req.body.templateId, activeUntil, company.prefix_index_elastic)
 
       return res.status(201).send({ businessId, invalids })
     } catch (e) {
@@ -81,7 +79,7 @@ class BusinessController {
 
       const activeUntil = req.body.active_until
 
-      const { businessId, invalids } = await this.newBusiness.create(companyToken, req.body.name, req.files.file, template.fields, req.body.templateId, activeUntil)
+      const { businessId, invalids } = await this.newBusiness.create(companyToken, req.body.name, req.files.file, template.fields, req.body.templateId, activeUntil, company.prefix_index_elastic)
 
       return res.status(201).send({ businessId, invalids })
     } catch (e) {
@@ -116,7 +114,7 @@ class BusinessController {
 
       const activeUntil = req.body.active_until
 
-      const { businessId, invalids } = await this.newBusiness.createFromJson(companyToken, name, template.fields, templateId, data, activeUntil)
+      const { businessId, invalids } = await this.newBusiness.createFromJson(companyToken, name, template.fields, templateId, data, activeUntil, company.prefix_index_elastic)
 
       return res.status(201).send({ businessId, invalids })
     } catch (e) {

@@ -1,11 +1,14 @@
 const axios = require('axios')
 
-async function sendData (data, companyToken, businessId, templateId) {
+async function sendData (data, companyToken, businessId, templateId, fieldKeyList, prefixIndexElastic) {
   const payload = {
     customers: data,
     business_id: businessId,
-    business_template_id: templateId
+    business_template_id: templateId,
+    field_key_list: fieldKeyList,
+    prefix_index_elastic: prefixIndexElastic
   }
+  console.log(payload)
   try {
     await getAxiosInstance(companyToken).post(`${process.env.CRM_URL}/customers`, payload)
   } catch (e) {
@@ -21,7 +24,8 @@ async function updateCustomer (customerId, data, companyToken) {
   }
 }
 
-async function createSingleCustomer (data, companyToken) {
+async function createSingleCustomer (data, companyToken, prefixIndexElastic) {
+  data.prefix_index_elastic = prefixIndexElastic
   try {
     return await getAxiosInstance(companyToken).post(`${process.env.CRM_URL}/customer`, data)
   } catch (err) {
@@ -45,9 +49,9 @@ async function getCustomerById (id, companyToken) {
   }
 }
 
-async function searchCustomer (search, companyToken) {
+async function searchCustomer (search, companyToken, prefixIndexElastic) {
   try {
-    return await getAxiosInstance(companyToken).get(`${process.env.CRM_URL}/customers/search?search=${search}`)
+    return await getAxiosInstanceByCompanyElastic(companyToken, prefixIndexElastic).get(`${process.env.CRM_URL}/customers/search?search=${search}`)
   } catch (err) {
     return err
   }
@@ -65,6 +69,13 @@ function getAxiosInstance (companyToken) {
   return axios.create({
     baseURL: process.env.CRM_URL,
     headers: { 'token' : `${companyToken}` }
+  })
+}
+
+function getAxiosInstanceByCompanyElastic (companyToken, prefixIndexElastic) {
+  return axios.create({
+    baseURL: process.env.CRM_URL,
+    headers: { 'token' : `${companyToken}`, 'prefix_index_elastic': prefixIndexElastic }
   })
 }
 

@@ -6,8 +6,8 @@ class CompanyRepository {
     this.mongodb = mongodb
   }
 
-  async save (name, callback, token) {
-    const newCompany = { name, callback, token, activated: true, created_at: moment().format(), updated_at: moment().format() }
+  async save (name, prefixIndexElastic, callback, token) {
+    const newCompany = { name, prefix_index_elastic: prefixIndexElastic, callback, token, activated: true, created_at: moment().format(), updated_at: moment().format() }
 
     const db = await this.mongodb.connect()
     var r = await db.collection('company').insertOne(newCompany)

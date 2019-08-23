@@ -8,12 +8,21 @@ const company = new Company(companyRepository)
 class CompanyController {
   async create (req, res) {
     req.assert('name', 'O nome é obrigatório').notEmpty()
+    req.assert('prefix_index_elastic', 'O prefix index elastic é obrigatório').notEmpty()
     req.assert('callback', 'A URL de callback é obrigatória').notEmpty()
 
     if (req.validationErrors()) return res.status(400).send({ errors: req.validationErrors() })
 
     try {
-      const newCompany = await company.create(req.body.name, req.body.callback)
+      var companies = await company.getAll()
+      if (companies && companies.length > 0) {
+        var comp = companies.filter(c => c.name == req.body.name)
+        if (comp && comp.length > 0) return res.status(400).send({ err: "Já existe uma company com este nome." })
+        comp = companies.filter(c => c.prefix_index_elastic == req.body.prefix_index_elastic)
+        if (comp && comp.length > 0) return res.status(400).send({ err: "Já existe uma company com este prefix index elastic nome." })
+      }
+
+      const newCompany = await company.create(req.body.name, req.body.prefix_index_elastic, req.body.callback)
 
       return res.status(201).send(newCompany)
     } catch (err) {

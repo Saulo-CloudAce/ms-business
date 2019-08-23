@@ -34,7 +34,7 @@ class CustomerController {
       cpfcnpj = cpfcnpj.replace(/\\/g, '')
       req.body.customer_cpfcnpj = cpfcnpj
 
-      const request = await createSingleCustomer(req.body, companyToken)
+      const request = await createSingleCustomer(req.body, companyToken, company.prefix_index_elastic)
       if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
       return res.status(201).send(request.data)
     } catch (err) {
@@ -88,7 +88,9 @@ class CustomerController {
             var data = await this.businessRepository.getAllByTemplate(companyToken, templateId)
             if (data && data.length > 0) {
               data.map(m => {
-                m.data = m.data.filter(md => md.customer_cpfcnpj === cpfcnpj)
+                m.data = m.data.filter(md => {
+                  md.customer_cpfcnpj === customer.cpfcnpj
+                })
               })
             }
             template.lote_data_list = data
@@ -168,7 +170,7 @@ class CustomerController {
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
       const search = req.query.search
-      var request = await searchCustomer(search, companyToken)
+      var request = await searchCustomer(search, companyToken, company.prefix_index_elastic)
       if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
 
       return res.status(200).send(request.data)
