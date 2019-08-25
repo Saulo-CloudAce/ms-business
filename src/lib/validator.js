@@ -106,7 +106,7 @@ class Validator {
   validate (data, rules) {
     var valid = true
 
-    if (data.length !== rules.length) return false
+    // if (data.length !== rules.length) return false
 
     data.forEach((el, i) => {
       if (rules[i].required && el.length === 0) {
