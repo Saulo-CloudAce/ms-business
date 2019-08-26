@@ -104,7 +104,7 @@ class BusinessRepository {
     try {
       const db = await this.mongodb.connect()
 
-      const businessList = await db.collection('business').find({ templateId, companyToken }, ['_id', 'name', 'data', 'activeUntil', 'active', 'createdAt', 'updatedAt'])
+      const businessList = await db.collection('business').find({ templateId, companyToken }, ['_id', 'name', 'data', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'flow_passed', 'activeUntil', 'active'])
         .sort({ createdAt: -1 })
         .toArray()
 
