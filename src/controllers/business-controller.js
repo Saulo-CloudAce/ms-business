@@ -273,7 +273,11 @@ class BusinessController {
 
       business.data.forEach(d => {
         if (d._id === registerId) {
-          fieldEditableList.forEach(f => { d[f.data] = req.body[f.data] })
+          fieldEditableList.forEach(f => {
+            if (req.body[f.data] && req.body[f.data].length > 0) {
+              d[f.data] = req.body[f.data]
+            }
+          })
           register = d
         }
       })
@@ -282,6 +286,7 @@ class BusinessController {
 
       return res.status(200).send(register)
     } catch (err) {
+      console.error(err)
       return res.status(500).send({ err: err.message })
     }
   }
