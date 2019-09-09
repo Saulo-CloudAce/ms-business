@@ -129,9 +129,9 @@ class CustomerController {
 
       if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
 
-      var customer = request.data
-      var templateList = customer.business_template_list
-      var businessList = customer.business_list
+      var customer = (request.data) ? request.data : []
+      var templateList = (customer && customer.business_template_list) ? customer.business_template_list : []
+      var businessList = (customer && customer.business_list) ? customer.business_list : []
       var templates = []
       if (templateList && templateList.length > 0) {
         templates = await Promise.all(templateList.map(async templateId => {
@@ -139,7 +139,7 @@ class CustomerController {
           if (template) {
             var data = await this.businessRepository.getAllByTemplate(companyToken, templateId)
             if (data && data.length > 0) {
-              data = data.filter(d => businessList.includes(d._id))
+              data = data.filter(d => businessList.includes(d._id.toString()))
               data.map(m => {
                 m.data = m.data.filter(md => md.customer_cpfcnpj === cpfcnpj)
               })
@@ -156,6 +156,7 @@ class CustomerController {
 
       return res.status(200).send(customer)
     } catch (err) {
+      console.error(err)
       return res.status(500).send({ err: err.message })
     }
   }
