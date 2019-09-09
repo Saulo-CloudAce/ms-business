@@ -29,7 +29,7 @@ class TemplateRepository {
 
       await this.mongodb.disconnect()
 
-      return template
+      return templateId
     } catch (err) {
       console.error(err)
       return err
