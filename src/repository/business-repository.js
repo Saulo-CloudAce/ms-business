@@ -19,16 +19,11 @@ class BusinessRepository {
   }
 
   async markFlowPassed (businessId) {
-    try {
       const db = await this.mongodb.connect()
-
+console.log('flow_passed', businessId)
       await db.collection('business').update({ _id: new ObjectID(businessId) }, { $set: { flow_passed: true, updatedAt: moment().format() } })
 
       await this.mongodb.disconnect()
-    } catch (err) {
-      console.log(err)
-      return err
-    }
   }
 
   async unmarkFlowPassed (businessId) {
@@ -131,7 +126,7 @@ class BusinessRepository {
   }
 
   async getById (companyToken, id) {
-    try {
+console.log('business-id', id)
       const db = await this.mongodb.connect()
 
       const business = await db.collection('business').findOne({ _id: new ObjectID(id), companyToken: companyToken }, ['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt'])
@@ -139,9 +134,6 @@ class BusinessRepository {
       await this.mongodb.disconnect()
 
       return business
-    } catch (err) {
-      return err
-    }
   }
 
   async getDataById (companyToken, id) {

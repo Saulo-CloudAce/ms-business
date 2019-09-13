@@ -148,6 +148,7 @@ class BusinessController {
 
       const business = await this.businessRepository.getById(companyToken, businessId)
       if (!business) return res.status(400).send({ err: 'Business não identificado' })
+console.log(business)
 
       await this.businessRepository.markFlowPassed(businessId)
 
