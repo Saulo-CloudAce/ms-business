@@ -9,21 +9,27 @@ class BusinessRepository {
   async save (companyToken, name, filePath, templateId, quantityRows, fieldsData, activeUntil) {
     const data = { companyToken, name, filePath, templateId, quantityRows, data: fieldsData, activeUntil, flow_passed: false, active: true, createdAt: moment().format(), updatedAt: moment().format() }
 
-    const db = await this.mongodb.connect()
-    var r = await db.collection('business').insertOne(data)
-    const id = r.insertedId
-
-    await this.mongodb.disconnect()
-
-    return id
+    try {
+      const db = await this.mongodb.connect()
+      var r = await db.collection('business').insertOne(data)
+      const id = r.insertedId
+      return id
+    } catch (err) {
+      throw new Error(err)
+    } finally {
+      await this.mongodb.disconnect()
+    }
   }
 
   async markFlowPassed (businessId) {
+    try {
       const db = await this.mongodb.connect()
-console.log('flow_passed', businessId)
       await db.collection('business').update({ _id: new ObjectID(businessId) }, { $set: { flow_passed: true, updatedAt: moment().format() } })
-
+    } catch (err) {
+      throw new Error(err)
+    } finally {
       await this.mongodb.disconnect()
+    }
   }
 
   async unmarkFlowPassed (businessId) {
@@ -31,11 +37,10 @@ console.log('flow_passed', businessId)
       const db = await this.mongodb.connect()
 
       await db.collection('business').update({ _id: new ObjectID(businessId) }, { $set: { flow_passed: false, updatedAt: moment().format() } })
-
-      await this.mongodb.disconnect()
     } catch (err) {
-      console.log(err)
-      return err
+      throw new Error(err)
+    } finally {
+      await this.mongodb.disconnect()
     }
   }
 
@@ -44,11 +49,10 @@ console.log('flow_passed', businessId)
       const db = await this.mongodb.connect()
 
       await db.collection('business').update({ _id: new ObjectID(businessId) }, { $set: { data, updatedAt: moment().format() } })
-
-      await this.mongodb.disconnect()
     } catch (err) {
-      console.log(err)
-      return err
+      throw new Error(err)
+    } finally {
+      await this.mongodb.disconnect()
     }
   }
 
@@ -57,11 +61,10 @@ console.log('flow_passed', businessId)
       const db = await this.mongodb.connect()
 
       await db.collection('business').update({ _id: new ObjectID(businessId) }, { $set: { active: true, activeUntil, updatedAt: moment().format() } })
-
-      await this.mongodb.disconnect()
     } catch (err) {
-      console.log(err)
-      return err
+      throw new Error(err)
+    } finally {
+      await this.mongodb.disconnect()
     }
   }
 
@@ -70,11 +73,10 @@ console.log('flow_passed', businessId)
       const db = await this.mongodb.connect()
 
       await db.collection('business').update({ _id: new ObjectID(businessId) }, { $set: { active: false, updatedAt: moment().format() } })
-
-      await this.mongodb.disconnect()
     } catch (err) {
-      console.log(err)
-      return err
+      throw new Error(err)
+    } finally {
+      await this.mongodb.disconnect()
     }
   }
 
@@ -87,11 +89,11 @@ console.log('flow_passed', businessId)
         .sort({ createdAt: -1 })
         .toArray()
 
-      await this.mongodb.disconnect()
-
       return businessList
     } catch (err) {
-      return err
+      throw new Error(err)
+    } finally {
+      await this.mongodb.disconnect()
     }
   }
 
@@ -103,11 +105,11 @@ console.log('flow_passed', businessId)
         .sort({ createdAt: -1 })
         .toArray()
 
-      await this.mongodb.disconnect()
-
       return businessList
     } catch (err) {
-      return err
+      throw new Error(err)
+    } finally {
+      await this.mongodb.disconnect()
     }
   }
 
@@ -117,23 +119,26 @@ console.log('flow_passed', businessId)
 
       const businessList = await db.collection('business').find({ templateId, companyToken }, ['_id', 'name', 'activeUntil', 'active', 'createdAt']).toArray()
 
-      await this.mongodb.disconnect()
-
       return businessList
     } catch (err) {
-      return err
+      throw new Error(err)
+    } finally {
+      await this.mongodb.disconnect()
     }
   }
 
   async getById (companyToken, id) {
-console.log('business-id', id)
+    try {
       const db = await this.mongodb.connect()
 
       const business = await db.collection('business').findOne({ _id: new ObjectID(id), companyToken: companyToken }, ['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt'])
 
-      await this.mongodb.disconnect()
-
       return business
+    } catch (err) {
+      throw new Error(err)
+    } finally {
+      await this.mongodb.disconnect()
+    }
   }
 
   async getDataById (companyToken, id) {
@@ -142,11 +147,11 @@ console.log('business-id', id)
 
       const business = await db.collection('business').findOne({ _id: new ObjectID(id), companyToken: companyToken })
 
-      await this.mongodb.disconnect()
-
       return business
     } catch (err) {
-      return err
+      throw new Error(err)
+    } finally {
+      await this.mongodb.disconnect()
     }
   }
 
@@ -156,11 +161,11 @@ console.log('business-id', id)
 
       const businessList = await db.collection('business').find({ activeUntil: date, active: true }, ['_id']).toArray()
 
-      await this.mongodb.disconnect()
-
       return businessList
     } catch (err) {
-      return err
+      throw new Error(err)
+    } finally {
+      await this.mongodb.disconnect()
     }
   }
 }

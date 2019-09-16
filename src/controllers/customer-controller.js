@@ -35,7 +35,7 @@ class CustomerController {
       req.body.customer_cpfcnpj = cpfcnpj
 
       const request = await createSingleCustomer(req.body, companyToken, company.prefix_index_elastic)
-      if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
+      if (request.response && request.response.status && request.response.status !== 200) return res.status(request.response.status).send(request.response.data)
       return res.status(201).send(request.data)
     } catch (err) {
       return res.status(500).send({ err: err.message })
@@ -78,7 +78,7 @@ class CustomerController {
 
       if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
 
-      let customer = request.data
+      var customer = request.data
       var templateList = customer.business_template_list
       var templates = []
       if (templateList && templateList.length > 0) {
@@ -86,8 +86,9 @@ class CustomerController {
           var template = await this.templateRepository.getNameById(templateId, companyToken)
           if (template) {
             var data = await this.businessRepository.getAllByTemplate(companyToken, templateId)
-            if (data && data.length > 0)
-              data.map(m => m.data = m.data.filter(md => md.customer_cpfcnpj === customer.cpfcnpj))
+            if (data && data.length > 0) {
+              data.map(m => { m.data = m.data.filter(md => md.customer_cpfcnpj === customer.cpfcnpj) })
+            }
 
             template.lote_data_list = data
             return template
@@ -170,7 +171,7 @@ class CustomerController {
 
       const search = req.query.search
       var request = await searchCustomer(search, companyToken, company.prefix_index_elastic)
-      if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
+      if (request.response && request.response.status && request.response.status !== 200) return res.status(request.response.status).send(request.response.data)
 
       return res.status(200).send(request.data)
     } catch (err) {

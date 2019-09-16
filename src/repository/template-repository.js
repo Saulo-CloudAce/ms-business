@@ -14,25 +14,24 @@ class TemplateRepository {
       var r = await db.collection('business_template').insertOne(newTemplate)
       var templateId = r.insertedId
 
-      await this.mongodb.disconnect()
-
       return { _id: templateId }
     } catch (err) {
-      return err
+      throw new Error(err)
+    } finally {
+      await this.mongodb.disconnect()
     }
   }
 
   async updateActive (templateId, active) {
     try {
       const db = await this.mongodb.connect()
-      var r = await db.collection('business_template').update({ _id: new ObjectID(templateId) }, { $set: { active, updateAt: moment().format() } })
-
-      await this.mongodb.disconnect()
+      await db.collection('business_template').update({ _id: new ObjectID(templateId) }, { $set: { active, updateAt: moment().format() } })
 
       return templateId
     } catch (err) {
-      console.error(err)
-      return err
+      throw new Error(err)
+    } finally {
+      await this.mongodb.disconnect()
     }
   }
 
@@ -41,11 +40,11 @@ class TemplateRepository {
       const db = await this.mongodb.connect()
       var result = await db.collection('business_template').find({ companyToken }, ['_id', 'name', 'active', 'createdAt', 'updateAt']).toArray()
 
-      await this.mongodb.disconnect()
-
       return result
     } catch (err) {
-      return err
+      throw new Error(err)
+    } finally {
+      await this.mongodb.disconnect()
     }
   }
 
@@ -54,11 +53,11 @@ class TemplateRepository {
       const db = await this.mongodb.connect()
       var result = await db.collection('business_template').find({ name, companyToken }, ['_id']).toArray()
 
-      await this.mongodb.disconnect()
-
       return result
     } catch (err) {
-      return err
+      throw new Error(err)
+    } finally {
+      await this.mongodb.disconnect()
     }
   }
 
@@ -68,11 +67,11 @@ class TemplateRepository {
 
       var result = await db.collection('business_template').findOne({ _id: new ObjectID(id), companyToken }, ['_id', 'name', 'fields', 'active', 'createdAt', 'updatedAt'])
 
-      await this.mongodb.disconnect()
-
       return result
     } catch (err) {
-      return err
+      throw new Error(err)
+    } finally {
+      await this.mongodb.disconnect()
     }
   }
 
@@ -82,25 +81,11 @@ class TemplateRepository {
 
       var result = await db.collection('business_template').findOne({ _id: new ObjectID(id), companyToken }, ['_id', 'name'])
 
-      await this.mongodb.disconnect()
-
       return result
     } catch (err) {
-      return err
-    }
-  }
-
-  async getNameById (id, companyToken) {
-    try {
-      const db = await this.mongodb.connect()
-
-      var result = await db.collection('business_template').findOne({ _id: new ObjectID(id), companyToken }, ['_id', 'name'])
-
+      throw new Error(err)
+    } finally {
       await this.mongodb.disconnect()
-
-      return result
-    } catch (err) {
-      return err
     }
   }
 }

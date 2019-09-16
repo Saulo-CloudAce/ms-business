@@ -8,6 +8,7 @@ const Uploader = require('../lib/uploader')
 const Validator = require('../lib/validator')
 const mongodb = require('../../config/mongodb')
 const crmService = require('../services/crm-service')
+const { mongoIdIsValid } = require('../helpers/validators')
 
 class BusinessController {
   constructor (businessService) {
@@ -140,15 +141,15 @@ class BusinessController {
   async markBusinessFlowPassed (req, res) {
     const companyToken = req.headers['token']
 
+    const businessId = req.params.id
+    if (!mongoIdIsValid(businessId)) return res.status(500).send({ err: 'Código do lote inválido' })
+
     try {
       const company = await this.companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
-      const businessId = req.params.id
-
       const business = await this.businessRepository.getById(companyToken, businessId)
       if (!business) return res.status(400).send({ err: 'Business não identificado' })
-console.log(business)
 
       await this.businessRepository.markFlowPassed(businessId)
 
@@ -161,11 +162,12 @@ console.log(business)
   async unmarkBusinessFlowPassed (req, res) {
     const companyToken = req.headers['token']
 
+    const businessId = req.params.id
+    if (!mongoIdIsValid(businessId)) return res.status(500).send({ err: 'Código do lote inválido' })
+
     try {
       const company = await this.companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
-
-      const businessId = req.params.id
 
       const business = await this.businessRepository.getById(companyToken, businessId)
       if (!business) return res.status(400).send({ err: 'Business não identificado' })
@@ -185,11 +187,12 @@ console.log(business)
 
     const companyToken = req.headers['token']
 
+    const businessId = req.params.id
+    if (!mongoIdIsValid(businessId)) return res.status(500).send({ err: 'Código do lote inválido' })
+
     try {
       const company = await this.companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
-
-      const businessId = req.params.id
 
       const business = await this.businessRepository.getById(companyToken, businessId)
       if (!business) return res.status(400).send({ err: 'Business não identificado' })
@@ -205,11 +208,12 @@ console.log(business)
   async deactivateBusiness (req, res) {
     const companyToken = req.headers['token']
 
+    const businessId = req.params.id
+    if (!mongoIdIsValid(businessId)) return res.status(500).send({ err: 'Código do lote inválido' })
+
     try {
       const company = await this.companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
-
-      const businessId = req.params.id
 
       const business = await this.businessRepository.getById(companyToken, businessId)
       if (!business) return res.status(400).send({ err: 'Business não identificado' })
@@ -237,7 +241,7 @@ console.log(business)
     }
   }
 
-  async deactivateExpiredBusiness() {
+  async deactivateExpiredBusiness () {
     try {
       const currentDate = moment().format('YYYY-MM-DD')
       const businessList = await this.businessRepository.getExpiredBusiness(currentDate)
@@ -295,7 +299,7 @@ console.log(business)
   async getBusinessRegisterById (req, res) {
     const companyToken = req.headers['token']
     const templateId = req.headers['templateid']
-console.log(companyToken)
+
     try {
       const company = await this.companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
