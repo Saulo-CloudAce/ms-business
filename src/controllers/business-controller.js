@@ -330,8 +330,6 @@ class BusinessController {
     const companyToken = req.headers['token']
     const templateId = req.headers['templateid']
 
-    console.log(templateId)
-
     try {
       const company = await this.companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
@@ -357,7 +355,6 @@ class BusinessController {
         }
       })
       if (resBusiness && resBusiness.length > 0) response = resBusiness[0]
-      console.log(response.data)
 
       return res.status(200).send(response)
     } catch (err) {
