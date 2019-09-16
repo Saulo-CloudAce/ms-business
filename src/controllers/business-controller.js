@@ -45,8 +45,9 @@ class BusinessController {
       if (businessName.length > 0) return res.status(400).send({ err: `${req.body.name} já foi cadastrado` })
 
       const activeUntil = req.body.active_until
+      var jumpFirstLine = (req.body.jump_first_line) ? (req.body.jump_first_line === 'true') : false
 
-      const { businessId, invalids } = await this.newBusiness.createFromUrlFile(companyToken, req.body.name, req.body.file, template.fields, req.body.templateId, activeUntil, company.prefix_index_elastic)
+      const { businessId, invalids } = await this.newBusiness.createFromUrlFile(companyToken, req.body.name, req.body.file, template.fields, req.body.templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine)
 
       return res.status(201).send({ businessId, invalids })
     } catch (e) {
@@ -79,8 +80,9 @@ class BusinessController {
       if (businessName.length > 0) return res.status(400).send({ err: `${req.body.name} já foi cadastrado` })
 
       const activeUntil = req.body.active_until
+      var jumpFirstLine = (req.body.jump_first_line) ? (req.body.jump_first_line === 'true') : false
 
-      const { businessId, invalids } = await this.newBusiness.create(companyToken, req.body.name, req.files.file, template.fields, req.body.templateId, activeUntil, company.prefix_index_elastic)
+      const { businessId, invalids } = await this.newBusiness.create(companyToken, req.body.name, req.files.file, template.fields, req.body.templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine)
 
       return res.status(201).send({ businessId, invalids })
     } catch (e) {
@@ -115,10 +117,11 @@ class BusinessController {
 
       const activeUntil = req.body.active_until
 
-      const { businessId, invalids } = await this.newBusiness.createFromJson(companyToken, name, template.fields, templateId, data, activeUntil, company.prefix_index_elastic)
+      const { businessId, invalids } = await this.newBusiness.createFromJson(companyToken, name, template.fields, templateId, data, activeUntil, company.prefix_index_elastic, req.body)
 
       return res.status(201).send({ businessId, invalids })
     } catch (e) {
+      console.error(e)
       return res.status(500).send({ err: e.message })
     }
   }

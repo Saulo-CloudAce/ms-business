@@ -10,6 +10,7 @@
   "author": "Silas Silva <silas.ti2010@gmail.com>",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.528.0",
     "axios": "^0.19.0",
     "body-parser": "^1.19.0",
     "connect-multiparty": "^2.2.0",

@@ -1,7 +1,8 @@
 const s3 = require('s3')
 const fs = require('fs')
+const AWS = require('aws-sdk')
 
-module.exports = async (dirBucket, dirFile, fileName, bucket) => new Promise((resolve, reject) => {
+const uploadFromFile = async (dirBucket, dirFile, fileName, bucket) => new Promise((resolve, reject) => {
   let fileInfos = {}
 
   const client = s3.createClient({
@@ -31,7 +32,7 @@ module.exports = async (dirBucket, dirFile, fileName, bucket) => new Promise((re
         Bucket: process.env.BUCKET,
         ACL: 'public-read',
         Key: `${dirBucket}/${fileName}`
-      },
+      }
     }
   }
 
@@ -46,3 +47,24 @@ module.exports = async (dirBucket, dirFile, fileName, bucket) => new Promise((re
     }
   })
 })
+
+async function uploadFromEncoded (dirBucket, buffer, fileName, nBucket) {
+  var clientS3 = new AWS.S3({ accessKeyId: process.env.ACCESSKEYID, secretAccessKey: process.env.SECRETACCESSKEY })
+  var urlFile = null
+  const bucket = (nBucket) ? nBucket : process.env.BUCKET
+  await clientS3.putObject({
+    Bucket: bucket,
+    Key: fileName,
+    Body: buffer,
+    ContentEncoding: 'utf8',
+    ContentType: 'application/json',
+    ACL: 'public-read'
+  }, function (err) {
+    if (err) { throw new Error(err) }
+  })
+  urlFile = `https://${bucket}.s3.amazonaws.com/${fileName}`
+
+  return urlFile
+}
+
+module.exports = { uploadFromFile, uploadFromEncoded }
