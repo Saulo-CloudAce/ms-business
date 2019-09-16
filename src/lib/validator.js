@@ -24,11 +24,14 @@ class Validator {
     }
   }
 
-  async validateAndFormat (filePath, fields) {
+  async validateAndFormat (filePath, fields, jumpFirstLine = false) {
     var readStream = fs.createReadStream(filePath)
     var reader = readline.createInterface({
       input: readStream
     })
+
+    var firstLine = 0
+    if (jumpFirstLine) firstLine = 1
 
     const lineCounter = ((i = 0) => () => ++i)()
 
@@ -39,12 +42,14 @@ class Validator {
       var lineValids = []
       reader
         .on('line', function (line, lineno = lineCounter()) {
-          const data = line.split(',')
-          if (self.validate(data, fields)) {
-            var dataFormatted = self.format(data, fields)
-            lineValids.push(dataFormatted)
-          } else {
-            lineInvalids.push(lineno)
+          if (lineno > firstLine) {
+            const data = line.split(',')
+            if (self.validate(data, fields)) {
+              var dataFormatted = self.format(data, fields)
+              lineValids.push(dataFormatted)
+            } else {
+              lineInvalids.push(lineno)
+            }
           }
         })
         .on('close', function () {
@@ -60,7 +65,7 @@ class Validator {
     }
   }
 
-  async validateAndFormatFromUrlFile (filePath, fields) {
+  async validateAndFormatFromUrlFile (filePath, fields, jumpFirstLine = false) {
     var readStream = await new Promise((resolve, reject) => {
       fetch(filePath)
         .then(res => {
@@ -73,7 +78,10 @@ class Validator {
       input: readStream
     })
 
-    const lineCounter = ((i = 0) => () => ++i)()
+    var firstLine = 0
+    if (jumpFirstLine) firstLine = 1
+
+    const lineCounter = ((i = firstLine) => () => ++i)()
 
     const self = this
 
@@ -82,12 +90,14 @@ class Validator {
       var lineValids = []
       reader
         .on('line', function (line, lineno = lineCounter()) {
-          const data = line.split(',')
-          if (self.validate(data, fields)) {
-            var dataFormatted = self.format(data, fields)
-            lineValids.push(dataFormatted)
-          } else {
-            lineInvalids.push(lineno)
+          if (lineno > firstLine) {
+            const data = line.split(',')
+            if (self.validate(data, fields)) {
+              var dataFormatted = self.format(data, fields)
+              lineValids.push(dataFormatted)
+            } else {
+              lineInvalids.push(lineno)
+            }
           }
         })
         .on('close', function () {
@@ -146,6 +156,7 @@ class Validator {
         elText = elText.replace(/\./g, '')
         elText = elText.replace(/-/g, '')
         elText = elText.replace(/\\/g, '')
+        elText = elText.replace(/\//g, '')
       } else if (rules[i].type === 'array') {
         var arrData = []
         if (!rules[i].fields) {
