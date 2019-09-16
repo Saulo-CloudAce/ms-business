@@ -6,9 +6,9 @@ async function connect () {
   if (connection) return null
 
   const result = await new Promise((resolve, reject) => {
-    MongoClient.connect(`mongodb://${process.env.MONGO_HOST}:${process.env.MONGO_PORT}`, (err, conn) => {
+    MongoClient.connect(`mongodb://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}`, (err, conn) => {
       if (err) {
-        return resolve({ err, db: null })
+        resolve({ err, db: null })
       } else {
         connection = conn
         db = conn.db(process.env.MONGO_DATABASE)
