@@ -8,7 +8,7 @@ async function sendData (data, companyToken, businessId, templateId, fieldKeyLis
     field_key_list: fieldKeyList,
     prefix_index_elastic: prefixIndexElastic
   }
-  console.log(payload)
+
   try {
     await getAxiosInstance(companyToken).post(`${process.env.CRM_URL}/customers`, payload)
   } catch (e) {

@@ -81,7 +81,7 @@ class Validator {
     var firstLine = 0
     if (jumpFirstLine) firstLine = 1
 
-    const lineCounter = ((i = firstLine) => () => ++i)()
+    const lineCounter = ((i = 0) => () => ++i)()
 
     const self = this
 
