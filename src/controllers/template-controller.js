@@ -84,6 +84,7 @@ class TemplateController {
     const companyToken = req.headers['token']
     const templateId = req.params.id
 
+
     try {
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
@@ -96,7 +97,6 @@ class TemplateController {
 
       return res.status(200).send(template)
     } catch (err) {
-      console.log(err)
       return res.status(500).send({ err: err.message })
     }
   }
