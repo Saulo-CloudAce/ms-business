@@ -90,7 +90,7 @@ class CustomerController {
               data.map(m => { m.data = m.data.filter(md => md.customer_cpfcnpj === customer.cpfcnpj) })
             }
 
-            template.lote_data_list = data
+            if (data.length > 0) template.lote_data_list = data.filter(d => d.data.length > 0)
             return template
           }
         }))
@@ -145,7 +145,7 @@ class CustomerController {
                 m.data = m.data.filter(md => md.customer_cpfcnpj === cpfcnpj)
               })
             }
-            template.lote_data_list = data
+            if (data.length > 0) template.lote_data_list = data.filter(d => d.data.length > 0)
             return template
           }
         }))
