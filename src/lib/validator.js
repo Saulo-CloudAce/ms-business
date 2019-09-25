@@ -43,7 +43,7 @@ class Validator {
       reader
         .on('line', function (line, lineno = lineCounter()) {
           if (lineno > firstLine) {
-            const data = line.split(',')
+            const data = line.split(';')
             if (self.validate(data, fields)) {
               var dataFormatted = self.format(data, fields)
               lineValids.push(dataFormatted)
@@ -91,7 +91,7 @@ class Validator {
       reader
         .on('line', function (line, lineno = lineCounter()) {
           if (lineno > firstLine) {
-            const data = line.split(',')
+            const data = line.split(';')
             if (self.validate(data, fields)) {
               var dataFormatted = self.format(data, fields)
               lineValids.push(dataFormatted)
