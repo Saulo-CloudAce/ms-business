@@ -90,7 +90,7 @@ class CustomerController {
               data.map(m => { m.data = m.data.filter(md => md.customer_cpfcnpj === customer.cpfcnpj) })
             }
 
-            template.lote_data_list = data
+            if (data.length > 0) template.lote_data_list = data.filter(d => d.data.length > 0)
             return template
           }
         }))
@@ -145,7 +145,7 @@ class CustomerController {
                 m.data = m.data.filter(md => md.customer_cpfcnpj === cpfcnpj)
               })
             }
-            template.lote_data_list = data
+            if (data.length > 0) template.lote_data_list = data.filter(d => d.data.length > 0)
             return template
           }
         }))
@@ -173,7 +173,38 @@ class CustomerController {
       var request = await searchCustomer(search, companyToken, company.prefix_index_elastic)
       if (request.response && request.response.status && request.response.status !== 200) return res.status(request.response.status).send(request.response.data)
 
-      return res.status(200).send(request.data)
+      var customers = request.data
+      var list_customers = []
+      for(let i in customers) {
+        var customer = customers[i]
+        var templateList = customer.business_template_list
+        var templates = []
+        if (templateList && templateList.length > 0) {
+          templates = await Promise.all(templateList.map(async templateId => {
+            var template = await this.templateRepository.getNameById(templateId, companyToken)
+            if (template) {
+              var data = await this.businessRepository.getAllByTemplate(companyToken, templateId)
+              if (data && data.length > 0) {
+                var customer_key = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
+                data.map(m => { m.data = m.data.filter(md => md.customer_cpfcnpj === customer_key) })
+              }
+
+              if (data.length > 0) template.lote_data_list = data.filter(d => d.data.length > 0)
+              return template
+            }
+          }))
+        }
+
+        if (customer) {
+          customer.schema_list = templates.filter(t => t)
+          delete customer.business_list
+          delete customer.business_template_list
+        }
+      }
+
+      customers = customers.sort((a, b) => (a.customer_name > b.customer_name) ? 1 : ((b.customer_name > a.customer_name) ? -1 : 0)) 
+
+      return res.status(200).send(customers)
     } catch (err) {
       return res.status(500).send({ err: err.message })
     }
