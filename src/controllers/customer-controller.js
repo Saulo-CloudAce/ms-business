@@ -202,6 +202,8 @@ class CustomerController {
         }
       }
 
+      customers = customers.sort((a, b) => (a.customer_name > b.customer_name) ? 1 : ((b.customer_name > a.customer_name) ? -1 : 0)) 
+
       return res.status(200).send(customers)
     } catch (err) {
       return res.status(500).send({ err: err.message })
