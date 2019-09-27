@@ -120,15 +120,19 @@ class Validator {
 
     data.forEach((el, i) => {
       if (rules[i].required && el.length === 0) {
+        console.log('REQUIRED', rules[i].column, el)
         valid = false
       } else if (rules[i].key && el.length === 0) {
+        console.log('KEY', rules[i].column, el)
         valid = false
       } else if (rules[i].type === 'int' && !Number.isInteger(parseInt(el))) {
+        console.log('INTEGER', rules[i].column, el)
         valid = false
       } else if (rules[i].type === 'array') {
-        if (!Array.isArray(el)) {
+        if (!Array.isArray(el) && rules[i].required) {
+          console.log('ARRAY', rules[i].column, el)
           valid = false
-        } else if (!this.validateArray(rules[i], el)) {
+        } else if (!this.validateArray(rules[i], el) && rules[i].required) {
           valid = false
         }
       }
@@ -160,19 +164,23 @@ class Validator {
       } else if (rules[i].type === 'array') {
         var arrData = []
         if (!rules[i].fields) {
-          el.forEach((element, x) => {
-            var item = {}
-            item[rules[i].data] = element
-            arrData.push(item)
-          })
-        } else {
-          el.forEach((element, x) => {
-            var item = {}
-            rules[i].fields.forEach((field, y) => {
-              item[field.data] = element[field.column]
+          if (Array.isArray(el)) {
+            el.forEach((element, x) => {
+              var item = {}
+              item[rules[i].data] = element
+              arrData.push(item)
             })
-            arrData.push(item)
-          })
+          }
+        } else {
+          if (Array.isArray(el)) {
+            el.forEach((element, x) => {
+              var item = {}
+              rules[i].fields.forEach((field, y) => {
+                item[field.data] = element[field.column]
+              })
+              arrData.push(item)
+            })
+          }
         }
         elText = arrData
       }
