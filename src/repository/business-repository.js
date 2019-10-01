@@ -6,8 +6,8 @@ class BusinessRepository {
     this.mongodb = mongodb
   }
 
-  async save (companyToken, name, filePath, templateId, quantityRows, fieldsData, activeUntil, jumpFirstLine = false) {
-    const data = { companyToken, name, filePath, templateId, jumpFirstLine, quantityRows, data: fieldsData, activeUntil, flow_passed: false, active: true, createdAt: moment().format(), updatedAt: moment().format() }
+  async save (companyToken, name, filePath, templateId, quantityRows, fieldsData, activeUntil, jumpFirstLine = false, dataSeparator = '') {
+    const data = { companyToken, name, filePath, templateId, jumpFirstLine, dataSeparator, quantityRows, data: fieldsData, activeUntil, flow_passed: false, active: true, createdAt: moment().format(), updatedAt: moment().format() }
 
     try {
       const db = await this.mongodb.connect()

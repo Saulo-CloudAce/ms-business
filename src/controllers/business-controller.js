@@ -45,9 +45,11 @@ class BusinessController {
       if (businessName.length > 0) return res.status(400).send({ err: `${req.body.name} já foi cadastrado` })
 
       const activeUntil = req.body.active_until
-      var jumpFirstLine = (req.body.jump_first_line) ? (req.body.jump_first_line === 'true') : false
+      var jumpFirstLine = (req.body.jump_first_line) ? req.body.jump_first_line : false
 
-      const { businessId, invalids } = await this.newBusiness.createFromUrlFile(companyToken, req.body.name, req.body.file, template.fields, req.body.templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine)
+      var dataSeparator = (req.body.data_separator) ? req.body.data_separator : ';'
+
+      const { businessId, invalids } = await this.newBusiness.createFromUrlFile(companyToken, req.body.name, req.body.file, template.fields, req.body.templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine, dataSeparator)
 
       return res.status(201).send({ businessId, invalids })
     } catch (e) {
@@ -82,7 +84,9 @@ class BusinessController {
       const activeUntil = req.body.active_until
       var jumpFirstLine = (req.body.jump_first_line) ? (req.body.jump_first_line === 'true') : false
 
-      const { businessId, invalids } = await this.newBusiness.create(companyToken, req.body.name, req.files.file, template.fields, req.body.templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine)
+      var dataSeparator = (req.body.data_separator) ? req.body.data_separator : ';'
+
+      const { businessId, invalids } = await this.newBusiness.create(companyToken, req.body.name, req.files.file, template.fields, req.body.templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine, dataSeparator)
 
       return res.status(201).send({ businessId, invalids })
     } catch (e) {

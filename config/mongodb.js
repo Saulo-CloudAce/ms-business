@@ -10,6 +10,7 @@ async function connect () {
     process.env.MONGO_USERNAME && process.env.MONGO_PASSWORD ? connectionMongo = `mongodb://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DATABASE}` : connectionMongo = `mongodb://${process.env.MONGO_HOST}:${process.env.MONGO_PORT}`
     MongoClient.connect(connectionMongo, (err, conn) => {
       if (err) {
+        console.error(err)
         resolve({ err, db: null })
       } else {
         connection = conn

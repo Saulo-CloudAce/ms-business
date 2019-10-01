@@ -6,29 +6,31 @@ class Business {
     this.crmService = crmService
   }
 
-  async create (companyToken, name, file, fields, templateId, activeUntil, prefixIndexElastic, jumpFirstLine) {
-    const { invalids, valids } = await this.validator.validateAndFormat(file.path, fields, jumpFirstLine)
+  async create (companyToken, name, file, fields, templateId, activeUntil, prefixIndexElastic, jumpFirstLine, dataSeparator) {
+    const { invalids, valids } = await this.validator.validateAndFormat(file.path, fields, jumpFirstLine, dataSeparator)
 
     if (valids.length === 0) {
       throw new Error('Todas as linhas estão inválidas')
     }
 
     const filePath = await this.uploader.upload(file)
-    const businessId = await this.repository.save(companyToken, name, filePath, templateId, valids.length, valids, activeUntil, jumpFirstLine)
+    const businessId = await this.repository.save(companyToken, name, filePath, templateId, valids.length, valids, activeUntil, jumpFirstLine, dataSeparator)
 
-    await this.crmService.sendData(valids, companyToken, businessId, templateId, prefixIndexElastic)
+    var listFieldKey = fields.filter(f => f.key).map(f => f.data)
+
+    await this.crmService.sendData(valids, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic)
 
     return { businessId, invalids }
   }
 
-  async createFromUrlFile (companyToken, name, filepath, fields, templateId, activeUntil, prefixIndexElastic, jumpFirstLine) {
-    const { invalids, valids } = await this.validator.validateAndFormatFromUrlFile(filepath, fields, jumpFirstLine)
+  async createFromUrlFile (companyToken, name, filepath, fields, templateId, activeUntil, prefixIndexElastic, jumpFirstLine, dataSeparator) {
+    const { invalids, valids } = await this.validator.validateAndFormatFromUrlFile(filepath, fields, jumpFirstLine, dataSeparator)
 
     if (valids.length === 0) {
       throw new Error('Todas as linhas estão inválidas')
     }
 
-    const businessId = await this.repository.save(companyToken, name, filepath, templateId, valids.length, valids, activeUntil, jumpFirstLine)
+    const businessId = await this.repository.save(companyToken, name, filepath, templateId, valids.length, valids, activeUntil, jumpFirstLine, dataSeparator)
 
     var listFieldKey = fields.filter(f => f.key).map(f => f.data)
 

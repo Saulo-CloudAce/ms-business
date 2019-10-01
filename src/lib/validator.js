@@ -24,7 +24,7 @@ class Validator {
     }
   }
 
-  async validateAndFormat (filePath, fields, jumpFirstLine = false) {
+  async validateAndFormat (filePath, fields, jumpFirstLine = false, dataSeparator = ';') {
     var readStream = fs.createReadStream(filePath)
     var reader = readline.createInterface({
       input: readStream
@@ -43,7 +43,7 @@ class Validator {
       reader
         .on('line', function (line, lineno = lineCounter()) {
           if (lineno > firstLine) {
-            const data = line.split(';')
+            const data = line.split(dataSeparator)
             if (self.validate(data, fields)) {
               var dataFormatted = self.format(data, fields)
               lineValids.push(dataFormatted)
@@ -65,7 +65,7 @@ class Validator {
     }
   }
 
-  async validateAndFormatFromUrlFile (filePath, fields, jumpFirstLine = false) {
+  async validateAndFormatFromUrlFile (filePath, fields, jumpFirstLine = false, dataSeparator = ';') {
     var readStream = await new Promise((resolve, reject) => {
       fetch(filePath)
         .then(res => {
@@ -91,7 +91,7 @@ class Validator {
       reader
         .on('line', function (line, lineno = lineCounter()) {
           if (lineno > firstLine) {
-            const data = line.split(';')
+            const data = line.split(dataSeparator)
             if (self.validate(data, fields)) {
               var dataFormatted = self.format(data, fields)
               lineValids.push(dataFormatted)
