@@ -130,6 +130,31 @@ class BusinessController {
     }
   }
 
+  async getPoolData (req, res) {
+    const companyToken = req.headers['token']
+
+    try {
+      const company = await this.companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+
+      var searchData = req.body.data
+      var businessData = []
+      if (searchData && Array.isArray(searchData)) {
+        var listBusinessId = searchData.map(s => s.lote_id)
+        var businessList = await this.businessRepository.getDataByListId(companyToken, listBusinessId)
+        var listDataId = searchData.map(s => s.item_id)
+        businessList.forEach((business) => {
+          var item = business.data.find(d => listDataId.indexOf(d._id) >= 0)
+          businessData.push(item)
+        })
+      }
+
+      return res.status(200).send(businessData)
+    } catch (err) {
+      return res.status(500).send({ err: err.message })
+    }
+  }
+
   async getAll (req, res) {
     const companyToken = req.headers['token']
 

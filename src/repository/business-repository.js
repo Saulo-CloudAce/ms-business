@@ -141,6 +141,21 @@ class BusinessRepository {
     }
   }
 
+  async getDataByListId (companyToken, listId) {
+    var listIdQuery = listId.map(l => new ObjectID(l))
+    try {
+      const db = await this.mongodb.connect()
+
+      const business = await db.collection('business').find({ companyToken: companyToken, _id: { $in: listIdQuery } }).toArray()
+
+      return business
+    } catch (err) {
+      throw new Error(err)
+    } finally {
+      await this.mongodb.disconnect()
+    }
+  }
+
   async getDataById (companyToken, id) {
     try {
       const db = await this.mongodb.connect()
