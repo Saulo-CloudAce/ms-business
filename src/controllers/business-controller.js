@@ -169,16 +169,20 @@ class BusinessController {
         var businessList = await businessRepository.getDataByListId(companyToken, listBusinessId)
         var listDataId = searchData.map(s => s.item_id)
         businessList.forEach((business) => {
-          var item = business.data.find(d => listDataId.indexOf(d._id) >= 0)
-          if (fields.length > 1) {
-            item = Object.keys(item)
-              .filter(k => fields.includes(k))
-              .reduce((obj, k) => {
-                obj[k] = item[k]
-                return obj
-              }, {})
-          }
-          businessData.push(item)
+          business.data
+            .filter(d => listDataId.includes(d._id))
+            .forEach((it) => {
+              var item = it
+              if (fields.length > 1) {
+                item = Object.keys(item)
+                  .filter(k => fields.includes(k))
+                  .reduce((obj, k) => {
+                    obj[k] = item[k]
+                    return obj
+                  }, {})
+              }
+              businessData.push(item)
+            })
         })
       }
 
