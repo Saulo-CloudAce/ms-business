@@ -207,7 +207,8 @@ class BusinessController {
           active: b.active,
           createdAt: b.createdAt,
           updatedAt: b.updatedAt,
-          dataAmount: b.data.length
+          dataAmount: b.data.length,
+          templateId: b.templateId
         }
       })
 
