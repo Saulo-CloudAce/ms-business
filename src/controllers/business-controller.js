@@ -138,13 +138,26 @@ class BusinessController {
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
       var searchData = req.body.data
+      var fields = []
+      if (req.body.fields) fields = req.body.fields
+      fields.push('_id')
+
       var businessData = []
+
       if (searchData && Array.isArray(searchData)) {
         var listBusinessId = searchData.map(s => s.lote_id)
         var businessList = await this.businessRepository.getDataByListId(companyToken, listBusinessId)
         var listDataId = searchData.map(s => s.item_id)
         businessList.forEach((business) => {
           var item = business.data.find(d => listDataId.indexOf(d._id) >= 0)
+          if (fields.length > 1) {
+            item = Object.keys(item)
+              .filter(k => fields.includes(k))
+              .reduce((obj, k) => {
+                obj[k] = item[k]
+                return obj
+              }, {})
+          }
           businessData.push(item)
         })
       }
