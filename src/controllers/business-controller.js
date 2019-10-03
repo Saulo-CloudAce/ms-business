@@ -6,18 +6,26 @@ const CompanyRepository = require('../repository/company-repository')
 const TemplateRepository = require('../repository/template-repository')
 const Uploader = require('../lib/uploader')
 const Validator = require('../lib/validator')
-const mongodb = require('../../config/mongodb')
 const crmService = require('../services/crm-service')
 const { mongoIdIsValid } = require('../helpers/validators')
 
 class BusinessController {
   constructor (businessService) {
     this.businessService = businessService
-    this.businessRepository = new BusinessRepository(mongodb)
     this.uploader = new Uploader(process.env.BUCKET)
-    this.companyRepository = new CompanyRepository(mongodb)
-    this.templateRepository = new TemplateRepository(mongodb)
-    this.newBusiness = new Business(this.businessRepository, this.uploader, new Validator(), crmService)
+  }
+
+  _getInstanceRepositories (app) {
+    const businessRepository = new BusinessRepository(app.locals.db)
+    const companyRepository = new CompanyRepository(app.locals.db)
+    const templateRepository = new TemplateRepository(app.locals.db)
+
+    return { businessRepository, companyRepository, templateRepository }
+  }
+
+  _getInstanceBusiness (app) {
+    var { businessRepository } = this._getInstanceRepositories(app)
+    return new Business(businessRepository, this.uploader, new Validator(), crmService)
   }
 
   async createFromUrlFile (req, res) {
@@ -33,14 +41,17 @@ class BusinessController {
     const companyToken = req.headers['token']
 
     try {
-      const company = await this.companyRepository.getByToken(companyToken)
+      const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
+      const newBusiness = this._getInstanceBusiness(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
-      const template = await this.templateRepository.getById(req.body.templateId, companyToken)
+      const template = await templateRepository.getById(req.body.templateId, companyToken)
       if (!template) return res.status(400).send({ err: 'Template não identificado' })
       if (!template.active) return res.status(400).send({ err: 'Este template foi desativado e não recebe mais dados.' })
 
-      const businessList = await this.newBusiness.getAll(companyToken)
+      const businessList = await newBusiness.getAll(companyToken)
       const businessName = businessList.filter(b => b.name.toLowerCase() === req.body.name.toLowerCase())
       if (businessName.length > 0) return res.status(400).send({ err: `${req.body.name} já foi cadastrado` })
 
@@ -49,7 +60,7 @@ class BusinessController {
 
       var dataSeparator = (req.body.data_separator) ? req.body.data_separator : ';'
 
-      const { businessId, invalids } = await this.newBusiness.createFromUrlFile(companyToken, req.body.name, req.body.file, template.fields, req.body.templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine, dataSeparator)
+      const { businessId, invalids } = await newBusiness.createFromUrlFile(companyToken, req.body.name, req.body.file, template.fields, req.body.templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine, dataSeparator)
 
       return res.status(201).send({ businessId, invalids })
     } catch (e) {
@@ -70,14 +81,17 @@ class BusinessController {
     const companyToken = req.headers['token']
 
     try {
-      const company = await this.companyRepository.getByToken(companyToken)
+      const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
+      const newBusiness = this._getInstanceBusiness(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
-      const template = await this.templateRepository.getById(req.body.templateId, companyToken)
+      const template = await templateRepository.getById(req.body.templateId, companyToken)
       if (!template) return res.status(400).send({ err: 'Template não identificado' })
       if (!template.active) return res.status(400).send({ err: 'Este template foi desativado e não recebe mais dados.' })
 
-      const businessList = await this.newBusiness.getAll(companyToken)
+      const businessList = await newBusiness.getAll(companyToken)
       const businessName = businessList.filter(b => b.name.toLowerCase() === req.body.name.toLowerCase())
       if (businessName.length > 0) return res.status(400).send({ err: `${req.body.name} já foi cadastrado` })
 
@@ -86,7 +100,7 @@ class BusinessController {
 
       var dataSeparator = (req.body.data_separator) ? req.body.data_separator : ';'
 
-      const { businessId, invalids } = await this.newBusiness.create(companyToken, req.body.name, req.files.file, template.fields, req.body.templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine, dataSeparator)
+      const { businessId, invalids } = await newBusiness.create(companyToken, req.body.name, req.files.file, template.fields, req.body.templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine, dataSeparator)
 
       return res.status(201).send({ businessId, invalids })
     } catch (e) {
@@ -108,20 +122,24 @@ class BusinessController {
 
     try {
       const { name, templateId, data } = req.body
-      const company = await this.companyRepository.getByToken(companyToken)
+
+      const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
+      const newBusiness = this._getInstanceBusiness(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
-      const template = await this.templateRepository.getById(templateId, companyToken)
+      const template = await templateRepository.getById(templateId, companyToken)
       if (!template) return res.status(400).send({ err: 'Template não identificado' })
       if (!template.active) return res.status(400).send({ err: 'Este template foi desativado e não recebe mais dados.' })
 
-      const businessList = await this.newBusiness.getAll(companyToken)
+      const businessList = await newBusiness.getAll(companyToken)
       const businessName = businessList.filter(b => b.name.toLowerCase() === req.body.name.toLowerCase())
       if (businessName.length > 0) return res.status(400).send({ err: `(${req.body.name}) já foi cadastrado` })
 
       const activeUntil = req.body.active_until
 
-      const { businessId, invalids } = await this.newBusiness.createFromJson(companyToken, name, template.fields, templateId, data, activeUntil, company.prefix_index_elastic, req.body)
+      const { businessId, invalids } = await newBusiness.createFromJson(companyToken, name, template.fields, templateId, data, activeUntil, company.prefix_index_elastic, req.body)
 
       return res.status(201).send({ businessId, invalids })
     } catch (e) {
@@ -134,7 +152,9 @@ class BusinessController {
     const companyToken = req.headers['token']
 
     try {
-      const company = await this.companyRepository.getByToken(companyToken)
+      const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
       var searchData = req.body.data
@@ -146,7 +166,7 @@ class BusinessController {
 
       if (searchData && Array.isArray(searchData)) {
         var listBusinessId = searchData.map(s => s.lote_id)
-        var businessList = await this.businessRepository.getDataByListId(companyToken, listBusinessId)
+        var businessList = await businessRepository.getDataByListId(companyToken, listBusinessId)
         var listDataId = searchData.map(s => s.item_id)
         businessList.forEach((business) => {
           var item = business.data.find(d => listDataId.indexOf(d._id) >= 0)
@@ -172,10 +192,13 @@ class BusinessController {
     const companyToken = req.headers['token']
 
     try {
-      const company = await this.companyRepository.getByToken(companyToken)
+      const { companyRepository } = this._getInstanceRepositories(req.app)
+      const newBusiness = this._getInstanceBusiness(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
-      const businessList = await this.newBusiness.getAll(companyToken)
+      const businessList = await newBusiness.getAll(companyToken)
 
       return res.status(201).send(businessList)
     } catch (e) {
@@ -190,13 +213,15 @@ class BusinessController {
     if (!mongoIdIsValid(businessId)) return res.status(500).send({ err: 'Código do lote inválido' })
 
     try {
-      const company = await this.companyRepository.getByToken(companyToken)
+      const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
-      const business = await this.businessRepository.getById(companyToken, businessId)
+      const business = await businessRepository.getById(companyToken, businessId)
       if (!business) return res.status(400).send({ err: 'Business não identificado' })
 
-      await this.businessRepository.markFlowPassed(businessId)
+      await businessRepository.markFlowPassed(businessId)
 
       return res.sendStatus(200)
     } catch (e) {
@@ -211,13 +236,15 @@ class BusinessController {
     if (!mongoIdIsValid(businessId)) return res.status(500).send({ err: 'Código do lote inválido' })
 
     try {
-      const company = await this.companyRepository.getByToken(companyToken)
+      const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
-      const business = await this.businessRepository.getById(companyToken, businessId)
+      const business = await businessRepository.getById(companyToken, businessId)
       if (!business) return res.status(400).send({ err: 'Business não identificado' })
 
-      await this.businessRepository.unmarkFlowPassed(businessId)
+      await businessRepository.unmarkFlowPassed(businessId)
 
       return res.sendStatus(200)
     } catch (e) {
@@ -236,13 +263,15 @@ class BusinessController {
     if (!mongoIdIsValid(businessId)) return res.status(500).send({ err: 'Código do lote inválido' })
 
     try {
-      const company = await this.companyRepository.getByToken(companyToken)
+      const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
-      const business = await this.businessRepository.getById(companyToken, businessId)
+      const business = await businessRepository.getById(companyToken, businessId)
       if (!business) return res.status(400).send({ err: 'Business não identificado' })
 
-      await this.businessRepository.activate(businessId, req.body.active_until)
+      await businessRepository.activate(businessId, req.body.active_until)
 
       return res.sendStatus(200)
     } catch (e) {
@@ -257,13 +286,15 @@ class BusinessController {
     if (!mongoIdIsValid(businessId)) return res.status(500).send({ err: 'Código do lote inválido' })
 
     try {
-      const company = await this.companyRepository.getByToken(companyToken)
+      const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
-      const business = await this.businessRepository.getById(companyToken, businessId)
+      const business = await businessRepository.getById(companyToken, businessId)
       if (!business) return res.status(400).send({ err: 'Business não identificado' })
 
-      await this.businessRepository.deactivate(businessId)
+      await businessRepository.deactivate(businessId)
 
       return res.sendStatus(200)
     } catch (e) {
@@ -275,10 +306,13 @@ class BusinessController {
     const companyToken = req.headers['token']
 
     try {
-      const company = await this.companyRepository.getByToken(companyToken)
+      const { companyRepository } = this._getInstanceRepositories(req.app)
+      const newBusiness = this._getInstanceBusiness(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
-      const business = await this.newBusiness.getDataById(companyToken, req.params.id)
+      const business = await newBusiness.getDataById(companyToken, req.params.id)
 
       return res.status(201).send(business)
     } catch (e) {
@@ -287,11 +321,13 @@ class BusinessController {
   }
 
   async deactivateExpiredBusiness () {
+    const app = require('../../config/server')
     try {
+      const { businessRepository } = this._getInstanceRepositories(app)
       const currentDate = moment().format('YYYY-MM-DD')
-      const businessList = await this.businessRepository.getExpiredBusiness(currentDate)
+      const businessList = await businessRepository.getExpiredBusiness(currentDate)
       businessList.forEach(async b => {
-        await this.businessRepository.deactivate(b._id)
+        await businessRepository.deactivate(b._id)
       })
       return true
     } catch (err) {
@@ -307,16 +343,19 @@ class BusinessController {
     const businessId = req.params.businessId
 
     try {
-      const company = await this.companyRepository.getByToken(companyToken)
+      const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
+      const newBusiness = this._getInstanceBusiness(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
-      const template = await this.templateRepository.getById(templateId, companyToken)
+      const template = await templateRepository.getById(templateId, companyToken)
       if (!template) return res.status(400).send({ err: 'Template não identificado' })
 
       var fieldEditableList = template.fields.filter(f => f.editable)
       if (!Array.isArray(fieldEditableList)) fieldEditableList = []
 
-      const business = await this.newBusiness.getDataById(companyToken, businessId)
+      const business = await newBusiness.getDataById(companyToken, businessId)
       if (!business) return res.status(400).send({ err: 'Business não identificado.' })
 
       var register = null
@@ -332,7 +371,7 @@ class BusinessController {
         }
       })
 
-      await this.newBusiness.updateDataBusiness(businessId, business.data)
+      await newBusiness.updateDataBusiness(businessId, business.data)
 
       return res.status(200).send(register)
     } catch (err) {
@@ -346,13 +385,16 @@ class BusinessController {
     const templateId = req.headers['templateid']
 
     try {
-      const company = await this.companyRepository.getByToken(companyToken)
+      const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
+      const newBusiness = this._getInstanceBusiness(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
-      const template = await this.templateRepository.getById(templateId, companyToken)
+      const template = await templateRepository.getById(templateId, companyToken)
       if (!template) return res.status(400).send({ err: 'Template não identificado' })
 
-      const business = await this.newBusiness.getDataById(companyToken, req.params.businessId)
+      const business = await newBusiness.getDataById(companyToken, req.params.businessId)
       if (!business) return res.status(400).send({ err: 'Business não identificado.' })
       var data = business.data.filter(d => d._id === req.params.registerId)
 
@@ -373,13 +415,16 @@ class BusinessController {
     const templateId = req.headers['templateid']
 
     try {
-      const company = await this.companyRepository.getByToken(companyToken)
+      const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
+      const newBusiness = this._getInstanceBusiness(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
-      const template = await this.templateRepository.getById(templateId, companyToken)
+      const template = await templateRepository.getById(templateId, companyToken)
       if (!template) return res.status(400).send({ err: 'Template não identificado' })
 
-      var businessList = await this.newBusiness.getAllByTemplateId(companyToken, templateId)
+      var businessList = await newBusiness.getAllByTemplateId(companyToken, templateId)
       if (!businessList) return res.status(400).send({ err: 'Erro ao listar os business deste template.' })
 
       var cpfcnpj = req.query.cpfcnpj

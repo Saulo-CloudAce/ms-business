@@ -1,4 +1,3 @@
-const mongodb = require('../../config/mongodb')
 const {
   createSingleCustomer,
   getByCpfCnpj,
@@ -11,10 +10,12 @@ const TemplateRepository = require('../repository/template-repository')
 const BusinessRepository = require('../repository/business-repository')
 
 class CustomerController {
-  constructor () {
-    this.companyRepository = new CompanyRepository(mongodb)
-    this.templateRepository = new TemplateRepository(mongodb)
-    this.businessRepository = new BusinessRepository(mongodb)
+  _getInstanceRepositories (app) {
+    const businessRepository = new BusinessRepository(app.locals.db)
+    const companyRepository = new CompanyRepository(app.locals.db)
+    const templateRepository = new TemplateRepository(app.locals.db)
+
+    return { businessRepository, companyRepository, templateRepository }
   }
 
   async create (req, res) {
@@ -25,7 +26,9 @@ class CustomerController {
     const companyToken = req.headers['token']
 
     try {
-      const company = await this.companyRepository.getByToken(companyToken)
+      var { companyRepository } = this._getInstanceRepositories(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
       var cpfcnpj = req.body.customer_cpfcnpj
@@ -50,7 +53,9 @@ class CustomerController {
     const companyToken = req.headers['token']
 
     try {
-      const company = await this.companyRepository.getByToken(companyToken)
+      var { companyRepository } = this._getInstanceRepositories(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
       var cpfcnpj = req.body.customer_cpfcnpj
@@ -71,7 +76,9 @@ class CustomerController {
     const companyToken = req.headers['token']
 
     try {
-      const company = await this.companyRepository.getByToken(companyToken)
+      var { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
       var request = await getCustomerById(req.params.id, companyToken)
@@ -83,9 +90,9 @@ class CustomerController {
       var templates = []
       if (templateList && templateList.length > 0) {
         templates = await Promise.all(templateList.map(async templateId => {
-          var template = await this.templateRepository.getNameById(templateId, companyToken)
+          var template = await templateRepository.getNameById(templateId, companyToken)
           if (template) {
-            var data = await this.businessRepository.getAllByTemplate(companyToken, templateId)
+            var data = await businessRepository.getAllByTemplate(companyToken, templateId)
             if (data && data.length > 0) {
               data.map(m => { m.data = m.data.filter(md => md.customer_cpfcnpj === customer.cpfcnpj) })
             }
@@ -113,7 +120,9 @@ class CustomerController {
     const companyToken = req.headers['token']
 
     try {
-      const company = await this.companyRepository.getByToken(companyToken)
+      var { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
       var cpfcnpj = req.query.cpfcnpj
@@ -136,9 +145,9 @@ class CustomerController {
       var templates = []
       if (templateList && templateList.length > 0) {
         templates = await Promise.all(templateList.map(async templateId => {
-          var template = await this.templateRepository.getNameById(templateId, companyToken)
+          var template = await templateRepository.getNameById(templateId, companyToken)
           if (template) {
-            var data = await this.businessRepository.getAllByTemplate(companyToken, templateId)
+            var data = await businessRepository.getAllByTemplate(companyToken, templateId)
             if (data && data.length > 0) {
               data = data.filter(d => businessList.includes(d._id.toString()))
               data.map(m => {
@@ -166,7 +175,9 @@ class CustomerController {
     const companyToken = req.headers['token']
 
     try {
-      const company = await this.companyRepository.getByToken(companyToken)
+      var { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
       const search = req.query.search
@@ -174,19 +185,18 @@ class CustomerController {
       if (request.response && request.response.status && request.response.status !== 200) return res.status(request.response.status).send(request.response.data)
 
       var customers = request.data
-      var list_customers = []
-      for(let i in customers) {
+      for (var i in customers) {
         var customer = customers[i]
         var templateList = customer.business_template_list
         var templates = []
         if (templateList && templateList.length > 0) {
           templates = await Promise.all(templateList.map(async templateId => {
-            var template = await this.templateRepository.getNameById(templateId, companyToken)
+            var template = await templateRepository.getNameById(templateId, companyToken)
             if (template) {
-              var data = await this.businessRepository.getAllByTemplate(companyToken, templateId)
+              var data = await businessRepository.getAllByTemplate(companyToken, templateId)
               if (data && data.length > 0) {
-                var customer_key = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
-                data.map(m => { m.data = m.data.filter(md => md.customer_cpfcnpj === customer_key) })
+                var customerKey = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
+                data.map(m => { m.data = m.data.filter(md => md.customer_cpfcnpj === customerKey) })
               }
 
               if (data.length > 0) template.lote_data_list = data.filter(d => d.data.length > 0)
@@ -202,7 +212,7 @@ class CustomerController {
         }
       }
 
-      customers = customers.sort((a, b) => (a.customer_name > b.customer_name) ? 1 : ((b.customer_name > a.customer_name) ? -1 : 0)) 
+      customers = customers.sort((a, b) => (a.customer_name > b.customer_name) ? 1 : ((b.customer_name > a.customer_name) ? -1 : 0))
 
       return res.status(200).send(customers)
     } catch (err) {

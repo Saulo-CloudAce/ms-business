@@ -1,14 +1,17 @@
-const mongodb = require('../../config/mongodb')
 const { validateFields, validateKey } = require('../lib/template-validator')
 const CompanyRepository = require('../repository/company-repository')
 const TemplateRepository = require('../repository/template-repository')
 const BusinessRepository = require('../repository/business-repository')
 
-const companyRepository = new CompanyRepository(mongodb)
-const templateRepository = new TemplateRepository(mongodb)
-const businessRepository = new BusinessRepository(mongodb)
-
 class TemplateController {
+  _getInstanceRepositories (app) {
+    const companyRepository = new CompanyRepository(app.locals.db)
+    const templateRepository = new TemplateRepository(app.locals.db)
+    const businessRepository = new BusinessRepository(app.locals.db)
+
+    return { companyRepository, templateRepository, businessRepository }
+  }
+
   async create (req, res) {
     req.assert('name', 'O nome é obrigatório').notEmpty()
     req.assert('fields', 'Os fields são obrigatórios').notEmpty()
@@ -18,6 +21,8 @@ class TemplateController {
     const companyToken = req.headers['token']
 
     try {
+      var { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
+
       const { name, fields } = req.body
 
       var keyValidated = validateKey(fields)
@@ -45,6 +50,8 @@ class TemplateController {
     const templateId = req.params.id
 
     try {
+      var { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
+
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
@@ -65,6 +72,8 @@ class TemplateController {
     const templateId = req.params.id
 
     try {
+      var { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
+
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
@@ -84,8 +93,9 @@ class TemplateController {
     const companyToken = req.headers['token']
     const templateId = req.params.id
 
-
     try {
+      var { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
+
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
@@ -104,9 +114,9 @@ class TemplateController {
   async getAll (req, res) {
     const companyToken = req.headers['token']
 
-    console.log(companyToken)
-
     try {
+      var { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
+
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
@@ -123,6 +133,8 @@ class TemplateController {
     const companyToken = req.headers['token']
 
     try {
+      var { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
+
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 

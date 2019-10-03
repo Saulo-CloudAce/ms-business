@@ -1,10 +1,5 @@
 const CompanyRepository = require('../repository/company-repository')
 const Company = require('../../domain/company')
-const mongodb = require('../../config/mongodb')
-
-const companyRepository = new CompanyRepository(mongodb)
-const company = new Company(companyRepository)
-
 class CompanyController {
   async create (req, res) {
     req.assert('name', 'O nome é obrigatório').notEmpty()
@@ -14,12 +9,15 @@ class CompanyController {
     if (req.validationErrors()) return res.status(400).send({ errors: req.validationErrors() })
 
     try {
+      const companyRepository = new CompanyRepository(req.app.locals.db)
+      const company = new Company(companyRepository)
+
       var companies = await company.getAll()
       if (companies && companies.length > 0) {
-        var comp = companies.filter(c => c.name == req.body.name)
-        if (comp && comp.length > 0) return res.status(400).send({ err: "Já existe uma company com este nome." })
-        comp = companies.filter(c => c.prefix_index_elastic == req.body.prefix_index_elastic)
-        if (comp && comp.length > 0) return res.status(400).send({ err: "Já existe uma company com este prefix index elastic nome." })
+        var comp = companies.filter(c => c.name === req.body.name)
+        if (comp && comp.length > 0) return res.status(400).send({ err: 'Já existe uma company com este nome.' })
+        comp = companies.filter(c => c.prefix_index_elastic === req.body.prefix_index_elastic)
+        if (comp && comp.length > 0) return res.status(400).send({ err: 'Já existe uma company com este prefix index elastic nome.' })
       }
 
       const newCompany = await company.create(req.body.name, req.body.prefix_index_elastic, req.body.callback)
@@ -32,6 +30,9 @@ class CompanyController {
 
   async getAll (req, res) {
     try {
+      const companyRepository = new CompanyRepository(req.app.locals.db)
+      const company = new Company(companyRepository)
+
       const companies = await company.getAll()
 
       return res.status(200).send(companies)
@@ -42,6 +43,9 @@ class CompanyController {
 
   async getById (req, res) {
     try {
+      const companyRepository = new CompanyRepository(req.app.locals.db)
+      const company = new Company(companyRepository)
+
       const c = await company.getById(req.params.id)
 
       return res.status(200).send(c)
@@ -58,6 +62,9 @@ class CompanyController {
     if (req.validationErrors()) return res.status(400).send({ errors: req.validationErrors() })
 
     try {
+      const companyRepository = new CompanyRepository(req.app.locals.db)
+      const company = new Company(companyRepository)
+
       const companyUpdated = await company.update(req.params.id, req.body.name, req.body.callback, req.body.activated)
 
       return res.status(201).send(companyUpdated)
@@ -65,7 +72,6 @@ class CompanyController {
       return res.status(500).send({ err: err.message })
     }
   }
-
 }
 
 module.exports = CompanyController

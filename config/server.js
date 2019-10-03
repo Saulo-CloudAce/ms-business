@@ -9,6 +9,7 @@ const businessRoutes = require('../src/routes/business')
 const companyRoutes = require('../src/routes/company')
 const templateRoutes = require('../src/routes/template')
 const customerRoutes = require('../src/routes/customer')
+const { connect } = require('../config/mongodb')
 
 const app = express()
 app.use(bodyParser.json({ limit: '250mb' }))
@@ -24,9 +25,10 @@ templateRoutes(app)
 customerRoutes(app)
 
 const port = process.env.PORT || 3000
-
-app.listen(port, () => {
-  console.log(`API is live on port ${port}`)
+connect(app, () => {
+  app.listen(port, () => {
+    console.log(`API is live on port ${port}`)
+  })
 })
 
 module.exports = app

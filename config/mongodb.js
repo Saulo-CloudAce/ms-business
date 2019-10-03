@@ -1,34 +1,17 @@
 const MongoClient = require('mongodb').MongoClient
-var connection = null
-var db = null
 
-async function connect () {
-  if (connection) return null
+async function connect (app, callback) {
+  let connectionMongo = ''
+  process.env.MONGO_USERNAME && process.env.MONGO_PASSWORD ? connectionMongo = `mongodb://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DATABASE}` : connectionMongo = `mongodb://${process.env.MONGO_HOST}:${process.env.MONGO_PORT}`
 
-  const result = await new Promise((resolve, reject) => {
-    let connectionMongo = ''
-    process.env.MONGO_USERNAME && process.env.MONGO_PASSWORD ? connectionMongo = `mongodb://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DATABASE}` : connectionMongo = `mongodb://${process.env.MONGO_HOST}:${process.env.MONGO_PORT}`
-    MongoClient.connect(connectionMongo, (err, conn) => {
-      if (err) {
-        console.error(err)
-        resolve({ err, db: null })
-      } else {
-        connection = conn
-        db = conn.db(process.env.MONGO_DATABASE)
-        resolve({ err: null, db })
-      }
-    })
+  MongoClient.connect(connectionMongo, { promiseLibrary: Promise }, (err, conn) => {
+    if (err) {
+      console.error(`Falha ao conectar ao banco de dados. ${err.stack}`)
+    }
+    var db = conn.db(process.env.MONGO_DATABASE)
+    app.locals.db = db
+    callback()
   })
-
-  if (result.err) throw result.err
-  return result.db
 }
 
-function disconnect () {
-  if (!connection) return true
-  connection.close()
-  connection = null
-  return true
-}
-
-module.exports = { connect, disconnect }
+module.exports = { connect }
