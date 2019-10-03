@@ -199,8 +199,19 @@ class BusinessController {
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
       const businessList = await newBusiness.getAll(companyToken)
+      var business = businessList.map(b => {
+        return {
+          _id: b._id,
+          name: b.name,
+          activeUntil: b.activeUntil,
+          active: b.active,
+          createdAt: b.createdAt,
+          updatedAt: b.updatedAt,
+          dataAmount: b.data.length
+        }
+      })
 
-      return res.status(201).send(businessList)
+      return res.status(201).send(business)
     } catch (e) {
       return res.status(500).send({ err: e.message })
     }

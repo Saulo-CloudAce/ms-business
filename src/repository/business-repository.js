@@ -61,7 +61,7 @@ class BusinessRepository {
   async getAll (companyToken) {
     try {
       const businessList = await this.db.collection('business')
-        .find({ companyToken: companyToken }, ['_id', 'name', 'activeUntil', 'active', 'createdAt', 'updatedAt'])
+        .find({ companyToken: companyToken }, ['_id', 'name', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'data'])
         .sort({ createdAt: -1 })
         .toArray()
 
