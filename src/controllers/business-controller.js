@@ -330,12 +330,18 @@ class BusinessController {
       const searchParams = req.body.search_params
 
       var businessList = await businessRepository.getAllByTemplate(companyToken, req.body.template_id)
+var resultList = []
       var dataList = businessList.filter((b) => {
 	var dataR = b.data.filter(r => Object.values(r).includes(searchParams.value))
+if (dataR.length > 0) {
+var b1 = b
+b1.data = dataR
+resultList.push(b1)
+}
 	return (dataR.length > 0)
       })
 
-      return res.status(201).send(dataList)
+      return res.status(201).send(resultList)
     } catch (e) {
       return res.status(500).send({ err: e.message })
     }
