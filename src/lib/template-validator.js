@@ -10,7 +10,7 @@ function validateFields (fields) {
     if (!f.editable) f.editable = false
     if (!f.operatorCanView) f.operator_can_view = true
 
-    f.label = f.column
+    f.label = (f.label) ? f.label : f.column
     f.column = clearString(f.column.toLowerCase())
 
     if (f.type === 'array') {
@@ -21,7 +21,7 @@ function validateFields (fields) {
           if (!ff.editable) ff.editable = false
           if (!ff.operatorCanView) ff.operator_can_view = true
 
-          ff.label = ff.column
+          ff.label = (ff.label) ? ff.label : ff.column
           ff.column = clearString(ff.column.toLowerCase())
         })
       }
