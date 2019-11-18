@@ -45,15 +45,15 @@ class BusinessController {
       const newBusiness = this._getInstanceBusiness(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
-      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+      if (!company) return res.status(400).send({ err: '#00010 - Company não identificada.' })
 
       const template = await templateRepository.getById(req.body.templateId, companyToken)
-      if (!template) return res.status(400).send({ err: 'Template não identificado' })
-      if (!template.active) return res.status(400).send({ err: 'Este template foi desativado e não recebe mais dados.' })
+      if (!template) return res.status(400).send({ err: '#00011 - Template não identificado' })
+      if (!template.active) return res.status(400).send({ err: '#00012 - Este template foi desativado e não recebe mais dados.' })
 
       const businessList = await newBusiness.getAll(companyToken)
       const businessName = businessList.filter(b => b.name.toLowerCase() === req.body.name.toLowerCase())
-      if (businessName.length > 0) return res.status(400).send({ err: `${req.body.name} já foi cadastrado` })
+      if (businessName.length > 0) return res.status(400).send({ err: `#00013 - ${req.body.name} já foi cadastrado` })
 
       const activeUntil = req.body.active_until
       var jumpFirstLine = (req.body.jump_first_line) ? req.body.jump_first_line : false
@@ -64,7 +64,9 @@ class BusinessController {
 
       return res.status(201).send({ businessId, invalids })
     } catch (e) {
-      return res.status(500).send({ err: e.message })
+      var errCode = '00014'
+      console.error(`#${errCode}`, e.message)
+      return res.status(500).send({ err: `#${errCode}` })
     }
   }
 
