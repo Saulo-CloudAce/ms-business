@@ -184,7 +184,7 @@ class CustomerController {
       var request = await searchCustomer(search, companyToken, company.prefix_index_elastic)
       if (request.response && request.response.status && request.response.status !== 200) return res.status(request.response.status).send(request.response.data)
 
-      var customers = request.data
+      var customers = (Array.isArray(request.data)) ? request.data : []
       for (var i in customers) {
         var customer = customers[i]
         var templateList = customer.business_template_list
