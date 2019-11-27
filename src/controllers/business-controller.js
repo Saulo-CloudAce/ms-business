@@ -58,7 +58,7 @@ class BusinessController {
       const activeUntil = req.body.active_until
       var jumpFirstLine = (req.body.jump_first_line) ? req.body.jump_first_line : false
 
-      var dataSeparator = (req.body.data_separator) ? req.body.data_separator : ';'
+      var dataSeparator = (req.body.data_separator) ? req.body.data_separator : ','
 
       const { businessId, invalids } = await newBusiness.createFromUrlFile(companyToken, req.body.name, req.body.file, template.fields, req.body.templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine, dataSeparator)
 
@@ -100,7 +100,7 @@ class BusinessController {
       const activeUntil = req.body.active_until
       var jumpFirstLine = (req.body.jump_first_line) ? (req.body.jump_first_line.toLowerCase() === 'true') : false
 
-      var dataSeparator = (req.body.data_separator) ? req.body.data_separator : ';'
+      var dataSeparator = (req.body.data_separator) ? req.body.data_separator : ','
 
       const { businessId, invalids } = await newBusiness.create(companyToken, req.body.name, req.files.file, template.fields, req.body.templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine, dataSeparator)
 
