@@ -2,6 +2,7 @@ const fs = require('fs')
 const readline = require('readline')
 const md5 = require('md5')
 const fetch = require('node-fetch')
+const { validCpf, validCnpj } = require('./cpf-cnpj-validator')
 
 class Validator {
   async validateAndFormatFromJson (data, fields) {
@@ -134,6 +135,16 @@ class Validator {
           valid = false
         } else if (!this.validateArray(rules[i], el) && rules[i].required) {
           valid = false
+        }
+      } else if (rules[i].data === 'customer_cpfcnpj') {
+        var elText = el.replace(/\./g, '')
+        elText = elText.replace(/-/g, '')
+        elText = elText.replace(/\\/g, '')
+        elText = elText.replace(/\//g, '')
+        if (elText.length === 11) {
+          if (!validCpf(elText)) valid = false
+        } else if (elText.length === 14) {
+          if (!validCnpj(elText)) valid = false
         }
       }
     })

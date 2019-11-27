@@ -320,6 +320,35 @@ class BusinessController {
     }
   }
 
+  async searchDataInBusiness (req, res) {
+    const companyToken = req.headers['token']
+
+    try {
+      const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+
+      const searchParams = req.body.search_params
+
+      var businessList = await businessRepository.getAllByTemplate(companyToken, req.body.template_id)
+var resultList = []
+      var dataList = businessList.filter((b) => {
+	var dataR = b.data.filter(r => Object.values(r).includes(searchParams.value))
+if (dataR.length > 0) {
+var b1 = b
+b1.data = dataR
+resultList.push(b1)
+}
+	return (dataR.length > 0)
+      })
+
+      return res.status(201).send(resultList)
+    } catch (e) {
+      return res.status(500).send({ err: e.message })
+    }
+  }
+
   async getByIdWithData (req, res) {
     const companyToken = req.headers['token']
 
