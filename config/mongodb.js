@@ -6,7 +6,7 @@ async function connect (app, callback) {
 
   MongoClient.connect(connectionMongo, { promiseLibrary: Promise }, (err, conn) => {
     if (err) {
-      console.error(`Falha ao conectar ao banco de dados. ${err.stack}`)
+      console.error(`#00000 - Falha ao conectar ao banco de dados. ${err.stack}`)
     }
     var db = conn.db(process.env.MONGO_DATABASE)
     app.locals.db = db
