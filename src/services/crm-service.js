@@ -49,6 +49,14 @@ async function getCustomerById (id, companyToken) {
   }
 }
 
+async function getCustomerFormattedById (id, companyToken) {
+  try {
+    return await getAxiosInstance(companyToken).get(`${process.env.CRM_URL}/customers/${id}/formatted`)
+  } catch (err) {
+    return err
+  }
+}
+
 async function searchCustomer (search, companyToken, prefixIndexElastic) {
   try {
     return await getAxiosInstanceByCompanyElastic(companyToken, prefixIndexElastic).get(`${process.env.CRM_URL}/customers/search?search=${search}`)
@@ -79,4 +87,4 @@ function getAxiosInstanceByCompanyElastic (companyToken, prefixIndexElastic) {
   })
 }
 
-module.exports = { sendData, createSingleCustomer, getByCpfCnpj, getAllCustomersByCompany, updateCustomer, searchCustomer, getCustomerById }
+module.exports = { sendData, createSingleCustomer, getByCpfCnpj, getAllCustomersByCompany, updateCustomer, searchCustomer, getCustomerById, getCustomerFormattedById }
