@@ -21,12 +21,9 @@ class TemplateController {
     const companyToken = req.headers['token']
 
     try {
-      var { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
+      const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
 
       const { name, fields } = req.body
-
-      var keyValidated = validateKey(fields)
-      if (!keyValidated) return res.status(400).send({ err: 'Defina um campo do template como chave' })
 
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
@@ -34,14 +31,19 @@ class TemplateController {
       const templatesCreated = await templateRepository.getAllByName(name, companyToken)
       if (templatesCreated.length > 0) return res.status(400).send({ err: `(${name}) já foi cadastrado.` })
 
-      var fieldsValidated = validateFields(fields)
+      var keyValidated = validateKey(fields)
+      if (!keyValidated) return res.status(400).send({ err: 'Defina um campo do template como chave' })
 
-      const template = await templateRepository.save(name, fieldsValidated, companyToken, true)
+      const fieldsValidated = validateFields(fields)
+
+      if (fieldsValidated.errors.length) return res.status(400).send({ errors: fieldsValidated.errors })
+
+      const template = await templateRepository.save(name, fieldsValidated.fields, companyToken, true)
 
       return res.status(201).send(template)
     } catch (err) {
-      console.log(err)
-      return res.status(500).send({ err: err.message })
+      console.error('CREATE TEMPLATE ==>', err)
+      return res.status(500).send({ err: 'Erro ao criar o template' })
     }
   }
 

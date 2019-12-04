@@ -43,7 +43,7 @@ class Business {
     const { invalids, valids } = await this.validator.validateAndFormatFromJson(data, fields)
 
     if (valids.length === 0) {
-      throw new Error('Todas as linhas estão inválidas')
+      return { businessId: null, invalids }
     }
 
     var filename = `${name}.json`

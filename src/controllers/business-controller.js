@@ -58,7 +58,11 @@ class BusinessController {
       const activeUntil = req.body.active_until
       var jumpFirstLine = (req.body.jump_first_line) ? req.body.jump_first_line : false
 
-      var dataSeparator = (req.body.data_separator) ? req.body.data_separator : ','
+      var dataSeparator = ';'
+      if (req.body.data_separator) {
+        if (req.body.data_separator == ',' || req.body.data_separator == 'v') dataSeparator = ','
+        else dataSeparator = req.body.data_separator
+      }
 
       const { businessId, invalids } = await newBusiness.createFromUrlFile(companyToken, req.body.name, req.body.file, template.fields, req.body.templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine, dataSeparator)
 
@@ -124,6 +128,7 @@ class BusinessController {
 
     try {
       const { name, templateId, data } = req.body
+      const activeUntil = req.body.active_until
 
       const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
       const newBusiness = this._getInstanceBusiness(req.app)
@@ -139,13 +144,12 @@ class BusinessController {
       const businessName = businessList.filter(b => b.name.toLowerCase() === req.body.name.toLowerCase())
       if (businessName.length > 0) return res.status(400).send({ err: `(${req.body.name}) já foi cadastrado` })
 
-      const activeUntil = req.body.active_until
-
       const { businessId, invalids } = await newBusiness.createFromJson(companyToken, name, template.fields, templateId, data, activeUntil, company.prefix_index_elastic, req.body)
+      if (businessId === null) return res.status(400).send({ err: invalids })
 
       return res.status(201).send({ businessId, invalids })
     } catch (e) {
-      console.error(e)
+      console.error('CREATE BUSINESS FROM JSON ==> ', e)
       return res.status(500).send({ err: e.message })
     }
   }
