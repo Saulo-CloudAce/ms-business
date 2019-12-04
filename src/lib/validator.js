@@ -137,6 +137,7 @@ class Validator {
           valid = false
         }
       } else if (rules[i].data === 'customer_cpfcnpj') {
+console.log('cpf')
         var elText = el.replace(/\./g, '')
         elText = elText.replace(/-/g, '')
         elText = elText.replace(/\\/g, '')
@@ -148,6 +149,7 @@ class Validator {
         }
       }
     })
+console.log('valida', valid)
     return valid
   }
 
