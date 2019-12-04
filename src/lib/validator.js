@@ -122,7 +122,11 @@ class Validator {
     let valid = true
     const lineErrors = { line: lineNumber, errors: [] }
 
-    // if (data.length !== rules.length) return false
+    if (data.length > rules.length) {
+      lineErrors.errors.push({ error: 'Tem mais campos do que o definido no template' })
+      valid = false
+      return { valid, lineErrors }
+    }
 
     data.forEach((el, i) => {
       if (rules[i].required && el.length === 0) {
