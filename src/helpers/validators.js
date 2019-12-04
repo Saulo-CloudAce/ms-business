@@ -11,11 +11,14 @@ function validateEmail (email) {
 
 function isArrayObject (array) {
   let isArrayObject = true
-  array.forEach(item => {
-    if (typeof item !== 'object') {
-      isArrayObject = false
-    }
-  })
+  if (!Array.isArray(array)) isArrayObject = false
+  else {
+    array.forEach(item => {
+      if (typeof item !== 'object') {
+        isArrayObject = false
+      }
+    })
+  }
 
   return isArrayObject
 }
