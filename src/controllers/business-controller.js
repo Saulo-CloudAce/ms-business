@@ -65,6 +65,7 @@ class BusinessController {
       }
 
       const { businessId, invalids } = await newBusiness.createFromUrlFile(companyToken, req.body.name, req.body.file, template.fields, req.body.templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine, dataSeparator)
+      if (businessId === null) return res.status(400).send({ err: invalids })
 
       return res.status(201).send({ businessId, invalids })
     } catch (e) {
@@ -107,6 +108,7 @@ class BusinessController {
       var dataSeparator = (req.body.data_separator) ? req.body.data_separator : ','
 
       const { businessId, invalids } = await newBusiness.create(companyToken, req.body.name, req.files.file, template.fields, req.body.templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine, dataSeparator)
+      if (businessId === null) return res.status(400).send({ err: invalids })
 
       return res.status(201).send({ businessId, invalids })
     } catch (e) {

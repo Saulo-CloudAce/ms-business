@@ -10,7 +10,7 @@ class Business {
     const { invalids, valids } = await this.validator.validateAndFormat(file.path, fields, jumpFirstLine, dataSeparator)
 
     if (valids.length === 0) {
-      throw new Error('Todas as linhas estão inválidas')
+      return { businessId: null, invalids }
     }
 
     const filePath = await this.uploader.upload(file)
@@ -27,7 +27,7 @@ class Business {
     const { invalids, valids } = await this.validator.validateAndFormatFromUrlFile(filepath, fields, jumpFirstLine, dataSeparator)
 
     if (valids.length === 0) {
-      throw new Error('Todas as linhas estão inválidas')
+      return { businessId: null, invalids }
     }
 
     const businessId = await this.repository.save(companyToken, name, filepath, templateId, valids.length, valids, activeUntil, jumpFirstLine, dataSeparator)
