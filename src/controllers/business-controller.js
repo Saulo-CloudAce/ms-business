@@ -39,15 +39,24 @@ class BusinessController {
     }
 
     const companyToken = req.headers['token']
+    const templateId = req.body.templateId
+    const activeUntil = req.body.active_until
+    const name = req.body.name
+    const urlFile = req.body.file
 
     try {
+      if (!mongoIdIsValid(templateId)) return res.status(400).send({ err: 'O ID do template é inválido' })
+
+      if (moment(activeUntil, 'YYYY-MM-DD').format('YYYY-MM-DD') !== activeUntil) return res.status(400).send({ err: 'A data active_until está com formato inválido. O formato válido é YYYY-MM-DD' })
+      if (moment(activeUntil).diff(moment()) < 0) return res.status(400).send({ err: 'A data active_until não pode ser anterior a data de hoje, somente posterior' })
+
       const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
       const newBusiness = this._getInstanceBusiness(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: '#00010 - Company não identificada.' })
 
-      const template = await templateRepository.getById(req.body.templateId, companyToken)
+      const template = await templateRepository.getById(templateId, companyToken)
       if (!template) return res.status(400).send({ err: '#00011 - Template não identificado' })
       if (!template.active) return res.status(400).send({ err: '#00012 - Este template foi desativado e não recebe mais dados.' })
 
@@ -55,16 +64,15 @@ class BusinessController {
       const businessName = businessList.filter(b => b.name.toLowerCase() === req.body.name.toLowerCase())
       if (businessName.length > 0) return res.status(400).send({ err: `#00013 - ${req.body.name} já foi cadastrado` })
 
-      const activeUntil = req.body.active_until
-      var jumpFirstLine = (req.body.jump_first_line) ? req.body.jump_first_line : false
+      const jumpFirstLine = (req.body.jump_first_line) ? req.body.jump_first_line : false
 
-      var dataSeparator = ';'
+      let dataSeparator = ';'
       if (req.body.data_separator) {
-        if (req.body.data_separator == ',' || req.body.data_separator == 'v') dataSeparator = ','
+        if (req.body.data_separator === ',' || req.body.data_separator === 'v') dataSeparator = ','
         else dataSeparator = req.body.data_separator
       }
 
-      const { businessId, invalids } = await newBusiness.createFromUrlFile(companyToken, req.body.name, req.body.file, template.fields, req.body.templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine, dataSeparator)
+      const { businessId, invalids } = await newBusiness.createFromUrlFile(companyToken, name, urlFile, template.fields, templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine, dataSeparator)
       if (businessId === null) return res.status(400).send({ err: invalids })
 
       return res.status(201).send({ businessId, invalids })
@@ -86,15 +94,22 @@ class BusinessController {
     }
 
     const companyToken = req.headers['token']
+    const templateId = req.body.templateId
+    const activeUntil = req.body.active_until
 
     try {
+      if (!mongoIdIsValid(templateId)) return res.status(400).send({ err: 'O ID do template é inválido' })
+
+      if (moment(activeUntil, 'YYYY-MM-DD').format('YYYY-MM-DD') !== activeUntil) return res.status(400).send({ err: 'A data active_until está com formato inválido. O formato válido é YYYY-MM-DD' })
+      if (moment(activeUntil).diff(moment()) < 0) return res.status(400).send({ err: 'A data active_until não pode ser anterior a data de hoje, somente posterior' })
+
       const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
       const newBusiness = this._getInstanceBusiness(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
-      const template = await templateRepository.getById(req.body.templateId, companyToken)
+      const template = await templateRepository.getById(templateId, companyToken)
       if (!template) return res.status(400).send({ err: 'Template não identificado' })
       if (!template.active) return res.status(400).send({ err: 'Este template foi desativado e não recebe mais dados.' })
 
@@ -102,12 +117,15 @@ class BusinessController {
       const businessName = businessList.filter(b => b.name.toLowerCase() === req.body.name.toLowerCase())
       if (businessName.length > 0) return res.status(400).send({ err: `${req.body.name} já foi cadastrado` })
 
-      const activeUntil = req.body.active_until
       var jumpFirstLine = (req.body.jump_first_line) ? (req.body.jump_first_line.toLowerCase() === 'true') : false
 
-      var dataSeparator = (req.body.data_separator) ? req.body.data_separator : ','
+      var dataSeparator = ';'
+      if (req.body.data_separator) {
+        if (req.body.data_separator === ',' || req.body.data_separator === 'v') dataSeparator = ','
+        else dataSeparator = req.body.data_separator
+      }
 
-      const { businessId, invalids } = await newBusiness.create(companyToken, req.body.name, req.files.file, template.fields, req.body.templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine, dataSeparator)
+      const { businessId, invalids } = await newBusiness.create(companyToken, req.body.name, req.files.file, template.fields, templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine, dataSeparator)
       if (businessId === null) return res.status(400).send({ err: invalids })
 
       return res.status(201).send({ businessId, invalids })
@@ -131,6 +149,11 @@ class BusinessController {
     try {
       const { name, templateId, data } = req.body
       const activeUntil = req.body.active_until
+
+      if (moment(activeUntil, 'YYYY-MM-DD').format('YYYY-MM-DD') !== activeUntil) return res.status(400).send({ err: 'A data active_until está com formato inválido. O formato válido é YYYY-MM-DD' })
+      if (moment(activeUntil).diff(moment()) < 0) return res.status(400).send({ err: 'A data active_until não pode ser anterior a data de hoje, somente posterior' })
+
+      if (!mongoIdIsValid(templateId)) return res.status(400).send({ err: 'O ID do template é inválido' })
 
       const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
       const newBusiness = this._getInstanceBusiness(req.app)
@@ -338,15 +361,15 @@ class BusinessController {
       const searchParams = req.body.search_params
 
       var businessList = await businessRepository.getAllByTemplate(companyToken, req.body.template_id)
-var resultList = []
-      var dataList = businessList.filter((b) => {
-	var dataR = b.data.filter(r => Object.values(r).includes(searchParams.value))
-if (dataR.length > 0) {
-var b1 = b
-b1.data = dataR
-resultList.push(b1)
-}
-	return (dataR.length > 0)
+      var resultList = []
+      businessList.filter((b) => {
+        var dataR = b.data.filter(r => Object.values(r).includes(searchParams.value))
+        if (dataR.length > 0) {
+          const b1 = b
+          b1.data = dataR
+          resultList.push(b1)
+        }
+        return (dataR.length > 0)
       })
 
       return res.status(201).send(resultList)

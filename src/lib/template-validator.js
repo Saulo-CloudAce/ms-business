@@ -2,6 +2,7 @@ const { clearString } = require('../helpers/formatters')
 const { isArrayElementSameTypes, isArrayOfObjects, isArrayWithEmptyElement } = require('../helpers/validators')
 
 const supportedTypes = ['text', 'string', 'int', 'array', 'boolean', 'cpfcnpj', 'cep', 'phone_number', 'decimal', 'email', 'options']
+const supportedKeys = ['customer_cpfcnpj', 'customer_name', 'customer_phone_number', 'customer_email']
 
 function validateKey (fields) {
   const keys = fields.filter(f => f.key)
@@ -39,6 +40,24 @@ function formatFieldsOptions (fields) {
   })
 }
 
+function validateFieldOptionsType (field) {
+  if (field.type === 'options' && !Object.keys(field).includes('list_options')) {
+    return { error: 'O list_options é obrigatório' }
+  } else if (field.type === 'options' && !Array.isArray(field.list_options)) {
+    return { error: 'O list_options deve ser um array' }
+  } else if (field.type === 'options' && field.list_options.length === 0) {
+    return { error: 'O list_options não pode ser um array vazio' }
+  } else if (field.type === 'options' && !isArrayElementSameTypes(field.list_options)) {
+    return { error: 'O list_options não pode ser um array com elementos de vários tipos de dados' }
+  } else if (field.type === 'options' && isArrayOfObjects(field.list_options)) {
+    return { error: 'O list_options não pode ser um array de objetos (não suportado)' }
+  } else if (field.type === 'options' && isArrayWithEmptyElement(field.list_options)) {
+    return { error: 'O list_options não pode ter elemento do array vazio' }
+  }
+
+  return {}
+}
+
 function validateFields (fields) {
   const formattedFields = formatFieldsOptions(fields)
   const errors = []
@@ -52,26 +71,26 @@ function validateFields (fields) {
         for (const arrayFieldItem of field.fields) {
           if (Object.keys(arrayFieldItem).includes('type')) {
             if (!supportedTypes.includes(arrayFieldItem.type)) errorsField.errors.push({ field: arrayFieldItem.column, error: 'Type não suportado' })
+            else if (arrayFieldItem.type === 'options') {
+              const error = validateFieldOptionsType(arrayFieldItem)
+              if (Object.keys(error).length) errorsField.errors.push({ field: arrayFieldItem.column , error: error.error })
+            }
           } else errorsField.errors.push({ field: arrayFieldItem.column, error: 'O type é obrigatório' })
         }
       }
 
-      if (field.type === 'options' && !Object.keys(field).includes('list_options')) {
-        errorsField.errors.push({ error: 'O list_options é obrigatório' })
-      } else if (field.type === 'options' && !Array.isArray(field.list_options)) {
-        errorsField.errors.push({ error: 'O list_options deve ser um array' })
-      } else if (field.type === 'options' && field.list_options.length === 0) {
-        errorsField.errors.push({ error: 'O list_options não pode ser um array vazio' })
-      } else if (field.type === 'options' && !isArrayElementSameTypes(field.list_options)) {
-        errorsField.errors.push({ error: 'O list_options não pode ser um array com elementos de vários tipos de dados' })
-      } else if (field.type === 'options' && isArrayOfObjects(field.list_options)) {
-        errorsField.errors.push({ error: 'O list_options não pode ser um array de objetos (não suportado)' })
-      } else if (field.type === 'options' && isArrayWithEmptyElement(field.list_options)) {
-        errorsField.errors.push({ error: 'O list_options não pode ter elemento do array vazio' })
+      if (field.type === 'options') {
+        const error = validateFieldOptionsType(field)
+        if (Object.keys(error).length) errorsField.errors.push(error)
       }
     } else {
       errorsField.push({ error: 'O type é obrigatório' })
     }
+
+    if (field.key && !supportedKeys.includes(field.data)) {
+      errorsField.errors.push({ error: 'Este campo não tem um "data" permitido para ser usado como chave', supported_data_keys: supportedKeys })
+    }
+
     if (errorsField.errors.length) errors.push(errorsField)
   }
 

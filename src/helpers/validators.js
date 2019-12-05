@@ -60,4 +60,29 @@ function isArrayWithEmptyElement (array) {
   return hasEmptyElement
 }
 
-module.exports = { mongoIdIsValid, validateEmail, isArrayObject, isArrayElementSameTypes, isArrayOfObjects, isArrayWithEmptyElement }
+function arraysEqual (source1, source2) {
+  const cpSource1 = source1.map(s => s)
+  const cpSource2 = source2.map(s => s)
+  return cpSource1.sort().toString() === cpSource2.sort().toString()
+}
+
+function arraysDiff (arr1, arr2) {
+  var filteredArr1 = arr1.filter(function (ele) {
+    return arr2.indexOf(ele) === -1
+  })
+
+  var filteredArr2 = arr2.filter(function (ele) {
+    return arr1.indexOf(ele) === -1
+  })
+  const arrDiff = filteredArr1.concat(filteredArr2)
+
+  return arrDiff
+}
+
+function listElementDuplicated (arr) {
+  const counts = {}
+  arr.forEach((x) => { counts[x] = (counts[x] || 0) + 1 })
+  return Object.keys(counts).filter(k => counts[k] > 1)
+}
+
+module.exports = { mongoIdIsValid, validateEmail, isArrayObject, isArrayElementSameTypes, isArrayOfObjects, isArrayWithEmptyElement, arraysEqual, arraysDiff, listElementDuplicated }

@@ -2,6 +2,7 @@ const { validateFields, validateKey } = require('../lib/template-validator')
 const CompanyRepository = require('../repository/company-repository')
 const TemplateRepository = require('../repository/template-repository')
 const BusinessRepository = require('../repository/business-repository')
+const { mongoIdIsValid } = require('../helpers/validators')
 
 class TemplateController {
   _getInstanceRepositories (app) {
@@ -54,6 +55,8 @@ class TemplateController {
     try {
       var { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
 
+      if (!mongoIdIsValid(templateId)) return res.status(400).send({ err: 'ID não válido' })
+
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
@@ -76,6 +79,8 @@ class TemplateController {
     try {
       var { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
 
+      if (!mongoIdIsValid(templateId)) return res.status(400).send({ err: 'ID não válido' })
+
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
@@ -97,6 +102,8 @@ class TemplateController {
 
     try {
       var { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
+
+      if (!mongoIdIsValid(templateId)) return res.status(400).send({ err: 'ID não válido' })
 
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
@@ -133,14 +140,17 @@ class TemplateController {
 
   async getById (req, res) {
     const companyToken = req.headers['token']
+    const templateId = req.params.id
 
     try {
       var { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
 
+      if (!mongoIdIsValid(templateId)) return res.status(400).send({ err: 'ID não válido' })
+
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
-      const template = await templateRepository.getById(req.params.id, companyToken)
+      const template = await templateRepository.getById(templateId, companyToken)
 
       return res.status(200).send(template)
     } catch (err) {
