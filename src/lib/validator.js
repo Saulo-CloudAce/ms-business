@@ -141,6 +141,13 @@ class Validator {
         console.log('INTEGER', rules[i].column, el)
         lineErrors.errors.push({ column: rules[i].column, error: 'O valor informado não é um inteiro', current_value: el })
         valid = false
+      } else if (rules[i].type === 'options') {
+        console.log('OPTIONS', rules[i].column, el)
+        console.log(rules[i].list_options)
+        if (!rules[i].list_options.map(o => String(o).toLowerCase()).includes(String(el).toLowerCase())) {
+          lineErrors.errors.push({ column: rules[i].column, error: 'O valor informado não está entre os pré-definidos na lista de opções', current_value: el, list_options: rules[i].list_options })
+          valid = false
+        }
       } else if (rules[i].type === 'decimal') {
         console.log('DECIMAL', rules[i].column, el)
         let elText = String(el).replace(' ', '')

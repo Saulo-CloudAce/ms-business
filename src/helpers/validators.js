@@ -23,4 +23,41 @@ function isArrayObject (array) {
   return isArrayObject
 }
 
-module.exports = { mongoIdIsValid, validateEmail, isArrayObject }
+function isArrayElementSameTypes (array) {
+  const arrayElementTypes = typeof array[0]
+  let arrayElementSameTypes = true
+
+  array.forEach(item => {
+    if (typeof item !== arrayElementTypes) {
+      arrayElementSameTypes = false
+    }
+  })
+
+  return arrayElementSameTypes
+}
+
+function isArrayOfObjects (array) {
+  let arrayOfObjects = false
+
+  array.forEach(item => {
+    if (typeof item === 'object') {
+      arrayOfObjects = true
+    }
+  })
+
+  return arrayOfObjects
+}
+
+function isArrayWithEmptyElement (array) {
+  let hasEmptyElement = false
+
+  array.forEach(item => {
+    if (String(item).trim().length === 0) {
+      hasEmptyElement = true
+    }
+  })
+
+  return hasEmptyElement
+}
+
+module.exports = { mongoIdIsValid, validateEmail, isArrayObject, isArrayElementSameTypes, isArrayOfObjects, isArrayWithEmptyElement }
