@@ -4,6 +4,18 @@ const md5 = require('md5')
 const fetch = require('node-fetch')
 const { validCpf, validCnpj } = require('./cpf-cnpj-validator')
 const { validateEmail, isArrayObject, arraysEqual, arraysDiff, listElementDuplicated } = require('../helpers/validators')
+const {
+  isKey,
+  isTypeOptions,
+  isTypeInt,
+  isTypeDecimal,
+  isTypeBoolean,
+  isTypeCep,
+  isTypeEmail,
+  isTypePhoneNumber,
+  isTypeArray,
+  isTypeCpfCnpj,
+  isRequired } = require('../helpers/field-methods')
 
 class Validator {
   _mapLineDataToLineDataWithRules (line, rulesByColumn) {
@@ -219,135 +231,170 @@ class Validator {
     }
   }
 
+  _validateFieldRequired (rules, fieldData, errors) {
+    if (String(fieldData).length === 0) errors.push({ column: rules.column, error: 'O preenchimento é obrigatório' })
+    return errors
+  }
+
+  _validateFieldKey (rules, fieldData, errors) {
+    if (String(fieldData).length === 0) errors.push({ column: rules.column, error: 'O preenchimento do campo chave é obrigatório' })
+    return errors
+  }
+
+  _validateFieldInt (rules, fieldData, errors) {
+    if (!Number.isInteger(parseInt(fieldData))) errors.push({ column: rules.column, error: 'O valor informado não é um inteiro', current_value: fieldData })
+    return errors
+  }
+
+  _validateFieldOptions (rules, fieldData, errors) {
+    if (!rules.list_options.map(o => String(o).toLowerCase()).includes(String(fieldData).toLowerCase())) {
+      errors.push({ column: rules.column, error: 'O valor informado não está entre os pré-definidos na lista de opções', current_value: fieldData, list_options: rules.list_options })
+    }
+
+    return errors
+  }
+
+  _validateFieldDecimal (rules, fieldData, errors) {
+    let elText = String(fieldData).replace(' ', '')
+    elText = elText.replace('.', '')
+    elText = elText.replace(',', '')
+    if (isNaN(elText)) errors.push({ column: rules.column, error: 'O valor informado não é um número válido', current_value: fieldData })
+
+    return errors
+  }
+
+  _validateFieldCep (rules, fieldData, errors) {
+    if (typeof fieldData === 'string') {
+      let elText = fieldData.replace(' ', '')
+      elText = elText.replace('-', '')
+      if (isNaN(elText)) {
+        errors.push({ column: rules.column, error: 'O valor informado não é um CEP', current_value: fieldData })
+      } else if (elText.length !== 8) {
+        errors.push({ column: rules.column, error: 'O CEP informado é inválido', current_value: fieldData })
+      }
+    } else {
+      errors.push({ column: rules.column, error: 'O valor informado não é uma string com número de CEP', current_value: fieldData })
+    }
+
+    return errors
+  }
+
+  _validateFieldBoolean (rules, fieldData, errors) {
+    if (!(String(fieldData).toLowerCase() === 'true' || String(fieldData).toLowerCase() === 'false')) {
+      errors.push({ column: rules.column, error: 'Os valores válidos para este campo são "true" ou "false"', current_value: fieldData })
+    }
+
+    return errors
+  }
+
+  _validateFieldEmail (rules, fieldData, errors) {
+    if (!validateEmail(fieldData)) errors.push({ column: rules.column, error: 'O e-mail informado é inválido', current_value: fieldData })
+    return errors
+  }
+
+  _validateFieldPhoneNumber (rules, fieldData, errors) {
+    if (typeof fieldData === 'string') {
+      let elText = fieldData.replace(' ', '')
+      elText = elText.replace('(', '')
+      elText = elText.replace(')', '')
+      elText = elText.replace('-', '')
+      if (isNaN(elText)) {
+        errors.push({ column: rules.column, error: 'O valor informado não é um número de telefone', current_value: fieldData })
+      } else if (!elText.length >= 10) {
+        errors.push({ column: rules.column, error: 'O telefone informado não tem a quantidade mínima de 10 números', current_value: fieldData })
+      }
+    } else {
+      errors.push({ column: rules.column, error: 'O valor informado não é uma string com número de telefone', current_value: fieldData })
+    }
+
+    return errors
+  }
+
+  _validateFieldArray (rules, fieldData, errors) {
+    if (!Array.isArray(fieldData) && rules.required) {
+      console.log('ARRAY', rules.column, fieldData)
+      errors.push({ column: rules.column, error: 'Este campo é um array e é obrigatório, logo precisa ser preenchido', current_value: fieldData })
+    } else if (!this.validateArray(rules, fieldData) && rules.required) {
+      errors.push({ column: rules.column, error: 'O array de dados fornecido é invalido.', current_value: fieldData })
+    } else if (Object.keys(rules).includes('fields') && !isArrayObject(fieldData)) {
+      errors.push({ column: rules.column, error: 'Este campo aceita somente array de objetos', current_value: fieldData })
+    } else if (!Object.keys(rules).includes('fields') && isArrayObject(fieldData)) {
+      errors.push({ column: rules.column, error: 'Este campo aceita somente array simples', current_value: fieldData })
+    }
+
+    return errors
+  }
+
+  _validateFieldCpfCnpj (rules, fieldData, errors) {
+    let elText = fieldData.replace(/\./g, '')
+    elText = elText.replace(/-/g, '')
+    elText = elText.replace(/\\/g, '')
+    elText = elText.replace(/\//g, '')
+    elText = elText.trim()
+
+    if (elText.length === 11) {
+      if (!validCpf(elText)) {
+        errors.push({ column: rules.column, error: 'O CPF informado é inválido', current_value: fieldData })
+      }
+    } else if (elText.length === 14) {
+      if (!validCnpj(elText)) {
+        errors.push({ column: rules.column, error: 'O CNPJ informado é inválido', current_value: fieldData })
+      }
+    } else {
+      errors.push({ column: rules.column, error: 'O valor informado não tem a quantidade de caracteres válidos para um CPF ou CNPJ', current_value: fieldData })
+    }
+
+    return errors
+  }
+
   validate (data, lineNumber) {
-    let valid = true
     const lineErrors = { line: lineNumber, errors: [] }
 
     const fieldsWithoutRules = Object.keys(data).filter(k => typeof data[k].rules !== 'object')
 
     if (fieldsWithoutRules.length) {
       lineErrors.errors.push({ error: 'Tem campos diferentes do que os definidos no template', fields_list_unkown: fieldsWithoutRules })
-      valid = false
-      return { valid, lineErrors }
+      return { valid: false, lineErrors }
     }
 
     Object.keys(data).forEach((k, i) => {
       const el = data[k].value
       const rules = data[k].rules
 
-      if (rules.required && el.length === 0) {
+      if (isRequired(rules)) {
         console.log('REQUIRED', rules.column, el)
-        lineErrors.errors.push({ column: rules.column, error: 'O preenchimento é obrigatório' })
-        valid = false
-      } else if (rules.key && el.length === 0) {
+        lineErrors.errors = this._validateFieldRequired(rules, el, lineErrors.errors)
+      } else if (isKey(rules)) {
         console.log('KEY', rules.column, el)
-        lineErrors.errors.push({ column: rules.column, error: 'O preenchimento do campo chave é obrigatório' })
-        valid = false
-      } else if (rules.type === 'int' && !Number.isInteger(parseInt(el))) {
+        lineErrors.errors = this._validateFieldKey(rules, el, lineErrors.errors)
+      } else if (isTypeInt(rules)) {
         console.log('INTEGER', rules.column, el)
-        lineErrors.errors.push({ column: rules.column, error: 'O valor informado não é um inteiro', current_value: el })
-        valid = false
-      } else if (rules.type === 'options') {
+        lineErrors.errors = this._validateFieldInt(rules, el, lineErrors.errors)
+      } else if (isTypeOptions(rules)) {
         console.log('OPTIONS', rules.column, el)
-        console.log(rules.list_options)
-        if (!rules.list_options.map(o => String(o).toLowerCase()).includes(String(el).toLowerCase())) {
-          lineErrors.errors.push({ column: rules.column, error: 'O valor informado não está entre os pré-definidos na lista de opções', current_value: el, list_options: rules.list_options })
-          valid = false
-        }
-      } else if (rules.type === 'decimal') {
+        lineErrors.errors = this._validateFieldOptions(rules, el, lineErrors.errors)
+      } else if (isTypeDecimal(rules)) {
         console.log('DECIMAL', rules.column, el)
-        let elText = String(el).replace(' ', '')
-        elText = elText.replace('.', '')
-        elText = elText.replace(',', '')
-        if (isNaN(elText)) {
-          lineErrors.errors.push({ column: rules.column, error: 'O valor informado não é um número válido', current_value: el })
-          valid = false
-        }
-      } else if (rules.type === 'cep') {
+        lineErrors.errors = this._validateFieldDecimal(rules, el, lineErrors.errors)
+      } else if (isTypeCep(rules)) {
         console.log('CEP', rules.column, el)
-        if (typeof el === 'string') {
-          let elText = el.replace(' ', '')
-          elText = elText.replace('-', '')
-          if (isNaN(elText)) {
-            lineErrors.errors.push({ column: rules.column, error: 'O valor informado não é um CEP', current_value: el })
-            valid = false
-          } else if (elText.length !== 8) {
-            lineErrors.errors.push({ column: rules.column, error: 'O CEP informado é inválido', current_value: el })
-            valid = false
-          }
-        } else {
-          lineErrors.errors.push({ column: rules.column, error: 'O valor informado não é uma string com número de CEP', current_value: el })
-          valid = false
-        }
-      } else if (rules.type === 'boolean') {
+        lineErrors.errors = this._validateFieldCep(rules, el, lineErrors.errors)
+      } else if (isTypeBoolean(rules)) {
         console.log('BOOLEAN', rules.column, el)
-        if (!(String(el).toLowerCase() === 'true' || String(el).toLowerCase() === 'false')) {
-          lineErrors.errors.push({ column: rules.column, error: 'Os valores válidos para este campo são "true" ou "false"', current_value: el })
-          valid = false
-        }
-      } else if (rules.type === 'email') {
+        lineErrors.errors = this._validateFieldBoolean(rules, el, lineErrors.errors)
+      } else if (isTypeEmail(rules)) {
         console.log('EMAIL', rules.column, el)
-        if (!validateEmail(el)) {
-          lineErrors.errors.push({ column: rules.column, error: 'O e-mail informado é inválido', current_value: el })
-          valid = false
-        }
-      } else if (rules.type === 'phone_number') {
+        lineErrors.errors = this._validateFieldEmail(rules, el, lineErrors.errors)
+      } else if (isTypePhoneNumber(rules)) {
         console.log('PHONE_NUMBER', rules.column, el)
-        if (typeof el === 'string') {
-          let elText = el.replace(' ', '')
-          elText = elText.replace('(', '')
-          elText = elText.replace(')', '')
-          elText = elText.replace('-', '')
-          if (isNaN(elText)) {
-            lineErrors.errors.push({ column: rules.column, error: 'O valor informado não é um número de telefone', current_value: el })
-            valid = false
-          } else if (!elText.length >= 10) {
-            lineErrors.errors.push({ column: rules.column, error: 'O telefone informado não tem a quantidade mínima de 10 números', current_value: el })
-            valid = false
-          }
-        } else {
-          lineErrors.errors.push({ column: rules.column, error: 'O valor informado não é uma string com número de telefone', current_value: el })
-          valid = false
-        }
-      } else if (rules.type === 'array') {
-        if (!Array.isArray(el) && rules.required) {
-          console.log('ARRAY', rules.column, el)
-          lineErrors.errors.push({ column: rules.column, error: 'Este campo é um array e é obrigatório, logo precisa ser preenchido', current_value: el })
-          valid = false
-        } else if (!this.validateArray(rules, el) && rules.required) {
-          lineErrors.errors.push({ column: rules.column, error: 'O array de dados fornecido é invalido.', current_value: el })
-          valid = false
-        } else if (Object.keys(rules).includes('fields') && !isArrayObject(el)) {
-          lineErrors.errors.push({ column: rules.column, error: 'Este campo aceita somente array de objetos', current_value: el })
-          valid = false
-        } else if (!Object.keys(rules).includes('fields') && isArrayObject(el)) {
-          lineErrors.errors.push({ column: rules.column, error: 'Este campo aceita somente array simples', current_value: el })
-          valid = false
-        }
-      } else if (rules.data === 'customer_cpfcnpj' || rules.type === 'cpfcnpj') {
-        let elText = el.replace(/\./g, '')
-        elText = elText.replace(/-/g, '')
-        elText = elText.replace(/\\/g, '')
-        elText = elText.replace(/\//g, '')
-        elText = elText.trim()
-
-        if (elText.length === 11) {
-          if (!validCpf(elText)) {
-            lineErrors.errors.push({ column: rules.column, error: 'O CPF informado é inválido', current_value: elText })
-            valid = false
-          }
-        } else if (elText.length === 14) {
-          if (!validCnpj(elText)) {
-            lineErrors.errors.push({ column: rules.column, error: 'O CNPJ informado é inválido', current_value: elText })
-            valid = false
-          }
-        } else {
-          lineErrors.errors.push({ column: rules.column, error: 'O valor informado não tem a quantidade de caracteres válidos para um CPF ou CNPJ', current_value: elText })
-          valid = false
-        }
+        lineErrors.errors = this._validateFieldPhoneNumber(rules, el, lineErrors.errors)
+      } else if (isTypeArray(rules)) {
+        lineErrors.errors = this._validateFieldArray(rules, el, lineErrors.errors)
+      } else if (isTypeCpfCnpj(rules)) {
+        lineErrors.errors = this._validateFieldCpfCnpj(rules, el, lineErrors.errors)
       }
     })
-    return { valid, lineErrors }
+    return { valid: (lineErrors.errors.length === 0), lineErrors }
   }
 
   validateArray (rules, el) {
@@ -369,22 +416,22 @@ class Validator {
       const fieldRules = rules[fieldKey]
 
       let elText = el
-      if (fieldRules.data === 'customer_cpfcnpj' || fieldRules.type === 'cpfcnpj') {
+      if (isTypeCpfCnpj(fieldRules)) {
         elText = elText.replace(/\./g, '')
         elText = elText.replace(/-/g, '')
         elText = elText.replace(/\\/g, '')
         elText = elText.replace(/\//g, '')
-      } else if (fieldRules.data === 'customer_phone_number' || fieldRules.type === 'phone_number') {
+      } else if (isTypePhoneNumber(fieldRules)) {
         elText = elText.replace(/-/g, '')
         elText = elText.replace('(', '')
         elText = elText.replace(')', '')
         elText = elText.replace(' ', '')
-      } else if (fieldRules.data === 'cep') {
+      } else if (isTypeCep(fieldRules)) {
         elText = elText.replace(/-/g, '')
-      } else if (fieldRules.type === 'decimal') {
+      } else if (isTypeDecimal(fieldRules)) {
         elText = elText.replace('.', '')
         elText = elText.replace(',', '.')
-      } else if (fieldRules.type === 'array') {
+      } else if (isTypeArray(fieldRules)) {
         var arrData = []
         if (!Object.keys(fieldRules).includes('fields')) {
           if (Array.isArray(el)) {
