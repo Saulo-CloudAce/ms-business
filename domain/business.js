@@ -57,6 +57,14 @@ class Business {
     return { businessId, invalids }
   }
 
+  async getByNameAndTemplateId (companyToken, businessName, templateId) {
+    try {
+      return this.repository.getByNameAndTemplateId(companyToken, businessName, templateId)
+    } catch (err) {
+      return err
+    }
+  }
+
   async getAll (companyToken) {
     try {
       return this.repository.getAll(companyToken)

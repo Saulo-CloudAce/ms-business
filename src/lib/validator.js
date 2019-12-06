@@ -139,7 +139,7 @@ class Validator {
             const { valid, lineErrors } = self.validate(lineWithRulesFields, lineNumberAtFile)
 
             if (valid) {
-              var dataFormatted = self.format(jsonData, rulesByColumn)
+              const dataFormatted = self.format(jsonData, rulesByColumn)
               lineValids.push(dataFormatted)
             } else {
               lineInvalids.push(lineErrors)
@@ -149,14 +149,50 @@ class Validator {
         .on('close', function () {
           return resolve({ invalids: lineInvalids, valids: lineValids })
         })
+        .on('error', function (err) {
+          console.error('READ_FILE_UPLOAD', err)
+          throw new Error(err)
+        })
     })
 
-    const { invalids, valids } = data
+    let { invalids, valids } = data
+
+    valids = this._joinDataBatch(valids, fields)
 
     return {
       invalids,
       valids
     }
+  }
+
+  _mergeData (listLineData, columnsArray) {
+    const firstLineData = listLineData.shift()
+    listLineData.forEach(line => {
+      columnsArray.forEach(col => {
+        const lineFilled = line[col.data].filter(l => Object.keys(l).filter(lk => String(l[lk]).length > 0).length > 0)
+        if (lineFilled.length) firstLineData[col.data] = firstLineData[col.data].concat(lineFilled)
+      })
+    })
+
+    return firstLineData
+  }
+
+  _joinDataBatch (dataBatch, rules) {
+    const columnKey = rules.find(r => r.key).data
+    const columnsArray = rules.filter(r => isTypeArray(r))
+    let dataIndexedByKeyColumn = {}
+    dataBatch.forEach(data => {
+      const dataKeyValue = data[columnKey]
+      if (Object.keys(dataIndexedByKeyColumn).includes(dataKeyValue)) dataIndexedByKeyColumn[dataKeyValue].push(data)
+      else {
+        dataIndexedByKeyColumn[dataKeyValue] = [data]
+      }
+    })
+    dataIndexedByKeyColumn = Object.keys(dataIndexedByKeyColumn).map(k => {
+      if (dataIndexedByKeyColumn[k].length > 1) return this._mergeData(dataIndexedByKeyColumn[k], columnsArray)
+      return dataIndexedByKeyColumn[k][0]
+    })
+    return dataIndexedByKeyColumn
   }
 
   async validateAndFormatFromUrlFile (filePath, fields, jumpFirstLine = false, dataSeparator = ';') {
@@ -211,7 +247,7 @@ class Validator {
             const { valid, lineErrors } = self.validate(lineWithRulesFields, lineNumberAtFile)
 
             if (valid) {
-              var dataFormatted = self.format(jsonData, rulesByColumn)
+              const dataFormatted = self.format(jsonData, rulesByColumn)
               lineValids.push(dataFormatted)
             } else {
               lineInvalids.push(lineErrors)
@@ -221,6 +257,10 @@ class Validator {
         .on('close', function () {
           return resolve({ invalids: lineInvalids, valids: lineValids })
         })
+        .on('error', function (err) {
+          console.error('READ_FILE_URL', err)
+          throw new Error(err)
+        })
     })
 
     const { invalids, valids } = data
@@ -229,6 +269,10 @@ class Validator {
       invalids,
       valids
     }
+  }
+
+  _isRequiredOrFill (rules, fieldData) {
+    return isRequired(rules) || String(fieldData).length > 0
   }
 
   _validateFieldRequired (rules, fieldData, errors) {
@@ -357,40 +401,50 @@ class Validator {
       return { valid: false, lineErrors }
     }
 
-    Object.keys(data).forEach((k, i) => {
+    Object.keys(data).forEach(k => {
       const el = data[k].value
       const rules = data[k].rules
 
       if (isRequired(rules)) {
         console.log('REQUIRED', rules.column, el)
         lineErrors.errors = this._validateFieldRequired(rules, el, lineErrors.errors)
-      } else if (isKey(rules)) {
+      }
+      if (isKey(rules) && this._isRequiredOrFill(rules, el)) {
         console.log('KEY', rules.column, el)
         lineErrors.errors = this._validateFieldKey(rules, el, lineErrors.errors)
-      } else if (isTypeInt(rules)) {
+      }
+      if (isTypeInt(rules) && this._isRequiredOrFill(rules, el)) {
         console.log('INTEGER', rules.column, el)
         lineErrors.errors = this._validateFieldInt(rules, el, lineErrors.errors)
-      } else if (isTypeOptions(rules)) {
+      }
+      if (isTypeOptions(rules) && this._isRequiredOrFill(rules, el)) {
         console.log('OPTIONS', rules.column, el)
         lineErrors.errors = this._validateFieldOptions(rules, el, lineErrors.errors)
-      } else if (isTypeDecimal(rules)) {
+      }
+      if (isTypeDecimal(rules) && this._isRequiredOrFill(rules, el)) {
         console.log('DECIMAL', rules.column, el)
         lineErrors.errors = this._validateFieldDecimal(rules, el, lineErrors.errors)
-      } else if (isTypeCep(rules)) {
+      }
+      if (isTypeCep(rules) && this._isRequiredOrFill(rules, el)) {
         console.log('CEP', rules.column, el)
         lineErrors.errors = this._validateFieldCep(rules, el, lineErrors.errors)
-      } else if (isTypeBoolean(rules)) {
+      }
+      if (isTypeBoolean(rules) && this._isRequiredOrFill(rules, el)) {
         console.log('BOOLEAN', rules.column, el)
         lineErrors.errors = this._validateFieldBoolean(rules, el, lineErrors.errors)
-      } else if (isTypeEmail(rules)) {
+      }
+      if (isTypeEmail(rules) && this._isRequiredOrFill(rules, el)) {
         console.log('EMAIL', rules.column, el)
         lineErrors.errors = this._validateFieldEmail(rules, el, lineErrors.errors)
-      } else if (isTypePhoneNumber(rules)) {
+      }
+      if (isTypePhoneNumber(rules) && this._isRequiredOrFill(rules, el)) {
         console.log('PHONE_NUMBER', rules.column, el)
         lineErrors.errors = this._validateFieldPhoneNumber(rules, el, lineErrors.errors)
-      } else if (isTypeArray(rules)) {
+      }
+      if (isTypeArray(rules) && this._isRequiredOrFill(rules, el)) {
         lineErrors.errors = this._validateFieldArray(rules, el, lineErrors.errors)
-      } else if (isTypeCpfCnpj(rules)) {
+      }
+      if (isTypeCpfCnpj(rules) && this._isRequiredOrFill(rules, el)) {
         lineErrors.errors = this._validateFieldCpfCnpj(rules, el, lineErrors.errors)
       }
     })
@@ -409,50 +463,80 @@ class Validator {
     return valid
   }
 
+  _formatFieldCpfCnpj (fieldData) {
+    let elText = fieldData.replace(/\./g, '')
+    elText = elText.replace(/-/g, '')
+    elText = elText.replace(/\\/g, '')
+    elText = elText.replace(/\//g, '')
+
+    return elText
+  }
+
+  _formatFieldPhoneNumber (fieldData) {
+    let elText = fieldData.replace(/-/g, '')
+    elText = elText.replace('(', '')
+    elText = elText.replace(')', '')
+    elText = elText.replace(' ', '')
+
+    return elText
+  }
+
+  _formatFieldCep (fieldData) {
+    return fieldData.replace(/-/g, '')
+  }
+
+  _formatFieldDecimal (fieldData) {
+    let elText = fieldData.replace('.', '')
+    elText = elText.replace(',', '.')
+
+    return elText
+  }
+
+  _formatFieldArray (fieldRules, fieldData) {
+    const arrData = []
+    if (!Object.keys(fieldRules).includes('fields')) {
+      if (Array.isArray(fieldData)) {
+        fieldData.forEach((element, x) => {
+          if (String(element).length) {
+            const item = {}
+            item[fieldRules.data] = element
+            arrData.push(item)
+          }
+        })
+      }
+    } else {
+      if (Array.isArray(fieldData)) {
+        fieldData.filter(fd => Object.keys(fd).filter(fdk => String(fd[fdk]).length > 0).length > 0)
+          .forEach(element => {
+            const item = {}
+            fieldRules.fields.forEach(field => {
+              item[field.data] = element[field.column]
+            })
+            arrData.push(item)
+          })
+      }
+    }
+
+    return arrData
+  }
+
   format (data, rules) {
     const formatted = {}
-    Object.keys(data).forEach((fieldKey, i) => {
+    Object.keys(data).forEach(fieldKey => {
       const el = data[fieldKey]
       const fieldRules = rules[fieldKey]
 
       let elText = el
       if (isTypeCpfCnpj(fieldRules)) {
-        elText = elText.replace(/\./g, '')
-        elText = elText.replace(/-/g, '')
-        elText = elText.replace(/\\/g, '')
-        elText = elText.replace(/\//g, '')
+        elText = this._formatFieldCpfCnpj(elText)
       } else if (isTypePhoneNumber(fieldRules)) {
-        elText = elText.replace(/-/g, '')
-        elText = elText.replace('(', '')
-        elText = elText.replace(')', '')
-        elText = elText.replace(' ', '')
+        elText = this._formatFieldPhoneNumber(elText)
       } else if (isTypeCep(fieldRules)) {
-        elText = elText.replace(/-/g, '')
+        elText = this._formatFieldCep(elText)
       } else if (isTypeDecimal(fieldRules)) {
-        elText = elText.replace('.', '')
-        elText = elText.replace(',', '.')
+        elText = this._formatFieldDecimal(elText)
       } else if (isTypeArray(fieldRules)) {
-        var arrData = []
-        if (!Object.keys(fieldRules).includes('fields')) {
-          if (Array.isArray(el)) {
-            el.forEach((element, x) => {
-              var item = {}
-              item[fieldRules.data] = element
-              arrData.push(item)
-            })
-          }
-        } else {
-          if (Array.isArray(el)) {
-            el.forEach(element => {
-              var item = {}
-              fieldRules.fields.forEach(field => {
-                item[field.data] = element[field.column]
-              })
-              arrData.push(item)
-            })
-          }
-        }
-        elText = arrData
+        elText = this._formatFieldArray(fieldRules, elText)
       }
       formatted[fieldRules.data] = elText
     })

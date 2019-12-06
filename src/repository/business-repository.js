@@ -58,6 +58,19 @@ class BusinessRepository {
     }
   }
 
+  async getByNameAndTemplateId (companyToken, businessName, templateId) {
+    try {
+      const businessList = await this.db.collection('business')
+        .find({ companyToken: companyToken, templateId, name: { $regex: new RegExp(businessName, 'i') } }, ['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt'])
+        .sort({ createdAt: -1 })
+        .toArray()
+
+      return businessList
+    } catch (err) {
+      throw new Error(err)
+    }
+  }
+
   async getAll (companyToken) {
     try {
       const businessList = await this.db.collection('business')
