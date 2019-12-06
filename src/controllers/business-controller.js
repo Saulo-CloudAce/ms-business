@@ -357,7 +357,7 @@ class BusinessController {
 
       const searchParams = req.body.search_params
 
-      var businessList = await businessRepository.getAllByTemplate(companyToken, req.body.template_id)
+      var businessList = await businessRepository.listAllByTemplate(companyToken, req.body.template_id)
       var resultList = []
       businessList.filter((b) => {
         var dataR = b.data.filter(r => Object.values(r).includes(searchParams.value))
@@ -497,7 +497,7 @@ class BusinessController {
       const template = await templateRepository.getById(templateId, companyToken)
       if (!template) return res.status(400).send({ err: 'Template não identificado' })
 
-      var businessList = await newBusiness.getAllByTemplateId(companyToken, templateId)
+      var businessList = await newBusiness.listAllByTemplateId(companyToken, templateId)
       if (!businessList) return res.status(400).send({ err: 'Erro ao listar os business deste template.' })
 
       var cpfcnpj = req.query.cpfcnpj

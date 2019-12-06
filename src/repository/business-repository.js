@@ -84,10 +84,9 @@ class BusinessRepository {
     }
   }
 
-  async getAllByTemplate (companyToken, templateId) {
+  async listAllByTemplate (companyToken, templateId) {
     try {
       const businessList = await this.db.collection('business').find({ templateId, companyToken }, ['_id', 'name', 'data', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'flow_passed', 'activeUntil', 'active'])
-        .sort({ createdAt: -1 })
         .toArray()
 
       return businessList

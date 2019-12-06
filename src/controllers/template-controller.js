@@ -111,7 +111,7 @@ class TemplateController {
       var template = await templateRepository.getNameById(templateId, companyToken)
       if (!template) return res.status(400).send({ err: 'Template não identificado' })
 
-      const businessData = await businessRepository.getAllByTemplate(companyToken, templateId)
+      const businessData = await businessRepository.listAllByTemplate(companyToken, templateId)
       template.data = businessData
 
       return res.status(200).send(template)

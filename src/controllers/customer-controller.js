@@ -93,7 +93,7 @@ class CustomerController {
         templates = await Promise.all(templateList.map(async templateId => {
           var template = await templateRepository.getNameById(templateId, companyToken)
           if (template) {
-            var data = await businessRepository.getAllByTemplate(companyToken, templateId)
+            var data = await businessRepository.listAllByTemplate(companyToken, templateId)
             if (data && data.length > 0) {
               data.map(m => { m.data = m.data.filter(md => md.customer_cpfcnpj === customer.cpfcnpj) })
             }
@@ -137,7 +137,7 @@ class CustomerController {
         templates = await Promise.all(templateList.map(async templateId => {
           var template = await templateRepository.getNameById(templateId, companyToken)
           if (template) {
-            var data = await businessRepository.getAllByTemplate(companyToken, templateId)
+            var data = await businessRepository.listAllByTemplate(companyToken, templateId)
             if (data && data.length > 0) {
               data.map(m => { m.data = m.data.filter(md => md.customer_cpfcnpj === customer.customer_cpfcnpj) })
             }
@@ -192,7 +192,7 @@ class CustomerController {
         templates = await Promise.all(templateList.map(async templateId => {
           var template = await templateRepository.getNameById(templateId, companyToken)
           if (template) {
-            var data = await businessRepository.getAllByTemplate(companyToken, templateId)
+            var data = await businessRepository.listAllByTemplate(companyToken, templateId)
             if (data && data.length > 0) {
               data = data.filter(d => businessList.includes(d._id.toString()))
               data.map(m => {
@@ -229,7 +229,7 @@ class CustomerController {
       var request = await searchCustomer(search, companyToken, company.prefix_index_elastic)
       if (request.response && request.response.status && request.response.status !== 200) return res.status(request.response.status).send(request.response.data)
       var customers = (Array.isArray(request.data)) ? request.data : []
-console.log(customers)
+
       for (var i in customers) {
         var customer = customers[i]
         var templateList = customer.business_template_list
@@ -238,7 +238,7 @@ console.log(customers)
           templates = await Promise.all(templateList.map(async templateId => {
             var template = await templateRepository.getNameById(templateId, companyToken)
             if (template) {
-              var data = await businessRepository.getAllByTemplate(companyToken, templateId)
+              var data = await businessRepository.listAllByTemplate(companyToken, templateId)
               if (data && data.length > 0) {
                 var customerKey = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
                 data.map(m => { m.data = m.data.filter(md => md.customer_cpfcnpj === customerKey) })
