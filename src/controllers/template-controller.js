@@ -3,6 +3,8 @@ const CompanyRepository = require('../repository/company-repository')
 const TemplateRepository = require('../repository/template-repository')
 const BusinessRepository = require('../repository/business-repository')
 const { mongoIdIsValid } = require('../helpers/validators')
+const { isTypeArray } = require('../helpers/field-methods')
+const { isArrayObject } = require('../helpers/validators')
 
 class TemplateController {
   _getInstanceRepositories (app) {
@@ -151,6 +153,58 @@ class TemplateController {
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
       const template = await templateRepository.getById(templateId, companyToken)
+
+      return res.status(200).send(template)
+    } catch (err) {
+      console.log(err)
+      return res.status(500).send({ err: err.message })
+    }
+  }
+
+  async update (req, res) {
+    req.assert('name', 'O nome é obrigatório').notEmpty()
+    req.assert('fields', 'Os fields são obrigatórios').notEmpty()
+
+    const companyToken = req.headers['token']
+    const templateId = req.params.id
+
+    if (req.validationErrors()) return res.status(400).send({ errors: req.validationErrors() })
+
+    try {
+      const { name, fields } = req.body
+      var { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
+
+      if (!mongoIdIsValid(templateId)) return res.status(400).send({ err: 'ID não válido' })
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+
+      const templatesCreated = await templateRepository.getAllByNameWhereIdNotIs(name, companyToken, templateId)
+      if (templatesCreated.length) return res.status(400).send({ err: `(${name}) já foi cadastrado.` })
+
+      const templateSaved = await templateRepository.getById(templateId, companyToken)
+      if (!templateSaved) return res.status(400).send({ err: 'Template não existente' })
+
+      templateSaved.name = name
+
+      templateSaved.fields.forEach(field => {
+        const updateField = fields.find(f => f.column === field.column)
+        if (updateField.label.length && updateField.label !== field.label) field.label = updateField.label
+        field.visible = updateField.visible
+        field.operator_can_view = updateField.operator_can_view
+        if (updateField.mask) field.mask = updateField.mask
+        if (isTypeArray(field) && isArrayObject(field.fields)) {
+          field.fields.forEach(subfield => {
+            const updateSubfield = updateField.fields.find(sf => sf.column === subfield.column)
+            if (updateSubfield.label.length && updateSubfield.label !== subfield.label) subfield.label = updateSubfield.label
+            subfield.visible = updateSubfield.visible
+            subfield.operator_can_view = updateSubfield.operator_can_view
+            if (updateSubfield.mask) subfield.mask = updateSubfield.mask
+          })
+        }
+      })
+
+      const template = await templateRepository.update(templateId, companyToken, templateSaved)
 
       return res.status(200).send(template)
     } catch (err) {

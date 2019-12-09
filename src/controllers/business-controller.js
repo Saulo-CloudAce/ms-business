@@ -176,6 +176,50 @@ class BusinessController {
     }
   }
 
+  async createSingleRegisterBusiness (req, res) {
+    req.assert('templateId', 'O ID do template é obrigatório').notEmpty()
+    req.assert('data', 'Os dados são obrigatórios.').notEmpty()
+
+    if (req.validationErrors()) {
+      return res.status(400).send({ errors: req.validationErrors() })
+    }
+
+    const companyToken = req.headers['token']
+
+    try {
+      const { templateId, data } = req.body
+      const activeUntil = (req.body.active_until) ? req.body.active_until : moment().add(1, 'days').format('YYYY-MM-DD')
+
+      if (moment(activeUntil, 'YYYY-MM-DD').format('YYYY-MM-DD') !== activeUntil) return res.status(400).send({ err: 'A data active_until está com formato inválido. O formato válido é YYYY-MM-DD' })
+      if (moment(activeUntil).diff(moment()) < 0) return res.status(400).send({ err: 'A data active_until não pode ser anterior a data de hoje, somente posterior' })
+
+      if (!mongoIdIsValid(templateId)) return res.status(400).send({ err: 'O ID do template é inválido' })
+
+      const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
+      const newBusiness = this._getInstanceBusiness(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+
+      const template = await templateRepository.getById(templateId, companyToken)
+      if (!template) return res.status(400).send({ err: 'Template não identificado' })
+      if (!template.active) return res.status(400).send({ err: 'Este template foi desativado e não recebe mais dados.' })
+
+      const rndNumber = Math.floor((Math.random() * 10) + 1)
+      const businessName = `single-register-${moment().format('YYYYMMDDHmmss')}${rndNumber}`
+
+      const isBatch = false
+
+      const { businessId, invalids } = await newBusiness.createFromJson(companyToken, businessName, template.fields, templateId, data, activeUntil, company.prefix_index_elastic, req.body, isBatch)
+      if (businessId === null) return res.status(400).send({ err: invalids })
+
+      return res.status(201).send({ businessId, isBatch, invalids })
+    } catch (e) {
+      console.error('CREATE BUSINESS FROM JSON ==> ', e)
+      return res.status(500).send({ err: e.message })
+    }
+  }
+
   async getPoolData (req, res) {
     const companyToken = req.headers['token']
 
@@ -230,7 +274,7 @@ class BusinessController {
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ err: 'Company não identificada.' })
 
-      const businessList = await newBusiness.getAll(companyToken)
+      const businessList = await newBusiness.getAllBatches(companyToken)
       var business = businessList.map(b => {
         return {
           _id: b._id,

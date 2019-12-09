@@ -39,7 +39,7 @@ class Business {
     return { businessId, invalids }
   }
 
-  async createFromJson (companyToken, name, fields, templateId, data, activeUntil, prefixIndexElastic, requestBody) {
+  async createFromJson (companyToken, name, fields, templateId, data, activeUntil, prefixIndexElastic, requestBody, isBatch = true) {
     const { invalids, valids } = await this.validator.validateAndFormatFromJson(data, fields)
 
     if (valids.length === 0) {
@@ -48,7 +48,7 @@ class Business {
 
     var filename = `${name}.json`
     const filePath = await this.uploader.uploadContent(companyToken, requestBody, filename)
-    const businessId = await this.repository.save(companyToken, name, filePath, templateId, valids.length, valids, activeUntil)
+    const businessId = await this.repository.save(companyToken, name, filePath, templateId, valids.length, valids, activeUntil, false, '', isBatch)
 
     var listFieldKey = fields.filter(f => f.key).map(f => f.data)
 
@@ -68,6 +68,14 @@ class Business {
   async getAll (companyToken) {
     try {
       return this.repository.getAll(companyToken)
+    } catch (err) {
+      return err
+    }
+  }
+
+  async getAllBatches (companyToken) {
+    try {
+      return this.repository.getAllBatches(companyToken)
     } catch (err) {
       return err
     }

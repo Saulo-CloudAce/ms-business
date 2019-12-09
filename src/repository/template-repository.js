@@ -29,6 +29,18 @@ class TemplateRepository {
     }
   }
 
+  async update (templateId, companyToken, templateUpdate) {
+    try {
+      templateUpdate.updatedAt = moment().format()
+
+      await this.db.collection('business_template').update({ _id: new ObjectID(templateId), companyToken }, { $set: { name: templateUpdate.name, fields: templateUpdate.fields } })
+
+      return templateUpdate
+    } catch (err) {
+      throw new Error(err)
+    }
+  }
+
   async getAllByCompany (companyToken) {
     try {
       var result = await this.db.collection('business_template').find({ companyToken }, ['_id', 'name', 'active', 'createdAt', 'updateAt']).toArray()
@@ -42,6 +54,16 @@ class TemplateRepository {
   async getAllByName (name, companyToken) {
     try {
       var result = await this.db.collection('business_template').find({ name, companyToken }, ['_id']).toArray()
+
+      return result
+    } catch (err) {
+      throw new Error(err)
+    }
+  }
+
+  async getAllByNameWhereIdNotIs (name, companyToken, templateId) {
+    try {
+      var result = await this.db.collection('business_template').find({ name, companyToken, _id: { $ne: new ObjectID(templateId) } }, ['_id']).toArray()
 
       return result
     } catch (err) {
