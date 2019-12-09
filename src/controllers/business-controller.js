@@ -544,17 +544,25 @@ class BusinessController {
       var businessList = await newBusiness.listAllByTemplateId(companyToken, templateId)
       if (!businessList) return res.status(400).send({ err: 'Erro ao listar os business deste template.' })
 
-      var cpfcnpj = req.query.cpfcnpj
+      const listKeyFields = template.fields.filter(f => f.key)
+
+      var querySearch = req.query.cpfcnpj
       var response = {}
 
       var resBusiness = businessList.filter(b => {
         var res = {}
-        var reg = b.data.filter(d => d.customer_cpfcnpj == cpfcnpj)
-        if (reg && reg.length > 0) {
+        var register = b.data.filter(d => {
+          const index = listKeyFields.filter(keyField => {
+            const index = d[keyField.data].toLowerCase().search(querySearch)
+            return index >= 0
+          }).length
+          return index > 0
+        })
+        if (register && register.length) {
           res._id = b._id
           res.name = b.name
           res.createdAt = b.createdAt
-          res.data = reg[0]
+          res.data = register[0]
           return res
         }
       })

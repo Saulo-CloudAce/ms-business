@@ -356,7 +356,6 @@ class Validator {
 
   _validateFieldArray (rules, fieldData, errors) {
     if (!Array.isArray(fieldData) && rules.required) {
-      console.log('ARRAY', rules.column, fieldData)
       errors.push({ column: rules.column, error: 'Este campo é um array e é obrigatório, logo precisa ser preenchido', current_value: fieldData })
     } else if (!this.validateArray(rules, fieldData) && rules.required) {
       errors.push({ column: rules.column, error: 'O array de dados fornecido é invalido.', current_value: fieldData })
@@ -406,39 +405,30 @@ class Validator {
       const rules = data[k].rules
 
       if (isRequired(rules)) {
-        console.log('REQUIRED', rules.column, el)
         lineErrors.errors = this._validateFieldRequired(rules, el, lineErrors.errors)
       }
       if (isKey(rules) && this._isRequiredOrFill(rules, el)) {
-        console.log('KEY', rules.column, el)
         lineErrors.errors = this._validateFieldKey(rules, el, lineErrors.errors)
       }
       if (isTypeInt(rules) && this._isRequiredOrFill(rules, el)) {
-        console.log('INTEGER', rules.column, el)
         lineErrors.errors = this._validateFieldInt(rules, el, lineErrors.errors)
       }
       if (isTypeOptions(rules) && this._isRequiredOrFill(rules, el)) {
-        console.log('OPTIONS', rules.column, el)
         lineErrors.errors = this._validateFieldOptions(rules, el, lineErrors.errors)
       }
       if (isTypeDecimal(rules) && this._isRequiredOrFill(rules, el)) {
-        console.log('DECIMAL', rules.column, el)
         lineErrors.errors = this._validateFieldDecimal(rules, el, lineErrors.errors)
       }
       if (isTypeCep(rules) && this._isRequiredOrFill(rules, el)) {
-        console.log('CEP', rules.column, el)
         lineErrors.errors = this._validateFieldCep(rules, el, lineErrors.errors)
       }
       if (isTypeBoolean(rules) && this._isRequiredOrFill(rules, el)) {
-        console.log('BOOLEAN', rules.column, el)
         lineErrors.errors = this._validateFieldBoolean(rules, el, lineErrors.errors)
       }
       if (isTypeEmail(rules) && this._isRequiredOrFill(rules, el)) {
-        console.log('EMAIL', rules.column, el)
         lineErrors.errors = this._validateFieldEmail(rules, el, lineErrors.errors)
       }
       if (isTypePhoneNumber(rules) && this._isRequiredOrFill(rules, el)) {
-        console.log('PHONE_NUMBER', rules.column, el)
         lineErrors.errors = this._validateFieldPhoneNumber(rules, el, lineErrors.errors)
       }
       if (isTypeArray(rules) && this._isRequiredOrFill(rules, el)) {
@@ -452,14 +442,7 @@ class Validator {
   }
 
   validateArray (rules, el) {
-    var valid = true
-    // if (rule.fields) {
-    //   line.forEach((l, i) => {
-    //     rule.fields.forEach((field, x) => {
-
-    //     })
-    //   })
-    // }
+    const valid = true
     return valid
   }
 
