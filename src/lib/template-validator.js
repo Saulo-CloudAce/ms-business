@@ -1,6 +1,6 @@
 const { clearString } = require('../helpers/formatters')
 const { isArrayElementSameTypes, isArrayOfObjects, isArrayWithEmptyElement } = require('../helpers/validators')
-const { isTypeOptions } = require('../helpers/field-methods')
+const { isTypeOptions, isTypeDate } = require('../helpers/field-methods')
 
 const supportedTypes = ['text', 'string', 'int', 'array', 'boolean', 'cpfcnpj', 'cep', 'phone_number', 'decimal', 'email', 'options', 'date']
 const supportedKeys = ['customer_cpfcnpj', 'customer_name', 'customer_phone_number', 'customer_email']
@@ -39,6 +39,12 @@ function formatFieldsOptions (fields) {
 
     return f
   })
+}
+
+function validateFieldDate (field) {
+  if (!Object.keys(field).includes('mask')) return { error: 'Deve informar a máscara ou padrão de data. Ex.: DD/MM/YYYY' }
+  else if (String(field.mask).length === 0) return { error: 'Deve informar uma máscara válida de data. Ex.: DD/MM/YYYY' }
+  return {}
 }
 
 function validateFieldOptionsType (field) {
@@ -82,6 +88,11 @@ function validateFields (fields) {
 
       if (isTypeOptions(field)) {
         const error = validateFieldOptionsType(field)
+        if (Object.keys(error).length) errorsField.errors.push(error)
+      }
+
+      if (isTypeDate(field)) {
+        const error = validateFieldDate(field)
         if (Object.keys(error).length) errorsField.errors.push(error)
       }
     } else {
