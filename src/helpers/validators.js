@@ -61,8 +61,8 @@ function isArrayWithEmptyElement (array) {
 }
 
 function arraysEqual (source1, source2) {
-  const cpSource1 = source1.map(s => s)
-  const cpSource2 = source2.map(s => s)
+  const cpSource1 = source1.map(s => s.trim())
+  const cpSource2 = source2.map(s => s.trim())
   return cpSource1.sort().toString() === cpSource2.sort().toString()
 }
 
