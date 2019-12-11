@@ -6,6 +6,10 @@ function isTypeInt (field) {
   return field.type === 'int'
 }
 
+function isTypeDate (field) {
+  return field.type === 'date'
+}
+
 function isTypeDecimal (field) {
   return field.type === 'decimal'
 }
@@ -53,5 +57,6 @@ module.exports = {
   isTypeArray,
   isTypeCpfCnpj,
   isRequired,
-  isKey
+  isKey,
+  isTypeDate
 }

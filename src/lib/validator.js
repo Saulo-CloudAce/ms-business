@@ -2,10 +2,12 @@ const fs = require('fs')
 const readline = require('readline')
 const md5 = require('md5')
 const fetch = require('node-fetch')
+const moment = require('moment')
 const { validCpf, validCnpj } = require('./cpf-cnpj-validator')
 const { validateEmail, isArrayObject, arraysEqual, arraysDiff, listElementDuplicated } = require('../helpers/validators')
 const {
   isKey,
+  isTypeDate,
   isTypeOptions,
   isTypeInt,
   isTypeDecimal,
@@ -290,6 +292,11 @@ class Validator {
     return errors
   }
 
+  _validateFieldDate (rules, fieldData, errors) {
+    if (!moment(fieldData).isValid()) errors.push({ column: rules.column, error: 'O valor informado não é uma data válida', current_value: fieldData })
+    return errors
+  }
+
   _validateFieldOptions (rules, fieldData, errors) {
     if (!rules.list_options.map(o => String(o).toLowerCase()).includes(String(fieldData).toLowerCase())) {
       errors.push({ column: rules.column, error: 'O valor informado não está entre os pré-definidos na lista de opções', current_value: fieldData, list_options: rules.list_options })
@@ -409,6 +416,9 @@ class Validator {
       }
       if (isKey(rules) && this._isRequiredOrFill(rules, el)) {
         lineErrors.errors = this._validateFieldKey(rules, el, lineErrors.errors)
+      }
+      if (isTypeDate(rules) && this._isRequiredOrFill(rules, el)) {
+        lineErrors.errors = this._validateFieldDate(rules, el, lineErrors.errors)
       }
       if (isTypeInt(rules) && this._isRequiredOrFill(rules, el)) {
         lineErrors.errors = this._validateFieldInt(rules, el, lineErrors.errors)
