@@ -1,4 +1,4 @@
-const { hasFieldUnique } = require('../src/lib/template-validator')
+const { hasFieldUnique, hasCustomerFields } = require('../src/lib/template-validator')
 
 class Business {
   constructor (repository, uploader, validator, crmService) {
@@ -23,9 +23,11 @@ class Business {
     const filePath = await this.uploader.upload(file)
     const businessId = await this.repository.save(companyToken, name, filePath, templateId, valids.length, valids, activeUntil, jumpFirstLine, dataSeparator)
 
-    var listFieldKey = fields.filter(f => f.key).map(f => f.data)
+    if (hasCustomerFields(fields)) {
+      const listFieldKey = fields.filter(f => f.key).map(f => f.data)
 
-    await this.crmService.sendData(valids, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic)
+      await this.crmService.sendData(valids, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic)
+    }
 
     return { businessId, invalids }
   }
@@ -44,9 +46,11 @@ class Business {
 
     const businessId = await this.repository.save(companyToken, name, filepath, templateId, valids.length, valids, activeUntil, jumpFirstLine, dataSeparator)
 
-    var listFieldKey = fields.filter(f => f.key).map(f => f.data)
+    if (hasCustomerFields(fields)) {
+      const listFieldKey = fields.filter(f => f.key).map(f => f.data)
 
-    await this.crmService.sendData(valids, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic)
+      await this.crmService.sendData(valids, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic)
+    }
 
     return { businessId, invalids }
   }
@@ -63,13 +67,15 @@ class Business {
       return { businessId: null, invalids }
     }
 
-    var filename = `${name}.json`
+    const filename = `${name}.json`
     const filePath = await this.uploader.uploadContent(companyToken, requestBody, filename)
     const businessId = await this.repository.save(companyToken, name, filePath, templateId, valids.length, valids, activeUntil, false, '', isBatch)
 
-    var listFieldKey = fields.filter(f => f.key).map(f => f.data)
+    if (hasCustomerFields(fields)) {
+      const listFieldKey = fields.filter(f => f.key).map(f => f.data)
 
-    await this.crmService.sendData(valids, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic)
+      await this.crmService.sendData(valids, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic)
+    }
 
     return { businessId, invalids }
   }
