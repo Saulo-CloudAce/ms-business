@@ -128,6 +128,7 @@ class BusinessController {
 
       return res.status(201).send({ businessId, invalids })
     } catch (e) {
+      console.error(e)
       return res.status(500).send({ err: e.message })
     }
   }

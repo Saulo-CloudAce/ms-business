@@ -17,7 +17,8 @@ const {
   isTypePhoneNumber,
   isTypeArray,
   isTypeCpfCnpj,
-  isRequired } = require('../helpers/field-methods')
+  isRequired,
+  isUnique } = require('../helpers/field-methods')
 
 class Validator {
   _mapLineDataToLineDataWithRules (line, rulesByColumn) {
@@ -36,7 +37,7 @@ class Validator {
     return rulesByColumn
   }
 
-  async validateAndFormatFromJson (data, fields) {
+  async validateAndFormatFromJson (data, fields, listBatches = []) {
     const lineInvalids = []
     const lineValids = []
     const rulesByColumn = this._indexTemplateFieldsByColumn(fields)
@@ -44,7 +45,7 @@ class Validator {
     data.forEach((line, i) => {
       const lineWithRulesFields = this._mapLineDataToLineDataWithRules(line, rulesByColumn)
 
-      const { valid, lineErrors } = this.validate(lineWithRulesFields, i)
+      const { valid, lineErrors } = this.validate(lineWithRulesFields, i, listBatches)
       if (valid) {
         const lineFormatted = this.format(line, rulesByColumn)
         lineValids.push(lineFormatted)
@@ -96,7 +97,7 @@ class Validator {
     return jsonData
   }
 
-  async validateAndFormat (filePath, fields, jumpFirstLine = false, dataSeparator = ';') {
+  async validateAndFormat (filePath, fields, jumpFirstLine = false, dataSeparator = ';', listBatches = []) {
     const rulesByColumn = this._indexTemplateFieldsByColumn(fields)
     const readStream = fs.createReadStream(filePath)
     const reader = readline.createInterface({
@@ -104,7 +105,6 @@ class Validator {
     })
 
     const firstLine = 1
-    // if (jumpFirstLine) firstLine = 1
 
     const lineCounter = ((i = 0) => () => ++i)()
 
@@ -138,7 +138,7 @@ class Validator {
             const jsonData = self._convertFileDataToJSONData(data, fileColumnsName, fields)
             const lineWithRulesFields = self._mapLineDataToLineDataWithRules(jsonData, rulesByColumn)
             const lineNumberAtFile = lineno - 1
-            const { valid, lineErrors } = self.validate(lineWithRulesFields, lineNumberAtFile)
+            const { valid, lineErrors } = self.validate(lineWithRulesFields, lineNumberAtFile, listBatches)
 
             if (valid) {
               const dataFormatted = self.format(jsonData, rulesByColumn)
@@ -180,7 +180,9 @@ class Validator {
   }
 
   _joinDataBatch (dataBatch, rules) {
-    const columnKey = rules.find(r => r.key).data
+    const fieldKey = rules.filter(r => r.key)
+    const columnKey = (fieldKey.length && Object.keys(fieldKey[0]).includes('data')) ? fieldKey[0].data : rules.find(r => r.unique).data
+    console.log(columnKey)
     const columnsArray = rules.filter(r => isTypeArray(r))
     let dataIndexedByKeyColumn = {}
     dataBatch.forEach(data => {
@@ -197,7 +199,7 @@ class Validator {
     return dataIndexedByKeyColumn
   }
 
-  async validateAndFormatFromUrlFile (filePath, fields, jumpFirstLine = false, dataSeparator = ';') {
+  async validateAndFormatFromUrlFile (filePath, fields, jumpFirstLine = false, dataSeparator = ';', listBatches = []) {
     const rulesByColumn = this._indexTemplateFieldsByColumn(fields)
     const readStream = await new Promise((resolve, reject) => {
       fetch(filePath)
@@ -212,7 +214,6 @@ class Validator {
     })
 
     const firstLine = 1
-    // if (jumpFirstLine) firstLine = 1
 
     const lineCounter = ((i = 0) => () => ++i)()
 
@@ -246,7 +247,7 @@ class Validator {
             const jsonData = self._convertFileDataToJSONData(data, fileColumnsName, fields)
             const lineWithRulesFields = self._mapLineDataToLineDataWithRules(jsonData, rulesByColumn)
             const lineNumberAtFile = lineno - 1
-            const { valid, lineErrors } = self.validate(lineWithRulesFields, lineNumberAtFile)
+            const { valid, lineErrors } = self.validate(lineWithRulesFields, lineNumberAtFile, listBatches)
 
             if (valid) {
               const dataFormatted = self.format(jsonData, rulesByColumn)
@@ -287,13 +288,30 @@ class Validator {
     return errors
   }
 
+  _validateFieldUnique (rules, fieldData, errors, listBatches = []) {
+    if (String(fieldData).length === 0) errors.push({ column: rules.column, error: 'O preenchimento do campo único é obrigatório' })
+    else {
+      let dataDuplicated = false
+      for (const batch of listBatches) {
+        const dataExist = batch.data.filter(d => String(d[rules.column]).toLowerCase().trim() === String(fieldData).toLowerCase().trim())
+        if (dataExist.length) {
+          dataDuplicated = true
+          break
+        }
+      }
+      if (dataDuplicated) errors.push({ column: rules.column, error: 'Já existe um lote com este registro' })
+    }
+
+    return errors
+  }
+
   _validateFieldInt (rules, fieldData, errors) {
     if (!Number.isInteger(parseInt(fieldData))) errors.push({ column: rules.column, error: 'O valor informado não é um inteiro', current_value: fieldData })
     return errors
   }
 
   _validateFieldDate (rules, fieldData, errors) {
-    let date = fieldData.trim()
+    const date = fieldData.trim()
     if (!moment(date, rules.mask).isValid()) errors.push({ column: rules.column, error: 'O valor informado não é uma data válida', current_value: date })
     return errors
   }
@@ -398,7 +416,7 @@ class Validator {
     return errors
   }
 
-  validate (data, lineNumber) {
+  validate (data, lineNumber, listBatches = []) {
     const lineErrors = { line: lineNumber, errors: [] }
 
     const fieldsWithoutRules = Object.keys(data).filter(k => typeof data[k].rules !== 'object')
@@ -417,6 +435,9 @@ class Validator {
       }
       if (isKey(rules) && this._isRequiredOrFill(rules, el)) {
         lineErrors.errors = this._validateFieldKey(rules, el, lineErrors.errors)
+      }
+      if (isUnique(rules) && this._isRequiredOrFill(rules, el)) {
+        lineErrors.errors = this._validateFieldUnique(rules, el, lineErrors.errors, listBatches)
       }
       if (isTypeDate(rules) && this._isRequiredOrFill(rules, el)) {
         lineErrors.errors = this._validateFieldDate(rules, el, lineErrors.errors)

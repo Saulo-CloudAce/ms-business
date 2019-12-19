@@ -1,4 +1,4 @@
-const { validateFields, validateKey } = require('../lib/template-validator')
+const { validateFields, validateKey, hasCustomerFields } = require('../lib/template-validator')
 const CompanyRepository = require('../repository/company-repository')
 const TemplateRepository = require('../repository/template-repository')
 const BusinessRepository = require('../repository/business-repository')
@@ -34,8 +34,10 @@ class TemplateController {
       const templatesCreated = await templateRepository.getAllByName(name, companyToken)
       if (templatesCreated.length > 0) return res.status(400).send({ err: `(${name}) já foi cadastrado.` })
 
-      var keyValidated = validateKey(fields)
-      if (!keyValidated) return res.status(400).send({ err: 'Defina um campo do template como chave' })
+      if (hasCustomerFields(fields)) {
+        const keyValidated = validateKey(fields)
+        if (!keyValidated) return res.status(400).send({ err: 'Defina um campo do template como chave' })
+      }
 
       const fieldsValidated = validateFields(fields)
 

@@ -5,6 +5,14 @@ const { isTypeOptions, isTypeDate } = require('../helpers/field-methods')
 const supportedTypes = ['text', 'string', 'int', 'array', 'boolean', 'cpfcnpj', 'cep', 'phone_number', 'decimal', 'email', 'options', 'date']
 const supportedKeys = ['customer_cpfcnpj', 'customer_name', 'customer_phone_number', 'customer_email']
 
+function hasFieldUnique (fields) {
+  return fields.filter(f => f.unique).length > 0
+}
+
+function hasCustomerFields (fields) {
+  return fields.filter(f => f.data.indexOf('customer') >= 0).length > 0
+}
+
 function validateKey (fields) {
   const keys = fields.filter(f => f.key)
   return keys.length > 0
@@ -14,6 +22,7 @@ function formatFieldsOptions (fields) {
   return fields.map(f => {
     if (f.type) f.type = f.type.toLowerCase()
     if (!f.key) f.key = false
+    if (!f.unique) f.unique = false
     if (!f.required) f.required = false
     if (!f.editable) f.editable = false
     if (!f.operatorCanView || !f.operator_can_view) f.operator_can_view = true
@@ -74,16 +83,18 @@ function validateFields (fields) {
     if (Object.keys(field).includes('type')) {
       if (!supportedTypes.includes(field.type)) errorsField.errors.push({ error: 'Type não suportado' })
 
-      if (field.type === 'array' && field.fields) {
+      if (field.type === 'array' && field.fields.length) {
         for (const arrayFieldItem of field.fields) {
           if (Object.keys(arrayFieldItem).includes('type')) {
             if (!supportedTypes.includes(arrayFieldItem.type)) errorsField.errors.push({ field: arrayFieldItem.column, error: 'Type não suportado' })
             else if (isTypeOptions(arrayFieldItem)) {
               const error = validateFieldOptionsType(arrayFieldItem)
-              if (Object.keys(error).length) errorsField.errors.push({ field: arrayFieldItem.column , error: error.error })
+              if (Object.keys(error).length) errorsField.errors.push({ field: arrayFieldItem.column, error: error.error })
             }
           } else errorsField.errors.push({ field: arrayFieldItem.column, error: 'O type é obrigatório' })
         }
+      } else if (field.type === 'array' && field.fields.length === 0) {
+        errorsField.errors.push({ error: 'O campo fields deve ser um array de objetos' })
       }
 
       if (isTypeOptions(field)) {
@@ -109,4 +120,4 @@ function validateFields (fields) {
   return { fields: formattedFields, errors }
 }
 
-module.exports = { validateFields, validateKey }
+module.exports = { validateFields, validateKey, hasCustomerFields, hasFieldUnique }

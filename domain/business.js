@@ -1,3 +1,5 @@
+const { hasFieldUnique } = require('../src/lib/template-validator')
+
 class Business {
   constructor (repository, uploader, validator, crmService) {
     this.repository = repository
@@ -7,7 +9,12 @@ class Business {
   }
 
   async create (companyToken, name, file, fields, templateId, activeUntil, prefixIndexElastic, jumpFirstLine, dataSeparator) {
-    const { invalids, valids } = await this.validator.validateAndFormat(file.path, fields, jumpFirstLine, dataSeparator)
+    let listBatches = []
+    if (hasFieldUnique(fields)) {
+      listBatches = await this.listAllByTemplateId(companyToken, templateId)
+    }
+
+    const { invalids, valids } = await this.validator.validateAndFormat(file.path, fields, jumpFirstLine, dataSeparator, listBatches)
 
     if (valids.length === 0) {
       return { businessId: null, invalids }
@@ -24,7 +31,12 @@ class Business {
   }
 
   async createFromUrlFile (companyToken, name, filepath, fields, templateId, activeUntil, prefixIndexElastic, jumpFirstLine, dataSeparator) {
-    const { invalids, valids } = await this.validator.validateAndFormatFromUrlFile(filepath, fields, jumpFirstLine, dataSeparator)
+    let listBatches = []
+    if (hasFieldUnique(fields)) {
+      listBatches = await this.listAllByTemplateId(companyToken, templateId)
+    }
+
+    const { invalids, valids } = await this.validator.validateAndFormatFromUrlFile(filepath, fields, jumpFirstLine, dataSeparator, listBatches)
 
     if (valids.length === 0) {
       return { businessId: null, invalids }
@@ -40,7 +52,12 @@ class Business {
   }
 
   async createFromJson (companyToken, name, fields, templateId, data, activeUntil, prefixIndexElastic, requestBody, isBatch = true) {
-    const { invalids, valids } = await this.validator.validateAndFormatFromJson(data, fields)
+    let listBatches = []
+    if (hasFieldUnique(fields)) {
+      listBatches = await this.listAllByTemplateId(companyToken, templateId)
+    }
+
+    const { invalids, valids } = await this.validator.validateAndFormatFromJson(data, fields, listBatches)
 
     if (valids.length === 0) {
       return { businessId: null, invalids }

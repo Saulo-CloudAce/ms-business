@@ -46,6 +46,10 @@ function isKey (field) {
   return field.key
 }
 
+function isUnique (field) {
+  return field.unique
+}
+
 module.exports = {
   isTypeOptions,
   isTypeInt,
@@ -58,5 +62,6 @@ module.exports = {
   isTypeCpfCnpj,
   isRequired,
   isKey,
-  isTypeDate
+  isTypeDate,
+  isUnique
 }
