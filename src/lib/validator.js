@@ -116,35 +116,37 @@ class Validator {
       let fileColumnsName = []
       reader
         .on('line', function (line, lineno = lineCounter()) {
-          if (lineno === firstLine) {
-            fileColumnsName = line.split(dataSeparator)
-            const columnsName = self._getColumnsRequiredName(fields)
-            if (columnsName.length < fileColumnsName.length) {
-              const columnsDiff = arraysDiff(fileColumnsName, columnsName)
-              const columnsDuplicated = listElementDuplicated(fileColumnsName)
-              lineInvalids.push({ error: 'O arquivo tem mais colunas do que as definidas no template', columns_diff: columnsDiff, columns_duplicated: columnsDuplicated })
-              resolve({ invalids: lineInvalids, valids: lineValids })
-              reader.close()
-              reader.removeAllListeners()
-            } else if (!arraysEqual(columnsName, fileColumnsName)) {
-              const columnsDiff = arraysDiff(columnsName, fileColumnsName)
-              lineInvalids.push({ error: 'O arquivo não tem todos os campos do template', columns_template: columnsName, columns_file: fileColumnsName, columns_diff: columnsDiff })
-              resolve({ invalids: lineInvalids, valids: lineValids })
-              reader.close()
-              reader.removeAllListeners()
-            }
-          } else {
-            const data = line.split(dataSeparator)
-            const jsonData = self._convertFileDataToJSONData(data, fileColumnsName, fields)
-            const lineWithRulesFields = self._mapLineDataToLineDataWithRules(jsonData, rulesByColumn)
-            const lineNumberAtFile = lineno - 1
-            const { valid, lineErrors } = self.validate(lineWithRulesFields, lineNumberAtFile, listBatches)
-
-            if (valid) {
-              const dataFormatted = self.format(jsonData, rulesByColumn)
-              lineValids.push(dataFormatted)
+          if (String(line).length) {
+            if (lineno === firstLine) {
+              fileColumnsName = line.split(dataSeparator)
+              const columnsName = self._getColumnsRequiredName(fields)
+              if (columnsName.length < fileColumnsName.length) {
+                const columnsDiff = arraysDiff(fileColumnsName, columnsName)
+                const columnsDuplicated = listElementDuplicated(fileColumnsName)
+                lineInvalids.push({ error: 'O arquivo tem mais colunas do que as definidas no template', columns_diff: columnsDiff, columns_duplicated: columnsDuplicated })
+                resolve({ invalids: lineInvalids, valids: lineValids })
+                reader.close()
+                reader.removeAllListeners()
+              } else if (!arraysEqual(columnsName, fileColumnsName)) {
+                const columnsDiff = arraysDiff(columnsName, fileColumnsName)
+                lineInvalids.push({ error: 'O arquivo não tem todos os campos do template', columns_template: columnsName, columns_file: fileColumnsName, columns_diff: columnsDiff })
+                resolve({ invalids: lineInvalids, valids: lineValids })
+                reader.close()
+                reader.removeAllListeners()
+              }
             } else {
-              lineInvalids.push(lineErrors)
+              const data = line.split(dataSeparator)
+              const jsonData = self._convertFileDataToJSONData(data, fileColumnsName, fields)
+              const lineWithRulesFields = self._mapLineDataToLineDataWithRules(jsonData, rulesByColumn)
+              const lineNumberAtFile = lineno - 1
+              const { valid, lineErrors } = self.validate(lineWithRulesFields, lineNumberAtFile, listBatches)
+
+              if (valid) {
+                const dataFormatted = self.format(jsonData, rulesByColumn)
+                lineValids.push(dataFormatted)
+              } else {
+                lineInvalids.push(lineErrors)
+              }
             }
           }
         })
@@ -225,35 +227,37 @@ class Validator {
       let fileColumnsName = []
       reader
         .on('line', function (line, lineno = lineCounter()) {
-          if (lineno === firstLine) {
-            fileColumnsName = line.split(dataSeparator)
-            const columnsName = self._getColumnsRequiredName(fields)
-            if (columnsName.length < fileColumnsName.length) {
-              const columnsDiff = arraysDiff(columnsName, fileColumnsName)
-              const columnsDuplicated = listElementDuplicated(fileColumnsName)
-              lineInvalids.push({ error: 'O arquivo tem mais colunas do que as definidas no template', columns_diff: columnsDiff, columns_duplicated: columnsDuplicated })
-              resolve({ invalids: lineInvalids, valids: lineValids })
-              reader.close()
-              reader.removeAllListeners()
-            } else if (!arraysEqual(columnsName, fileColumnsName)) {
-              const columnsDiff = arraysDiff(columnsName, fileColumnsName)
-              lineInvalids.push({ error: 'O arquivo não tem todos os campos do template', columns_template: columnsName, columns_file: fileColumnsName, columns_diff: columnsDiff })
-              resolve({ invalids: lineInvalids, valids: lineValids })
-              reader.close()
-              reader.removeAllListeners()
-            }
-          } else {
-            const data = line.split(dataSeparator)
-            const jsonData = self._convertFileDataToJSONData(data, fileColumnsName, fields)
-            const lineWithRulesFields = self._mapLineDataToLineDataWithRules(jsonData, rulesByColumn)
-            const lineNumberAtFile = lineno - 1
-            const { valid, lineErrors } = self.validate(lineWithRulesFields, lineNumberAtFile, listBatches)
-
-            if (valid) {
-              const dataFormatted = self.format(jsonData, rulesByColumn)
-              lineValids.push(dataFormatted)
+          if (String(line).length) {
+            if (lineno === firstLine) {
+              fileColumnsName = line.split(dataSeparator)
+              const columnsName = self._getColumnsRequiredName(fields)
+              if (columnsName.length < fileColumnsName.length) {
+                const columnsDiff = arraysDiff(columnsName, fileColumnsName)
+                const columnsDuplicated = listElementDuplicated(fileColumnsName)
+                lineInvalids.push({ error: 'O arquivo tem mais colunas do que as definidas no template', columns_diff: columnsDiff, columns_duplicated: columnsDuplicated })
+                resolve({ invalids: lineInvalids, valids: lineValids })
+                reader.close()
+                reader.removeAllListeners()
+              } else if (!arraysEqual(columnsName, fileColumnsName)) {
+                const columnsDiff = arraysDiff(columnsName, fileColumnsName)
+                lineInvalids.push({ error: 'O arquivo não tem todos os campos do template', columns_template: columnsName, columns_file: fileColumnsName, columns_diff: columnsDiff })
+                resolve({ invalids: lineInvalids, valids: lineValids })
+                reader.close()
+                reader.removeAllListeners()
+              }
             } else {
-              lineInvalids.push(lineErrors)
+              const data = line.split(dataSeparator)
+              const jsonData = self._convertFileDataToJSONData(data, fileColumnsName, fields)
+              const lineWithRulesFields = self._mapLineDataToLineDataWithRules(jsonData, rulesByColumn)
+              const lineNumberAtFile = lineno - 1
+              const { valid, lineErrors } = self.validate(lineWithRulesFields, lineNumberAtFile, listBatches)
+
+              if (valid) {
+                const dataFormatted = self.format(jsonData, rulesByColumn)
+                lineValids.push(dataFormatted)
+              } else {
+                lineInvalids.push(lineErrors)
+              }
             }
           }
         })
@@ -395,7 +399,7 @@ class Validator {
   }
 
   _validateFieldCpfCnpj (rules, fieldData, errors) {
-    let elText = fieldData.replace(/\./g, '')
+    let elText = String(fieldData).replace(/\./g, '')
     elText = elText.replace(/-/g, '')
     elText = elText.replace(/\\/g, '')
     elText = elText.replace(/\//g, '')
