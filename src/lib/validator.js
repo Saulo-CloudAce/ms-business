@@ -321,7 +321,7 @@ class Validator {
   }
 
   _validateFieldOptions (rules, fieldData, errors) {
-    if (!rules.list_options.map(o => String(o).toLowerCase()).includes(String(fieldData).toLowerCase())) {
+    if (rules.list_options.filter(o => String(o.value) === String(fieldData)).length === 0) {
       errors.push({ column: rules.column, error: 'O valor informado não está entre os pré-definidos na lista de opções', current_value: fieldData, list_options: rules.list_options })
     }
 

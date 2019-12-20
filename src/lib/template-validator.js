@@ -65,8 +65,8 @@ function validateFieldOptionsType (field) {
     return { error: 'O list_options não pode ser um array vazio' }
   } else if (!isArrayElementSameTypes(field.list_options)) {
     return { error: 'O list_options não pode ser um array com elementos de vários tipos de dados' }
-  } else if (isArrayOfObjects(field.list_options)) {
-    return { error: 'O list_options não pode ser um array de objetos (não suportado)' }
+  } else if (isArrayOfObjects(field.list_options) && field.list_options.filter(o => !Object.keys(o).includes('value') || !Object.keys(o).includes('label')).length) {
+    return { error: 'O list_options deve ser um array com elementos da seguntes estrutura `{ value: "", label: "" }`' }
   } else if (isArrayWithEmptyElement(field.list_options)) {
     return { error: 'O list_options não pode ter elemento do array vazio' }
   }
@@ -84,15 +84,18 @@ function validateFields (fields) {
       if (!supportedTypes.includes(field.type)) errorsField.errors.push({ error: 'Type não suportado' })
 
       if (field.type === 'array' && field.fields.length) {
-        for (const arrayFieldItem of field.fields) {
+        field.fields.forEach(arrayFieldItem => {
           if (Object.keys(arrayFieldItem).includes('type')) {
             if (!supportedTypes.includes(arrayFieldItem.type)) errorsField.errors.push({ field: arrayFieldItem.column, error: 'Type não suportado' })
             else if (isTypeOptions(arrayFieldItem)) {
               const error = validateFieldOptionsType(arrayFieldItem)
               if (Object.keys(error).length) errorsField.errors.push({ field: arrayFieldItem.column, error: error.error })
+              else {
+                if (!isArrayOfObjects(arrayFieldItem.list_options)) arrayFieldItem.list_options = arrayFieldItem.list_options.map(a => { return { value: String(a), label: String(a) } })
+              }
             }
           } else errorsField.errors.push({ field: arrayFieldItem.column, error: 'O type é obrigatório' })
-        }
+        })
       } else if (field.type === 'array' && field.fields.length === 0) {
         errorsField.errors.push({ error: 'O campo fields deve ser um array de objetos' })
       }
@@ -100,6 +103,9 @@ function validateFields (fields) {
       if (isTypeOptions(field)) {
         const error = validateFieldOptionsType(field)
         if (Object.keys(error).length) errorsField.errors.push(error)
+        else {
+          if (!isArrayOfObjects(field.list_options)) field.list_options = field.list_options.map(a => { return { value: String(a), label: String(a) } })
+        }
       }
 
       if (isTypeDate(field)) {
