@@ -6,8 +6,8 @@ class BusinessRepository {
     this.db = db
   }
 
-  async save (companyToken, name, filePath, templateId, quantityRows, fieldsData, activeUntil, jumpFirstLine = false, dataSeparator = '', isBatch = true) {
-    const data = { companyToken, name, filePath, templateId, jumpFirstLine, dataSeparator, isBatch, quantityRows, data: fieldsData, activeUntil, flow_passed: false, active: true, createdAt: moment().format(), updatedAt: moment().format() }
+  async save (companyToken, name, filePath, templateId, quantityRows, fieldsData, activeUntil, jumpFirstLine = false, dataSeparator = '', isBatch = true, invalids = []) {
+    const data = { companyToken, name, filePath, templateId, jumpFirstLine, dataSeparator, isBatch, quantityRows, data: fieldsData, activeUntil, invalids, flow_passed: false, active: true, createdAt: moment().format(), updatedAt: moment().format() }
 
     try {
       var r = await this.db.collection('business').insertOne(data)

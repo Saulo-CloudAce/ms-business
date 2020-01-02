@@ -30,7 +30,7 @@ class CustomerController {
       var { companyRepository } = this._getInstanceRepositories(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
-      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       var cpfcnpj = req.body.customer_cpfcnpj
       cpfcnpj = cpfcnpj.replace(/\./g, '')
@@ -42,7 +42,7 @@ class CustomerController {
       if (request.response && request.response.status && request.response.status !== 200) return res.status(request.response.status).send(request.response.data)
       return res.status(201).send(request.data)
     } catch (err) {
-      return res.status(500).send({ err: err.message })
+      return res.status(500).send({ error: err.message })
     }
   }
 
@@ -57,7 +57,7 @@ class CustomerController {
       var { companyRepository } = this._getInstanceRepositories(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
-      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       var cpfcnpj = req.body.customer_cpfcnpj
       cpfcnpj = cpfcnpj.replace(/\./g, '')
@@ -69,7 +69,7 @@ class CustomerController {
       if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
       return res.status(200).send(request.data)
     } catch (err) {
-      return res.status(500).send({ err: err.message })
+      return res.status(500).send({ error: err.message })
     }
   }
 
@@ -80,7 +80,7 @@ class CustomerController {
       var { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
-      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       var request = await getCustomerById(req.params.id, companyToken)
 
@@ -113,7 +113,7 @@ class CustomerController {
       return res.status(200).send(customer)
     } catch (err) {
       console.error(err)
-      return res.status(500).send({ err: err.message })
+      return res.status(500).send({ error: err.message })
     }
   }
 
@@ -124,7 +124,7 @@ class CustomerController {
       var { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
-      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       var request = await getCustomerFormattedById(req.params.id, companyToken)
 
@@ -157,7 +157,7 @@ class CustomerController {
       return res.status(200).send(customer)
     } catch (err) {
       console.log(err)
-      return res.status(500).send({ err: err.message })
+      return res.status(500).send({ error: err.message })
     }
   }
 
@@ -168,7 +168,7 @@ class CustomerController {
       var { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
-      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       var cpfcnpj = req.query.cpfcnpj
       var request = null
@@ -212,7 +212,7 @@ class CustomerController {
       return res.status(200).send(customer)
     } catch (err) {
       console.error(err)
-      return res.status(500).send({ err: err.message })
+      return res.status(500).send({ error: err.message })
     }
   }
 
@@ -223,7 +223,7 @@ class CustomerController {
       var { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
-      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       const search = req.query.search
       var request = await searchCustomer(search, companyToken, company.prefix_index_elastic)
@@ -262,7 +262,7 @@ class CustomerController {
       return res.status(200).send(customers)
     } catch (err) {
 console.error(err)
-      return res.status(500).send({ err: err.message })
+      return res.status(500).send({ error: err.message })
     }
   }
 }

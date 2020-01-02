@@ -21,7 +21,7 @@ class Business {
     }
 
     const filePath = await this.uploader.upload(file)
-    const businessId = await this.repository.save(companyToken, name, filePath, templateId, valids.length, valids, activeUntil, jumpFirstLine, dataSeparator)
+    const businessId = await this.repository.save(companyToken, name, filePath, templateId, valids.length, valids, activeUntil, jumpFirstLine, dataSeparator, false, invalids)
 
     if (hasCustomerFields(fields)) {
       const listFieldKey = fields.filter(f => f.key).map(f => f.data)
@@ -44,7 +44,7 @@ class Business {
       return { businessId: null, invalids }
     }
 
-    const businessId = await this.repository.save(companyToken, name, filepath, templateId, valids.length, valids, activeUntil, jumpFirstLine, dataSeparator)
+    const businessId = await this.repository.save(companyToken, name, filepath, templateId, valids.length, valids, activeUntil, jumpFirstLine, dataSeparator, false, invalids)
 
     if (hasCustomerFields(fields)) {
       const listFieldKey = fields.filter(f => f.key).map(f => f.data)
@@ -69,7 +69,7 @@ class Business {
 
     const filename = `${name}.json`
     const filePath = await this.uploader.uploadContent(companyToken, requestBody, filename)
-    const businessId = await this.repository.save(companyToken, name, filePath, templateId, valids.length, valids, activeUntil, false, '', isBatch)
+    const businessId = await this.repository.save(companyToken, name, filePath, templateId, valids.length, valids, activeUntil, false, '', isBatch, invalids)
 
     if (hasCustomerFields(fields)) {
       const listFieldKey = fields.filter(f => f.key).map(f => f.data)

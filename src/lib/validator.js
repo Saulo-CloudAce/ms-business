@@ -45,7 +45,7 @@ class Validator {
     data.forEach((line, i) => {
       const lineWithRulesFields = this._mapLineDataToLineDataWithRules(line, rulesByColumn)
 
-      const { valid, lineErrors } = this.validate(lineWithRulesFields, i, listBatches)
+      const { valid, lineErrors } = this.validate(lineWithRulesFields, i, listBatches, fields)
       if (valid) {
         const lineFormatted = this.format(line, rulesByColumn)
         lineValids.push(lineFormatted)
@@ -139,7 +139,7 @@ class Validator {
               const jsonData = self._convertFileDataToJSONData(data, fileColumnsName, fields)
               const lineWithRulesFields = self._mapLineDataToLineDataWithRules(jsonData, rulesByColumn)
               const lineNumberAtFile = lineno - 1
-              const { valid, lineErrors } = self.validate(lineWithRulesFields, lineNumberAtFile, listBatches)
+              const { valid, lineErrors } = self.validate(lineWithRulesFields, lineNumberAtFile, listBatches, fields)
 
               if (valid) {
                 const dataFormatted = self.format(jsonData, rulesByColumn)
@@ -250,7 +250,7 @@ class Validator {
               const jsonData = self._convertFileDataToJSONData(data, fileColumnsName, fields)
               const lineWithRulesFields = self._mapLineDataToLineDataWithRules(jsonData, rulesByColumn)
               const lineNumberAtFile = lineno - 1
-              const { valid, lineErrors } = self.validate(lineWithRulesFields, lineNumberAtFile, listBatches)
+              const { valid, lineErrors } = self.validate(lineWithRulesFields, lineNumberAtFile, listBatches, fields)
 
               if (valid) {
                 const dataFormatted = self.format(jsonData, rulesByColumn)
@@ -420,13 +420,15 @@ class Validator {
     return errors
   }
 
-  validate (data, lineNumber, listBatches = []) {
-    const lineErrors = { line: lineNumber, errors: [] }
+  validate (data, lineNumber, listBatches = [], fields = []) {
+    const lineNumberOnFile = lineNumber + 1
+    const lineErrors = { line: lineNumberOnFile, errors: [] }
 
     const fieldsWithoutRules = Object.keys(data).filter(k => typeof data[k].rules !== 'object')
 
     if (fieldsWithoutRules.length) {
-      lineErrors.errors.push({ error: 'Tem campos diferentes do que os definidos no template', fields_list_unkown: fieldsWithoutRules })
+      const listFieldsRequired = fields.filter(f => fieldsWithoutRules.includes(f.data)).map(f => f.column)
+      lineErrors.errors.push({ error: 'Tem campos diferentes do que os definidos no template', fields_list_unkown: listFieldsRequired })
       return { valid: false, lineErrors }
     }
 
@@ -505,8 +507,11 @@ class Validator {
   }
 
   _formatFieldDecimal (fieldData) {
-    let elText = fieldData.replace('.', '')
-    elText = elText.replace(',', '.')
+    let elText = fieldData
+    if (String(elText).indexOf(',') >= 0) {
+      elText = fieldData.replace('.', '')
+      elText = elText.replace(',', '.')
+    }
 
     return elText
   }
