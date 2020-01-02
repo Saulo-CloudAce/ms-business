@@ -184,7 +184,6 @@ class Validator {
   _joinDataBatch (dataBatch, rules) {
     const fieldKey = rules.filter(r => r.key)
     const columnKey = (fieldKey.length && Object.keys(fieldKey[0]).includes('data')) ? fieldKey[0].data : rules.find(r => r.unique).data
-    console.log(columnKey)
     const columnsArray = rules.filter(r => isTypeArray(r))
     let dataIndexedByKeyColumn = {}
     dataBatch.forEach(data => {
