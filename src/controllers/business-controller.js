@@ -39,34 +39,47 @@ class BusinessController {
     }
 
     const companyToken = req.headers['token']
+    const templateId = req.body.templateId
+    const activeUntil = req.body.active_until
+    const name = req.body.name
+    const urlFile = req.body.file
 
     try {
+      if (!mongoIdIsValid(templateId)) return res.status(400).send({ error: 'O ID do template é inválido' })
+
+      if (moment(activeUntil, 'YYYY-MM-DD').format('YYYY-MM-DD') !== activeUntil) return res.status(400).send({ error: 'A data active_until está com formato inválido. O formato válido é YYYY-MM-DD' })
+      if (moment(activeUntil).diff(moment()) < 0) return res.status(400).send({ error: 'A data active_until não pode ser anterior a data de hoje, somente posterior' })
+
       const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
       const newBusiness = this._getInstanceBusiness(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
-      if (!company) return res.status(400).send({ err: '#00010 - Company não identificada.' })
+      if (!company) return res.status(400).send({ error: '#00010 - Company não identificada.' })
 
-      const template = await templateRepository.getById(req.body.templateId, companyToken)
-      if (!template) return res.status(400).send({ err: '#00011 - Template não identificado' })
-      if (!template.active) return res.status(400).send({ err: '#00012 - Este template foi desativado e não recebe mais dados.' })
+      const template = await templateRepository.getById(templateId, companyToken)
+      if (!template) return res.status(400).send({ error: '#00011 - Template não identificado' })
+      if (!template.active) return res.status(400).send({ error: '#00012 - Este template foi desativado e não recebe mais dados.' })
 
-      const businessList = await newBusiness.getAll(companyToken)
-      const businessName = businessList.filter(b => b.name.toLowerCase() === req.body.name.toLowerCase())
-      if (businessName.length > 0) return res.status(400).send({ err: `#00013 - ${req.body.name} já foi cadastrado` })
+      const businessList = await newBusiness.getByNameAndTemplateId(companyToken, req.body.name, templateId)
+      if (businessList.length) return res.status(400).send({ error: `${req.body.name} já foi cadastrado` })
 
-      const activeUntil = req.body.active_until
-      var jumpFirstLine = (req.body.jump_first_line) ? req.body.jump_first_line : false
+      const jumpFirstLine = (req.body.jump_first_line) ? req.body.jump_first_line : false
 
-      var dataSeparator = (req.body.data_separator) ? req.body.data_separator : ','
+      let dataSeparator = ';'
+      if (req.body.data_separator) {
+        if (req.body.data_separator === ',' || req.body.data_separator === 'v') dataSeparator = ','
+        else dataSeparator = req.body.data_separator
+      }
 
-      const { businessId, invalids } = await newBusiness.createFromUrlFile(companyToken, req.body.name, req.body.file, template.fields, req.body.templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine, dataSeparator)
+      const { businessId, invalids } = await newBusiness.createFromUrlFile(companyToken, name, urlFile, template.fields, templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine, dataSeparator)
+      if (businessId === null) return res.status(400).send({ error: invalids })
 
-      return res.status(201).send({ businessId, invalids })
+      if (invalids.length) return res.status(400).send({ businessId, invalids })
+      return res.status(201).send({ businessId })
     } catch (e) {
       var errCode = '00014'
       console.error(`#${errCode}`, e.message)
-      return res.status(500).send({ err: `#${errCode}` })
+      return res.status(500).send({ error: `#${errCode}` })
     }
   }
 
@@ -81,32 +94,44 @@ class BusinessController {
     }
 
     const companyToken = req.headers['token']
+    const templateId = req.body.templateId
+    const activeUntil = req.body.active_until
 
     try {
+      if (!mongoIdIsValid(templateId)) return res.status(400).send({ error: 'O ID do template é inválido' })
+
+      if (moment(activeUntil, 'YYYY-MM-DD').format('YYYY-MM-DD') !== activeUntil) return res.status(400).send({ error: 'A data active_until está com formato inválido. O formato válido é YYYY-MM-DD' })
+      if (moment(activeUntil).diff(moment()) < 0) return res.status(400).send({ error: 'A data active_until não pode ser anterior a data de hoje, somente posterior' })
+
       const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
       const newBusiness = this._getInstanceBusiness(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
-      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      const template = await templateRepository.getById(req.body.templateId, companyToken)
-      if (!template) return res.status(400).send({ err: 'Template não identificado' })
-      if (!template.active) return res.status(400).send({ err: 'Este template foi desativado e não recebe mais dados.' })
+      const template = await templateRepository.getById(templateId, companyToken)
+      if (!template) return res.status(400).send({ error: 'Template não identificado' })
+      if (!template.active) return res.status(400).send({ error: 'Este template foi desativado e não recebe mais dados.' })
 
-      const businessList = await newBusiness.getAll(companyToken)
-      const businessName = businessList.filter(b => b.name.toLowerCase() === req.body.name.toLowerCase())
-      if (businessName.length > 0) return res.status(400).send({ err: `${req.body.name} já foi cadastrado` })
+      const businessList = await newBusiness.getByNameAndTemplateId(companyToken, req.body.name, templateId)
+      if (businessList.length) return res.status(400).send({ error: `${req.body.name} já foi cadastrado` })
 
-      const activeUntil = req.body.active_until
       var jumpFirstLine = (req.body.jump_first_line) ? (req.body.jump_first_line.toLowerCase() === 'true') : false
 
-      var dataSeparator = (req.body.data_separator) ? req.body.data_separator : ','
+      var dataSeparator = ';'
+      if (req.body.data_separator) {
+        if (req.body.data_separator === ',' || req.body.data_separator === 'v') dataSeparator = ','
+        else dataSeparator = req.body.data_separator
+      }
 
-      const { businessId, invalids } = await newBusiness.create(companyToken, req.body.name, req.files.file, template.fields, req.body.templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine, dataSeparator)
+      const { businessId, invalids } = await newBusiness.create(companyToken, req.body.name, req.files.file, template.fields, templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine, dataSeparator)
+      if (businessId === null) return res.status(400).send({ error: invalids })
 
-      return res.status(201).send({ businessId, invalids })
+      if (invalids.length) return res.status(400).send({ businessId, invalids })
+      return res.status(201).send({ businessId })
     } catch (e) {
-      return res.status(500).send({ err: e.message })
+      console.error(e)
+      return res.status(500).send({ error: e.message })
     }
   }
 
@@ -124,29 +149,81 @@ class BusinessController {
 
     try {
       const { name, templateId, data } = req.body
+      const activeUntil = req.body.active_until
+
+      if (moment(activeUntil, 'YYYY-MM-DD').format('YYYY-MM-DD') !== activeUntil) return res.status(400).send({ error: 'A data active_until está com formato inválido. O formato válido é YYYY-MM-DD' })
+      if (moment(activeUntil).diff(moment()) < 0) return res.status(400).send({ error: 'A data active_until não pode ser anterior a data de hoje, somente posterior' })
+
+      if (!mongoIdIsValid(templateId)) return res.status(400).send({ error: 'O ID do template é inválido' })
 
       const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
       const newBusiness = this._getInstanceBusiness(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
-      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       const template = await templateRepository.getById(templateId, companyToken)
-      if (!template) return res.status(400).send({ err: 'Template não identificado' })
-      if (!template.active) return res.status(400).send({ err: 'Este template foi desativado e não recebe mais dados.' })
+      if (!template) return res.status(400).send({ error: 'Template não identificado' })
+      if (!template.active) return res.status(400).send({ error: 'Este template foi desativado e não recebe mais dados.' })
 
-      const businessList = await newBusiness.getAll(companyToken)
-      const businessName = businessList.filter(b => b.name.toLowerCase() === req.body.name.toLowerCase())
-      if (businessName.length > 0) return res.status(400).send({ err: `(${req.body.name}) já foi cadastrado` })
-
-      const activeUntil = req.body.active_until
+      const businessList = await newBusiness.getByNameAndTemplateId(companyToken, req.body.name, templateId)
+      if (businessList.length) return res.status(400).send({ error: `${req.body.name} já foi cadastrado` })
 
       const { businessId, invalids } = await newBusiness.createFromJson(companyToken, name, template.fields, templateId, data, activeUntil, company.prefix_index_elastic, req.body)
+      if (businessId === null) return res.status(400).send({ error: invalids })
 
-      return res.status(201).send({ businessId, invalids })
+      if (invalids.length) return res.status(400).send({ businessId, invalids })
+      return res.status(201).send({ businessId })
     } catch (e) {
-      console.error(e)
-      return res.status(500).send({ err: e.message })
+      console.error('CREATE BUSINESS FROM JSON ==> ', e)
+      return res.status(500).send({ error: e.message })
+    }
+  }
+
+  async createSingleRegisterBusiness (req, res) {
+    req.assert('templateId', 'O ID do template é obrigatório').notEmpty()
+    req.assert('data', 'Os dados são obrigatórios.').notEmpty()
+
+    if (req.validationErrors()) {
+      return res.status(400).send({ errors: req.validationErrors() })
+    }
+
+    const companyToken = req.headers['token']
+
+    try {
+      const { templateId, data } = req.body
+      const activeUntil = (req.body.active_until) ? req.body.active_until : moment().add(1, 'days').format('YYYY-MM-DD')
+
+      if (moment(activeUntil, 'YYYY-MM-DD').format('YYYY-MM-DD') !== activeUntil) return res.status(400).send({ error: 'A data active_until está com formato inválido. O formato válido é YYYY-MM-DD' })
+      if (moment(activeUntil).diff(moment()) < 0) return res.status(400).send({ error: 'A data active_until não pode ser anterior a data de hoje, somente posterior' })
+
+      if (!mongoIdIsValid(templateId)) return res.status(400).send({ error: 'O ID do template é inválido' })
+
+      const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
+      const newBusiness = this._getInstanceBusiness(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
+
+      const template = await templateRepository.getById(templateId, companyToken)
+      if (!template) return res.status(400).send({ error: 'Template não identificado' })
+      if (!template.active) return res.status(400).send({ error: 'Este template foi desativado e não recebe mais dados.' })
+
+      const rndNumber = Math.floor((Math.random() * 10) + 1)
+      const businessName = `single-register-${moment().format('YYYYMMDDHmmss')}${rndNumber}`
+
+      const isBatch = false
+
+      const { businessId, invalids } = await newBusiness.createFromJson(companyToken, businessName, template.fields, templateId, data, activeUntil, company.prefix_index_elastic, req.body, isBatch)
+      let dataInvalids = []
+      if (invalids.length) dataInvalids = invalids[0].errors
+      if (businessId === null) return res.status(400).send({ error: dataInvalids })
+
+      if (dataInvalids.length) return res.status(400).send({ businessId, isBatch, invalids: dataInvalids })
+      return res.status(201).send({ businessId, isBatch })
+    } catch (e) {
+      console.error('CREATE BUSINESS FROM JSON ==> ', e)
+      return res.status(500).send({ error: e.message })
     }
   }
 
@@ -157,7 +234,7 @@ class BusinessController {
       const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
-      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       var searchData = req.body.data
       var fields = []
@@ -190,7 +267,7 @@ class BusinessController {
 
       return res.status(200).send(businessData)
     } catch (err) {
-      return res.status(500).send({ err: err.message })
+      return res.status(500).send({ error: err.message })
     }
   }
 
@@ -202,9 +279,9 @@ class BusinessController {
       const newBusiness = this._getInstanceBusiness(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
-      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      const businessList = await newBusiness.getAll(companyToken)
+      const businessList = await newBusiness.getAllBatches(companyToken)
       var business = businessList.map(b => {
         return {
           _id: b._id,
@@ -218,9 +295,9 @@ class BusinessController {
         }
       })
 
-      return res.status(201).send(business)
+      return res.status(200).send(business)
     } catch (e) {
-      return res.status(500).send({ err: e.message })
+      return res.status(500).send({ error: e.message })
     }
   }
 
@@ -228,22 +305,22 @@ class BusinessController {
     const companyToken = req.headers['token']
 
     const businessId = req.params.id
-    if (!mongoIdIsValid(businessId)) return res.status(500).send({ err: 'Código do lote inválido' })
+    if (!mongoIdIsValid(businessId)) return res.status(500).send({ error: 'Código do lote inválido' })
 
     try {
       const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
-      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       const business = await businessRepository.getById(companyToken, businessId)
-      if (!business) return res.status(400).send({ err: 'Business não identificado' })
+      if (!business) return res.status(400).send({ error: 'Business não identificado' })
 
       await businessRepository.markFlowPassed(businessId)
 
       return res.sendStatus(200)
     } catch (e) {
-      return res.status(500).send({ err: e.message })
+      return res.status(500).send({ error: e.message })
     }
   }
 
@@ -251,22 +328,22 @@ class BusinessController {
     const companyToken = req.headers['token']
 
     const businessId = req.params.id
-    if (!mongoIdIsValid(businessId)) return res.status(500).send({ err: 'Código do lote inválido' })
+    if (!mongoIdIsValid(businessId)) return res.status(500).send({ error: 'Código do lote inválido' })
 
     try {
       const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
-      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       const business = await businessRepository.getById(companyToken, businessId)
-      if (!business) return res.status(400).send({ err: 'Business não identificado' })
+      if (!business) return res.status(400).send({ error: 'Business não identificado' })
 
       await businessRepository.unmarkFlowPassed(businessId)
 
       return res.sendStatus(200)
     } catch (e) {
-      return res.status(500).send({ err: e.message })
+      return res.status(500).send({ error: e.message })
     }
   }
 
@@ -278,22 +355,22 @@ class BusinessController {
     const companyToken = req.headers['token']
 
     const businessId = req.params.id
-    if (!mongoIdIsValid(businessId)) return res.status(500).send({ err: 'Código do lote inválido' })
+    if (!mongoIdIsValid(businessId)) return res.status(500).send({ error: 'Código do lote inválido' })
 
     try {
       const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
-      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       const business = await businessRepository.getById(companyToken, businessId)
-      if (!business) return res.status(400).send({ err: 'Business não identificado' })
+      if (!business) return res.status(400).send({ error: 'Business não identificado' })
 
       await businessRepository.activate(businessId, req.body.active_until)
 
       return res.sendStatus(200)
     } catch (e) {
-      return res.status(500).send({ err: e.message })
+      return res.status(500).send({ error: e.message })
     }
   }
 
@@ -301,22 +378,22 @@ class BusinessController {
     const companyToken = req.headers['token']
 
     const businessId = req.params.id
-    if (!mongoIdIsValid(businessId)) return res.status(500).send({ err: 'Código do lote inválido' })
+    if (!mongoIdIsValid(businessId)) return res.status(500).send({ error: 'Código do lote inválido' })
 
     try {
       const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
-      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       const business = await businessRepository.getById(companyToken, businessId)
-      if (!business) return res.status(400).send({ err: 'Business não identificado' })
+      if (!business) return res.status(400).send({ error: 'Business não identificado' })
 
       await businessRepository.deactivate(businessId)
 
       return res.sendStatus(200)
     } catch (e) {
-      return res.status(500).send({ err: e.message })
+      return res.status(500).send({ error: e.message })
     }
   }
 
@@ -327,25 +404,25 @@ class BusinessController {
       const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
-      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       const searchParams = req.body.search_params
 
-      var businessList = await businessRepository.getAllByTemplate(companyToken, req.body.template_id)
-var resultList = []
-      var dataList = businessList.filter((b) => {
-	var dataR = b.data.filter(r => Object.values(r).includes(searchParams.value))
-if (dataR.length > 0) {
-var b1 = b
-b1.data = dataR
-resultList.push(b1)
-}
-	return (dataR.length > 0)
+      var businessList = await businessRepository.listAllByTemplate(companyToken, req.body.template_id)
+      var resultList = []
+      businessList.filter((b) => {
+        var dataR = b.data.filter(r => Object.values(r).includes(searchParams.value))
+        if (dataR.length > 0) {
+          const b1 = b
+          b1.data = dataR
+          resultList.push(b1)
+        }
+        return (dataR.length > 0)
       })
 
-      return res.status(201).send(resultList)
+      return res.status(200).send(resultList)
     } catch (e) {
-      return res.status(500).send({ err: e.message })
+      return res.status(500).send({ error: e.message })
     }
   }
 
@@ -357,13 +434,13 @@ resultList.push(b1)
       const newBusiness = this._getInstanceBusiness(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
-      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       const business = await newBusiness.getDataById(companyToken, req.params.id)
 
-      return res.status(201).send(business)
+      return res.status(200).send(business)
     } catch (e) {
-      return res.status(500).send({ err: e.message })
+      return res.status(500).send({ error: e.message })
     }
   }
 
@@ -394,16 +471,16 @@ resultList.push(b1)
       const newBusiness = this._getInstanceBusiness(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
-      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       const template = await templateRepository.getById(templateId, companyToken)
-      if (!template) return res.status(400).send({ err: 'Template não identificado' })
+      if (!template) return res.status(400).send({ error: 'Template não identificado' })
 
       var fieldEditableList = template.fields.filter(f => f.editable)
       if (!Array.isArray(fieldEditableList)) fieldEditableList = []
 
       const business = await newBusiness.getDataById(companyToken, businessId)
-      if (!business) return res.status(400).send({ err: 'Business não identificado.' })
+      if (!business) return res.status(400).send({ error: 'Business não identificado.' })
 
       var register = null
 
@@ -423,7 +500,7 @@ resultList.push(b1)
       return res.status(200).send(register)
     } catch (err) {
       console.error(err)
-      return res.status(500).send({ err: err.message })
+      return res.status(500).send({ error: err.message })
     }
   }
 
@@ -436,13 +513,13 @@ resultList.push(b1)
       const newBusiness = this._getInstanceBusiness(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
-      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       const template = await templateRepository.getById(templateId, companyToken)
-      if (!template) return res.status(400).send({ err: 'Template não identificado' })
+      if (!template) return res.status(400).send({ error: 'Template não identificado' })
 
       const business = await newBusiness.getDataById(companyToken, req.params.businessId)
-      if (!business) return res.status(400).send({ err: 'Business não identificado.' })
+      if (!business) return res.status(400).send({ error: 'Business não identificado.' })
       var data = business.data.filter(d => d._id === req.params.registerId)
 
       var respBusiness = {
@@ -453,7 +530,7 @@ resultList.push(b1)
 
       return res.status(200).send(respBusiness)
     } catch (err) {
-      return res.status(500).send({ err: err.message })
+      return res.status(500).send({ error: err.message })
     }
   }
 
@@ -466,25 +543,33 @@ resultList.push(b1)
       const newBusiness = this._getInstanceBusiness(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
-      if (!company) return res.status(400).send({ err: 'Company não identificada.' })
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       const template = await templateRepository.getById(templateId, companyToken)
-      if (!template) return res.status(400).send({ err: 'Template não identificado' })
+      if (!template) return res.status(400).send({ error: 'Template não identificado' })
 
-      var businessList = await newBusiness.getAllByTemplateId(companyToken, templateId)
-      if (!businessList) return res.status(400).send({ err: 'Erro ao listar os business deste template.' })
+      var businessList = await newBusiness.listAllByTemplateId(companyToken, templateId)
+      if (!businessList) return res.status(400).send({ error: 'Erro ao listar os business deste template.' })
 
-      var cpfcnpj = req.query.cpfcnpj
+      const listKeyFields = template.fields.filter(f => f.key)
+
+      var querySearch = req.query.cpfcnpj
       var response = {}
 
       var resBusiness = businessList.filter(b => {
         var res = {}
-        var reg = b.data.filter(d => d.customer_cpfcnpj == cpfcnpj)
-        if (reg && reg.length > 0) {
+        var register = b.data.filter(d => {
+          const index = listKeyFields.filter(keyField => {
+            const index = d[keyField.data].toLowerCase().search(querySearch)
+            return index >= 0
+          }).length
+          return index > 0
+        })
+        if (register && register.length) {
           res._id = b._id
           res.name = b.name
           res.createdAt = b.createdAt
-          res.data = reg[0]
+          res.data = register[0]
           return res
         }
       })
@@ -492,7 +577,7 @@ resultList.push(b1)
 
       return res.status(200).send(response)
     } catch (err) {
-      return res.status(500).send({ err: err.message })
+      return res.status(500).send({ error: err.message })
     }
   }
 }

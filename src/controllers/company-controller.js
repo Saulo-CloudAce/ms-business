@@ -15,16 +15,16 @@ class CompanyController {
       var companies = await company.getAll()
       if (companies && companies.length > 0) {
         var comp = companies.filter(c => c.name === req.body.name)
-        if (comp && comp.length > 0) return res.status(400).send({ err: 'Já existe uma company com este nome.' })
+        if (comp && comp.length > 0) return res.status(400).send({ error: 'Já existe uma company com este nome.' })
         comp = companies.filter(c => c.prefix_index_elastic === req.body.prefix_index_elastic)
-        if (comp && comp.length > 0) return res.status(400).send({ err: 'Já existe uma company com este prefix index elastic nome.' })
+        if (comp && comp.length > 0) return res.status(400).send({ error: 'Já existe uma company com este prefix index elastic nome.' })
       }
 
       const newCompany = await company.create(req.body.name, req.body.prefix_index_elastic, req.body.callback)
 
       return res.status(201).send(newCompany)
     } catch (err) {
-      return res.status(500).send({ err: err.message })
+      return res.status(500).send({ error: err.message })
     }
   }
 
@@ -37,7 +37,7 @@ class CompanyController {
 
       return res.status(200).send(companies)
     } catch (err) {
-      return res.status(500).send({ err: err.message })
+      return res.status(500).send({ error: err.message })
     }
   }
 
@@ -50,7 +50,7 @@ class CompanyController {
 
       return res.status(200).send(c)
     } catch (err) {
-      return res.status(500).send({ err: err.message })
+      return res.status(500).send({ error: err.message })
     }
   }
 
@@ -69,7 +69,7 @@ class CompanyController {
 
       return res.status(201).send(companyUpdated)
     } catch (err) {
-      return res.status(500).send({ err: err.message })
+      return res.status(500).send({ error: err.message })
     }
   }
 }

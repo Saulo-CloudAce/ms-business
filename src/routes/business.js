@@ -8,6 +8,7 @@ const businessRoute = (app) => {
   app.post('/api/v1/business', multipartyMiddleware, (req, res) => businessController.create(req, res))
   app.post('/api/v1/business_url_file', multipartyMiddleware, (req, res) => businessController.createFromUrlFile(req, res))
   app.post('/api/v1/business_json', (req, res) => businessController.createFromJson(req, res))
+  app.post('/api/v1/business_single_register', (req, res) => businessController.createSingleRegisterBusiness(req, res))
   app.get('/api/v1/business', (req, res) => businessController.getAll(req, res))
   app.get('/api/v1/business/search', (req, res) => businessController.getBusinessAndRegisterIdByCpf(req, res))
   app.post('/api/v1/business/get_pool_data', (req, res) => businessController.getPoolData(req, res))

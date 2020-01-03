@@ -9,6 +9,7 @@ const templateRoute = (app) => {
   app.get('/api/v1/templates/:id/data', (req, res) => templateController.getDataByTemplateId(req, res))
   app.put('/api/v1/templates/:id/activate', (req, res) => templateController.activateTemplate(req, res))
   app.put('/api/v1/templates/:id/deactivate', (req, res) => templateController.deactivateTemplate(req, res))
+  app.put('/api/v1/templates/:id', (req, res) => templateController.update(req, res))
 }
 
 module.exports = templateRoute

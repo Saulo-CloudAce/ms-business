@@ -6,8 +6,8 @@ class BusinessRepository {
     this.db = db
   }
 
-  async save (companyToken, name, filePath, templateId, quantityRows, fieldsData, activeUntil, jumpFirstLine = false, dataSeparator = '') {
-    const data = { companyToken, name, filePath, templateId, jumpFirstLine, dataSeparator, quantityRows, data: fieldsData, activeUntil, flow_passed: false, active: true, createdAt: moment().format(), updatedAt: moment().format() }
+  async save (companyToken, name, filePath, templateId, quantityRows, fieldsData, activeUntil, jumpFirstLine = false, dataSeparator = '', isBatch = true, invalids = []) {
+    const data = { companyToken, name, filePath, templateId, jumpFirstLine, dataSeparator, isBatch, quantityRows, data: fieldsData, activeUntil, invalids, flow_passed: false, active: true, createdAt: moment().format(), updatedAt: moment().format() }
 
     try {
       var r = await this.db.collection('business').insertOne(data)
@@ -58,10 +58,10 @@ class BusinessRepository {
     }
   }
 
-  async getAll (companyToken) {
+  async getByNameAndTemplateId (companyToken, businessName, templateId) {
     try {
       const businessList = await this.db.collection('business')
-        .find({ companyToken: companyToken }, ['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'data'])
+        .find({ companyToken: companyToken, templateId, name: { $regex: new RegExp(businessName, 'i') } }, ['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt'])
         .sort({ createdAt: -1 })
         .toArray()
 
@@ -71,10 +71,37 @@ class BusinessRepository {
     }
   }
 
-  async getAllByTemplate (companyToken, templateId) {
+  async getAll (companyToken) {
+    try {
+      let businessList = await this.db.collection('business')
+        .find({ companyToken: companyToken }, ['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'data'])
+        .toArray()
+
+      businessList = businessList.sort((a, b) => moment(b.createdAt) - moment(a.createdAt))
+
+      return businessList
+    } catch (err) {
+      throw new Error(err)
+    }
+  }
+
+  async getAllBatches (companyToken) {
+    try {
+      let businessList = await this.db.collection('business')
+        .find({ companyToken: companyToken, isBatch: { $ne: false } }, ['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'data'])
+        .toArray()
+
+      businessList = businessList.sort((a, b) => moment(b.createdAt) - moment(a.createdAt))
+
+      return businessList
+    } catch (err) {
+      throw new Error(err)
+    }
+  }
+
+  async listAllByTemplate (companyToken, templateId) {
     try {
       const businessList = await this.db.collection('business').find({ templateId, companyToken }, ['_id', 'name', 'data', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'flow_passed', 'activeUntil', 'active'])
-        .sort({ createdAt: -1 })
         .toArray()
 
       return businessList
