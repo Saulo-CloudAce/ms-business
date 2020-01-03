@@ -2,7 +2,7 @@ const { clearString } = require('../helpers/formatters')
 const { isArrayElementSameTypes, isArrayOfObjects, isArrayWithEmptyElement } = require('../helpers/validators')
 const { isTypeOptions, isTypeDate } = require('../helpers/field-methods')
 
-const supportedTypes = ['text', 'string', 'int', 'array', 'boolean', 'cpfcnpj', 'cep', 'phone_number', 'decimal', 'email', 'options', 'date']
+const supportedTypes = ['text', 'string', 'int', 'array', 'boolean', 'cpfcnpj', 'cep', 'phone_number', 'decimal', 'email', 'options', 'date', 'timestamp']
 const supportedKeys = ['customer_cpfcnpj', 'customer_name', 'customer_phone_number', 'customer_email']
 
 function hasFieldUnique (fields) {
@@ -83,7 +83,7 @@ function validateFields (fields) {
     if (Object.keys(field).includes('type')) {
       if (!supportedTypes.includes(field.type)) errorsField.errors.push({ error: 'Type não suportado' })
 
-      if (field.type === 'array' && field.fields.length) {
+      if (field.type === 'array' && Object.keys(field).includes('fields') && field.fields.length) {
         field.fields.forEach(arrayFieldItem => {
           if (Object.keys(arrayFieldItem).includes('type')) {
             if (!supportedTypes.includes(arrayFieldItem.type)) errorsField.errors.push({ field: arrayFieldItem.column, error: 'Type não suportado' })
@@ -96,7 +96,7 @@ function validateFields (fields) {
             }
           } else errorsField.errors.push({ field: arrayFieldItem.column, error: 'O type é obrigatório' })
         })
-      } else if (field.type === 'array' && field.fields.length === 0) {
+      } else if (field.type === 'array' && Object.keys(field).includes('fields') && field.fields.length === 0) {
         errorsField.errors.push({ error: 'O campo fields deve ser um array de objetos' })
       }
 
