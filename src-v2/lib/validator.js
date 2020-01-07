@@ -50,7 +50,7 @@ class Validator {
       if (valid) {
         const lineFormatted = this.format(line, rulesByColumn)
         lineValids.push(lineFormatted)
-        lineValidsCustomer.push(line)
+        lineValidsCustomer.push(this.formatCustomer(line, rulesByColumn))
       } else {
         lineInvalids.push(lineErrors)
       }

@@ -10,7 +10,7 @@ async function sendData (data, companyToken, businessId, templateId, fieldKeyLis
   }
 
   try {
-    await getAxiosInstance(companyToken).post(`${process.env.CRM_URL}/customers`, payload)
+    return await getAxiosInstance(companyToken).post(`${process.env.CRM_URL}/customers`, payload)
   } catch (err) {
     console.error('SEND DATA CRM ==>', err)
     return err

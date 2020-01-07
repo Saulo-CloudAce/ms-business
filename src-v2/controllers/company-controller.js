@@ -1,5 +1,5 @@
 const CompanyRepository = require('../repository/company-repository')
-const Company = require('../../domain/company')
+const Company = require('../../domain-v2/company')
 class CompanyController {
   async create (req, res) {
     req.assert('name', 'O nome é obrigatório').notEmpty()

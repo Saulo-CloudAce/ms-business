@@ -14,7 +14,7 @@ class Business {
       listBatches = await this.listAllByTemplateId(companyToken, templateId)
     }
 
-    const { invalids, valids } = await this.validator.validateAndFormat(file.path, fields, jumpFirstLine, dataSeparator, listBatches)
+    const { invalids, valids, validsCustomer } = await this.validator.validateAndFormat(file.path, fields, jumpFirstLine, dataSeparator, listBatches)
 
     if (valids.length === 0) {
       return { businessId: null, invalids }
@@ -26,7 +26,7 @@ class Business {
     if (hasCustomerFields(fields)) {
       const listFieldKey = fields.filter(f => f.key).map(f => f.data)
 
-      await this.crmService.sendData(valids, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic)
+      await this.crmService.sendData(validsCustomer, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic)
     }
 
     return { businessId, invalids }
@@ -38,7 +38,7 @@ class Business {
       listBatches = await this.listAllByTemplateId(companyToken, templateId)
     }
 
-    const { invalids, valids } = await this.validator.validateAndFormatFromUrlFile(filepath, fields, jumpFirstLine, dataSeparator, listBatches)
+    const { invalids, valids, validsCustomer } = await this.validator.validateAndFormatFromUrlFile(filepath, fields, jumpFirstLine, dataSeparator, listBatches)
 
     if (valids.length === 0) {
       return { businessId: null, invalids }
@@ -49,7 +49,7 @@ class Business {
     if (hasCustomerFields(fields)) {
       const listFieldKey = fields.filter(f => f.key).map(f => f.data)
 
-      await this.crmService.sendData(valids, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic)
+      await this.crmService.sendData(validsCustomer, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic)
     }
 
     return { businessId, invalids }
@@ -57,11 +57,12 @@ class Business {
 
   async createFromJson (companyToken, name, fields, templateId, data, activeUntil, prefixIndexElastic, requestBody, isBatch = true) {
     let listBatches = []
+    let contactIdList = []
     if (hasFieldUnique(fields)) {
       listBatches = await this.listAllByTemplateId(companyToken, templateId)
     }
 
-    const { invalids, valids } = await this.validator.validateAndFormatFromJson(data, fields, listBatches)
+    const { invalids, valids, validsCustomer } = await this.validator.validateAndFormatFromJson(data, fields, listBatches)
 
     if (valids.length === 0) {
       return { businessId: null, invalids }
@@ -74,10 +75,11 @@ class Business {
     if (hasCustomerFields(fields)) {
       const listFieldKey = fields.filter(f => f.key).map(f => f.data)
 
-      await this.crmService.sendData(valids, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic)
+      const responseSendData = await this.crmService.sendData(validsCustomer, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic)
+      if (responseSendData.data && responseSendData.data.contact_ids) contactIdList = responseSendData.data.contact_ids
     }
 
-    return { businessId, invalids }
+    return { businessId, invalids, contactIds: contactIdList }
   }
 
   async listAllByTemplateId (companyToken, templateId) {

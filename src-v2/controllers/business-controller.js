@@ -1,6 +1,6 @@
 const moment = require('moment')
 
-const Business = require('../../domain/business')
+const Business = require('../../domain-v2/business')
 const BusinessRepository = require('../repository/business-repository')
 const CompanyRepository = require('../repository/company-repository')
 const TemplateRepository = require('../repository/template-repository')
@@ -214,13 +214,14 @@ class BusinessController {
 
       const isBatch = false
 
-      const { businessId, invalids } = await newBusiness.createFromJson(companyToken, businessName, template.fields, templateId, data, activeUntil, company.prefix_index_elastic, req.body, isBatch)
+      const { businessId, invalids, contactIds } = await newBusiness.createFromJson(companyToken, businessName, template.fields, templateId, data, activeUntil, company.prefix_index_elastic, req.body, isBatch)
+
       let dataInvalids = []
       if (invalids.length) dataInvalids = invalids[0].errors
       if (businessId === null) return res.status(400).send({ error: dataInvalids })
 
       if (dataInvalids.length) return res.status(400).send({ businessId, isBatch, invalids: dataInvalids })
-      return res.status(201).send({ businessId, isBatch })
+      return res.status(201).send({ businessId, isBatch, contactId: contactIds[0] })
     } catch (e) {
       console.error('CREATE BUSINESS FROM JSON ==> ', e)
       return res.status(500).send({ error: e.message })
