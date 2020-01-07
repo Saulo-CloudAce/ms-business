@@ -146,7 +146,7 @@ class Validator {
               const { valid, lineErrors } = self.validate(lineWithRulesFields, lineNumberAtFile, listBatches, fields)
 
               if (valid) {
-                const dataFormatted = self.formatCustomer(jsonData, rulesByColumn)
+                const dataFormatted = self.format(jsonData, rulesByColumn)
                 lineValids.push(dataFormatted)
                 lineValidsCustomer.push(self.formatCustomer(jsonData, rulesByColumn))
               } else {
@@ -259,7 +259,7 @@ class Validator {
               const { valid, lineErrors } = self.validate(lineWithRulesFields, lineNumberAtFile, listBatches, fields)
 
               if (valid) {
-                const dataFormatted = self.formatCustomer(jsonData, rulesByColumn)
+                const dataFormatted = self.format(jsonData, rulesByColumn)
                 lineValids.push(dataFormatted)
                 lineValidsCustomer.push(self.formatCustomer(jsonData, rulesByColumn))
               } else {
@@ -507,6 +507,8 @@ class Validator {
     elText = elText.replace(')', '')
     elText = elText.replace(' ', '')
 
+    if (elText.length <= 8) return ""
+
     return elText
   }
 
@@ -570,7 +572,7 @@ class Validator {
       } else if (isTypeArray(fieldRules)) {
         elText = this._formatFieldArray(fieldRules, elText)
       }
-      formatted[fieldRules.data] = elText
+      formatted[fieldRules.column] = elText
     })
     formatted['_id'] = md5(new Date() + Math.random())
     return formatted

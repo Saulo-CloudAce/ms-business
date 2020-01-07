@@ -9,6 +9,12 @@ const businessRoutes = require('../src/routes/business')
 const companyRoutes = require('../src/routes/company')
 const templateRoutes = require('../src/routes/template')
 const customerRoutes = require('../src/routes/customer')
+
+const businessRoutesV2 = require('../src-v2/routes/business')
+const companyRoutesV2 = require('../src-v2/routes/company')
+const templateRoutesV2 = require('../src-v2/routes/template')
+const customerRoutesV2 = require('../src-v2/routes/customer')
+
 const { connect } = require('../config/mongodb')
 
 const app = express()
@@ -23,6 +29,11 @@ businessRoutes(app)
 companyRoutes(app)
 templateRoutes(app)
 customerRoutes(app)
+
+businessRoutesV2(app)
+companyRoutesV2(app)
+templateRoutesV2(app)
+customerRoutesV2(app)
 
 const port = process.env.PORT || 3000
 connect(app, () => {
