@@ -48,7 +48,7 @@ class BusinessController {
       if (!mongoIdIsValid(templateId)) return res.status(400).send({ error: 'O ID do template é inválido' })
 
       if (moment(activeUntil, 'YYYY-MM-DD').format('YYYY-MM-DD') !== activeUntil) return res.status(400).send({ error: 'A data active_until está com formato inválido. O formato válido é YYYY-MM-DD' })
-      if (moment(activeUntil).diff(moment()) < 0) return res.status(400).send({ error: 'A data active_until não pode ser anterior a data de hoje, somente posterior' })
+      // if (moment(activeUntil).diff(moment()) < 0) return res.status(400).send({ error: 'A data active_until não pode ser anterior a data de hoje, somente posterior' })
 
       const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
       const newBusiness = this._getInstanceBusiness(req.app)
@@ -101,7 +101,7 @@ class BusinessController {
       if (!mongoIdIsValid(templateId)) return res.status(400).send({ error: 'O ID do template é inválido' })
 
       if (moment(activeUntil, 'YYYY-MM-DD').format('YYYY-MM-DD') !== activeUntil) return res.status(400).send({ error: 'A data active_until está com formato inválido. O formato válido é YYYY-MM-DD' })
-      if (moment(activeUntil).diff(moment()) < 0) return res.status(400).send({ error: 'A data active_until não pode ser anterior a data de hoje, somente posterior' })
+      // if (moment(activeUntil).diff(moment()) < 0) return res.status(400).send({ error: 'A data active_until não pode ser anterior a data de hoje, somente posterior' })
 
       const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
       const newBusiness = this._getInstanceBusiness(req.app)
@@ -152,7 +152,7 @@ class BusinessController {
       const activeUntil = req.body.active_until
 
       if (moment(activeUntil, 'YYYY-MM-DD').format('YYYY-MM-DD') !== activeUntil) return res.status(400).send({ error: 'A data active_until está com formato inválido. O formato válido é YYYY-MM-DD' })
-      if (moment(activeUntil).diff(moment()) < 0) return res.status(400).send({ error: 'A data active_until não pode ser anterior a data de hoje, somente posterior' })
+      // if (moment(activeUntil).diff(moment()) < 0) return res.status(400).send({ error: 'A data active_until não pode ser anterior a data de hoje, somente posterior' })
 
       if (!mongoIdIsValid(templateId)) return res.status(400).send({ error: 'O ID do template é inválido' })
 

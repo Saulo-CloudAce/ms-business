@@ -88,7 +88,7 @@ class BusinessRepository {
   async getAllBatches (companyToken) {
     try {
       let businessList = await this.db.collection('business')
-        .find({ companyToken: companyToken, isBatch: { $ne: false } }, ['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'data'])
+        .find({ companyToken: companyToken }, ['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'data'])
         .toArray()
 
       businessList = businessList.sort((a, b) => moment(b.createdAt) - moment(a.createdAt))
