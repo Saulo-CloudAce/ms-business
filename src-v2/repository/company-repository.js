@@ -10,8 +10,8 @@ class CompanyRepository {
     const newCompany = { name, prefix_index_elastic: prefixIndexElastic, callback, token, activated: true, created_at: moment().format(), updated_at: moment().format() }
 
     try {
-      var r = await this.db.collection('company').insertOne(newCompany)
-      var company = r.ops[0]
+      const r = await this.db.collection('company').insertOne(newCompany)
+      const company = r.ops[0]
 
       return company
     } catch (err) {
@@ -21,7 +21,7 @@ class CompanyRepository {
 
   async getAll () {
     try {
-      var result = await this.db.collection('company').find({}).toArray()
+      const result = await this.db.collection('company').find({}).toArray()
 
       return result
     } catch (err) {
@@ -31,7 +31,7 @@ class CompanyRepository {
 
   async getById (id) {
     try {
-      var result = await this.db.collection('company').findOne({ _id: new ObjectID(id) })
+      const result = await this.db.collection('company').findOne({ _id: new ObjectID(id) })
 
       return result
     } catch (err) {
@@ -41,7 +41,7 @@ class CompanyRepository {
 
   async getByToken (token) {
     try {
-      var result = await this.db.collection('company').findOne({ token })
+      const result = await this.db.collection('company').findOne({ token })
 
       return result
     } catch (err) {
@@ -51,7 +51,7 @@ class CompanyRepository {
 
   async update (id, name, callback, activated) {
     try {
-      var result = await this.db.collection('company').update({ _id: new ObjectID(id) }, { $set: { name, callback, activated, updated_at: moment().format() } })
+      const result = await this.db.collection('company').update({ _id: new ObjectID(id) }, { $set: { name, callback, activated, updated_at: moment().format() } })
 
       return result.ops[0]
     } catch (err) {

@@ -216,7 +216,7 @@ class Validator {
           resolve(fs.createReadStream('/tmp/teste'))
         })
     })
-    var reader = readline.createInterface({
+    const reader = readline.createInterface({
       input: readStream
     })
 

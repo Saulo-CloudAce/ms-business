@@ -6,6 +6,7 @@ const {
   updateCustomer,
   getCustomerById,
   getCustomerFormattedById } = require('../services/crm-service')
+const { clearCPFCNPJ } = require('../helpers/formatters')
 const CompanyRepository = require('../repository/company-repository')
 const TemplateRepository = require('../repository/template-repository')
 const BusinessRepository = require('../repository/business-repository')
@@ -27,15 +28,12 @@ class CustomerController {
     const companyToken = req.headers['token']
 
     try {
-      var { companyRepository } = this._getInstanceRepositories(req.app)
+      const { companyRepository } = this._getInstanceRepositories(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      var cpfcnpj = req.body.customer_cpfcnpj
-      cpfcnpj = cpfcnpj.replace(/\./g, '')
-      cpfcnpj = cpfcnpj.replace(/-/g, '')
-      cpfcnpj = cpfcnpj.replace(/\\/g, '')
+      const cpfcnpj = clearCPFCNPJ(req.body.customer_cpfcnpj)
       req.body.customer_cpfcnpj = cpfcnpj
 
       const request = await createSingleCustomer(req.body, companyToken, company.prefix_index_elastic)
@@ -54,15 +52,12 @@ class CustomerController {
     const companyToken = req.headers['token']
 
     try {
-      var { companyRepository } = this._getInstanceRepositories(req.app)
+      const { companyRepository } = this._getInstanceRepositories(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      var cpfcnpj = req.body.customer_cpfcnpj
-      cpfcnpj = cpfcnpj.replace(/\./g, '')
-      cpfcnpj = cpfcnpj.replace(/-/g, '')
-      cpfcnpj = cpfcnpj.replace(/\\/g, '')
+      const cpfcnpj = clearCPFCNPJ(req.body.customer_cpfcnpj)
       req.body.customer_cpfcnpj = cpfcnpj
 
       const request = await updateCustomer(req.params.id, req.body, companyToken)
@@ -77,29 +72,34 @@ class CustomerController {
     const companyToken = req.headers['token']
 
     try {
-      var { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
+      const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      var request = await getCustomerById(req.params.id, companyToken)
+      const request = await getCustomerById(req.params.id, companyToken)
 
       if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
 
-      var customer = request.data
-      var templateList = customer.business_template_list
-      var templates = []
+      const customer = request.data
+      const templateList = customer.business_template_list
+      let templates = []
       if (templateList && templateList.length > 0) {
         templates = await Promise.all(templateList.map(async templateId => {
-          var template = await templateRepository.getNameById(templateId, companyToken)
+          const template = await templateRepository.getById(templateId, companyToken)
           if (template) {
-            var data = await businessRepository.listAllByTemplate(companyToken, templateId)
-            if (data && data.length > 0) {
-              data.map(m => { m.data = m.data.filter(md => md.customer_cpfcnpj === customer.cpfcnpj) })
-            }
+            const templateFinal = { _id: template._id, name: template.name }
+            const fieldKey = template.fields.find(f => f.data === 'customer_cpfcnpj')
+            if (fieldKey) {
+              const keyCpfCnpj = fieldKey.column
+              const data = await businessRepository.listAllByTemplate(companyToken, templateId)
+              if (data && data.length > 0) {
+                data.map(m => { m.data = m.data.filter(md => md[keyCpfCnpj] === customer.cpfcnpj) })
+              }
 
-            if (data.length > 0) template.lote_data_list = data.filter(d => d.data.length > 0)
-            return template
+              if (data.length > 0) templateFinal.lote_data_list = data.filter(d => d.data.length > 0)
+              return templateFinal
+            }
           }
         }))
       }
@@ -121,29 +121,34 @@ class CustomerController {
     const companyToken = req.headers['token']
 
     try {
-      var { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
+      const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      var request = await getCustomerFormattedById(req.params.id, companyToken)
+      const request = await getCustomerFormattedById(req.params.id, companyToken)
 
       if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
 
-      var customer = request.data
-      var templateList = customer.business_template_list
-      var templates = []
+      const customer = request.data
+      const templateList = customer.business_template_list
+      let templates = []
       if (templateList && templateList.length > 0) {
         templates = await Promise.all(templateList.map(async templateId => {
-          var template = await templateRepository.getNameById(templateId, companyToken)
+          const template = await templateRepository.getById(templateId, companyToken)
           if (template) {
-            var data = await businessRepository.listAllByTemplate(companyToken, templateId)
-            if (data && data.length > 0) {
-              data.map(m => { m.data = m.data.filter(md => md.customer_cpfcnpj === customer.customer_cpfcnpj) })
-            }
+            const templateFinal = { _id: template._id, name: template.name }
+            const fieldKey = template.fields.find(f => f.data === 'customer_cpfcnpj')
+            if (fieldKey) {
+              const keyCpfCnpj = fieldKey.column
+              const data = await businessRepository.listAllByTemplate(companyToken, templateId)
+              if (data && data.length > 0) {
+                data.map(m => { m.data = m.data.filter(md => md[keyCpfCnpj] === customer.customer_cpfcnpj) })
+              }
 
-            if (data.length > 0) template.lote_data_list = data.filter(d => d.data.length > 0)
-            return template
+              if (data.length > 0) templateFinal.lote_data_list = data.filter(d => d.data.length > 0)
+              return templateFinal
+            }
           }
         }))
       }
@@ -165,18 +170,15 @@ class CustomerController {
     const companyToken = req.headers['token']
 
     try {
-      var { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
+      const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      var cpfcnpj = req.query.cpfcnpj
-      var request = null
+      let cpfcnpj = req.query.cpfcnpj
+      let request = null
       if (cpfcnpj) {
-        cpfcnpj = cpfcnpj.replace(/\./g, '')
-        cpfcnpj = cpfcnpj.replace(/-/g, '')
-        cpfcnpj = cpfcnpj.replace(/\\/g, '')
-
+        cpfcnpj = clearCPFCNPJ(cpfcnpj)
         request = await getByCpfCnpj(cpfcnpj, companyToken)
       } else {
         request = await getAllCustomersByCompany(companyToken)
@@ -184,26 +186,28 @@ class CustomerController {
 
       if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
 
-      var customer = (request.data) ? request.data : []
-      var templateList = (customer && customer.business_template_list) ? customer.business_template_list : []
-      var businessList = (customer && customer.business_list) ? customer.business_list : []
-      var templates = []
+      const customer = (request.data) ? request.data : []
+      const templateList = (customer && customer.business_template_list) ? customer.business_template_list : []
+      const businessList = (customer && customer.business_list) ? customer.business_list : []
+      let templates = []
       if (templateList && templateList.length > 0) {
         templates = await Promise.all(templateList.map(async templateId => {
-          var template = await templateRepository.getById(templateId, companyToken)
+          const template = await templateRepository.getById(templateId, companyToken)
           if (template) {
-            let templateFinal = { _id: template._id, name: template.name }
-            console.log(template)
-            const keyCpfCnpj = template.fields.find(f => f.data === 'customer_cpfcnpj').column
-            var data = await businessRepository.listAllByTemplate(companyToken, templateId)
-            if (data && data.length > 0) {
-              data = data.filter(d => businessList.includes(d._id.toString()))
-              data.map(m => {
-                m.data = m.data.filter(md => md[keyCpfCnpj] === cpfcnpj)
-              })
+            const templateFinal = { _id: template._id, name: template.name }
+            const fieldKey = template.fields.find(f => f.data === 'customer_cpfcnpj')
+            if (fieldKey) {
+              const keyCpfCnpj = fieldKey.column
+              let data = await businessRepository.listAllByTemplate(companyToken, templateId)
+              if (data && data.length > 0) {
+                data = data.filter(d => businessList.includes(d._id.toString()))
+                data.map(m => {
+                  m.data = m.data.filter(md => md[keyCpfCnpj] === cpfcnpj)
+                })
+              }
+              if (data.length > 0) templateFinal.lote_data_list = data.filter(d => d.data.length > 0)
+              return templateFinal
             }
-            if (data.length > 0) templateFinal.lote_data_list = data.filter(d => d.data.length > 0)
-            return templateFinal
           }
         }))
       }
@@ -223,32 +227,37 @@ class CustomerController {
     const companyToken = req.headers['token']
 
     try {
-      var { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
+      const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       const search = req.query.search
-      var request = await searchCustomer(search, companyToken, company.prefix_index_elastic)
+      const request = await searchCustomer(search, companyToken, company.prefix_index_elastic)
       if (request.response && request.response.status && request.response.status !== 200) return res.status(request.response.status).send(request.response.data)
-      var customers = (Array.isArray(request.data)) ? request.data : []
+      let customers = (Array.isArray(request.data)) ? request.data : []
 
-      for (var i in customers) {
-        var customer = customers[i]
-        var templateList = customer.business_template_list
-        var templates = []
+      for (const i in customers) {
+        const customer = customers[i]
+        const templateList = customer.business_template_list
+        let templates = []
         if (templateList && templateList.length > 0) {
           templates = await Promise.all(templateList.map(async templateId => {
-            var template = await templateRepository.getNameById(templateId, companyToken)
+            const template = await templateRepository.getById(templateId, companyToken)
             if (template) {
-              var data = await businessRepository.listAllByTemplate(companyToken, templateId)
-              if (data && data.length > 0) {
-                var customerKey = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
-                data.map(m => { m.data = m.data.filter(md => md.customer_cpfcnpj === customerKey) })
-              }
+              const templateFinal = { _id: template._id, name: template.name }
+              const fieldKey = template.fields.find(f => f.data === 'customer_cpfcnpj')
+              if (fieldKey) {
+                const keyCpfCnpj = fieldKey.column
+                const data = await businessRepository.listAllByTemplate(companyToken, templateId)
+                if (data && data.length > 0) {
+                  const customerKey = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
+                  data.map(m => { m.data = m.data.filter(md => md[keyCpfCnpj] === customerKey) })
+                }
 
-              if (data.length > 0) template.lote_data_list = data.filter(d => d.data.length > 0)
-              return template
+                if (data.length > 0) templateFinal.lote_data_list = data.filter(d => d.data.length > 0)
+                return templateFinal
+              }
             }
           }))
         }
@@ -264,7 +273,7 @@ class CustomerController {
 
       return res.status(200).send(customers)
     } catch (err) {
-console.error(err)
+      console.error(err)
       return res.status(500).send({ error: err.message })
     }
   }

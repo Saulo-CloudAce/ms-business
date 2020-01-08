@@ -49,9 +49,9 @@ const uploadFromFile = async (dirBucket, dirFile, fileName, bucket) => new Promi
 })
 
 async function uploadFromEncoded (dirBucket, buffer, fileName, nBucket) {
-  var clientS3 = new AWS.S3({ accessKeyId: process.env.ACCESSKEYID, secretAccessKey: process.env.SECRETACCESSKEY })
-  var urlFile = null
-  var bucket = (nBucket) ? nBucket : process.env.BUCKET
+  const clientS3 = new AWS.S3({ accessKeyId: process.env.ACCESSKEYID, secretAccessKey: process.env.SECRETACCESSKEY })
+  let urlFile = null
+  const bucket = (nBucket) ? nBucket : process.env.BUCKET
   if (dirBucket && dirBucket.length > 0) fileName = `${dirBucket}/${fileName}`
   await clientS3.putObject({
     Bucket: bucket,

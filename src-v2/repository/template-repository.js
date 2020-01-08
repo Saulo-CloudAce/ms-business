@@ -10,8 +10,8 @@ class TemplateRepository {
     const newTemplate = { name, fields, companyToken, active, createdAt: moment().format(), updatedAt: moment().format() }
 
     try {
-      var r = await this.db.collection('business_template').insertOne(newTemplate)
-      var templateId = r.insertedId
+      const r = await this.db.collection('business_template').insertOne(newTemplate)
+      const templateId = r.insertedId
 
       return { _id: templateId }
     } catch (err) {
@@ -43,7 +43,7 @@ class TemplateRepository {
 
   async getAllByCompany (companyToken) {
     try {
-      var result = await this.db.collection('business_template').find({ companyToken }, ['_id', 'name', 'active', 'createdAt', 'updateAt']).toArray()
+      const result = await this.db.collection('business_template').find({ companyToken }, ['_id', 'name', 'active', 'createdAt', 'updateAt']).toArray()
 
       return result
     } catch (err) {
@@ -53,7 +53,7 @@ class TemplateRepository {
 
   async getAllByName (name, companyToken) {
     try {
-      var result = await this.db.collection('business_template').find({ name, companyToken }, ['_id']).toArray()
+      const result = await this.db.collection('business_template').find({ name, companyToken }, ['_id']).toArray()
 
       return result
     } catch (err) {
@@ -63,7 +63,7 @@ class TemplateRepository {
 
   async getAllByNameWhereIdNotIs (name, companyToken, templateId) {
     try {
-      var result = await this.db.collection('business_template').find({ name, companyToken, _id: { $ne: new ObjectID(templateId) } }, ['_id']).toArray()
+      const result = await this.db.collection('business_template').find({ name, companyToken, _id: { $ne: new ObjectID(templateId) } }, ['_id']).toArray()
 
       return result
     } catch (err) {
@@ -73,7 +73,7 @@ class TemplateRepository {
 
   async getById (id, companyToken) {
     try {
-      var result = await this.db.collection('business_template').findOne({ _id: new ObjectID(id), companyToken }, ['_id', 'name', 'fields', 'active', 'createdAt', 'updatedAt'])
+      const result = await this.db.collection('business_template').findOne({ _id: new ObjectID(id), companyToken }, ['_id', 'name', 'fields', 'active', 'createdAt', 'updatedAt'])
 
       return result
     } catch (err) {
@@ -83,7 +83,7 @@ class TemplateRepository {
 
   async getNameById (id, companyToken) {
     try {
-      var result = await this.db.collection('business_template').findOne({ _id: new ObjectID(id), companyToken }, ['_id', 'name'])
+      const result = await this.db.collection('business_template').findOne({ _id: new ObjectID(id), companyToken }, ['_id', 'name'])
 
       return result
     } catch (err) {

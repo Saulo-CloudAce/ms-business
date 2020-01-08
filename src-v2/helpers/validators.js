@@ -1,11 +1,11 @@
-var mongodb = require('mongodb')
+const mongodb = require('mongodb')
 
 function mongoIdIsValid (id = null) {
   return mongodb.ObjectID.isValid(id)
 }
 
 function validateEmail (email) {
-  var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   return re.test(String(email).toLowerCase())
 }
 
@@ -67,11 +67,11 @@ function arraysEqual (source1, source2) {
 }
 
 function arraysDiff (arr1, arr2) {
-  var filteredArr1 = arr1.filter(function (ele) {
+  const filteredArr1 = arr1.filter(function (ele) {
     return arr2.indexOf(ele) === -1
   })
 
-  var filteredArr2 = arr2.filter(function (ele) {
+  const filteredArr2 = arr2.filter(function (ele) {
     return arr1.indexOf(ele) === -1
   })
   const arrDiff = filteredArr1.concat(filteredArr2)

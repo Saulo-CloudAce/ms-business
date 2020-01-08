@@ -24,7 +24,7 @@ class BusinessController {
   }
 
   _getInstanceBusiness (app) {
-    var { businessRepository } = this._getInstanceRepositories(app)
+    const { businessRepository } = this._getInstanceRepositories(app)
     return new Business(businessRepository, this.uploader, new Validator(), crmService)
   }
 
@@ -48,7 +48,7 @@ class BusinessController {
       if (!mongoIdIsValid(templateId)) return res.status(400).send({ error: 'O ID do template é inválido' })
 
       if (moment(activeUntil, 'YYYY-MM-DD').format('YYYY-MM-DD') !== activeUntil) return res.status(400).send({ error: 'A data active_until está com formato inválido. O formato válido é YYYY-MM-DD' })
-      // if (moment(activeUntil).diff(moment()) < 0) return res.status(400).send({ error: 'A data active_until não pode ser anterior a data de hoje, somente posterior' })
+      if (moment(activeUntil, 'YYYY-MM-DD').diff(moment().format('YYYY-MM-DD')) < 0) return res.status(400).send({ error: 'A data active_until não pode ser anterior a data de hoje, somente igual ou posterior' })
 
       const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
       const newBusiness = this._getInstanceBusiness(req.app)
@@ -77,7 +77,7 @@ class BusinessController {
       if (invalids.length) return res.status(400).send({ businessId, invalids })
       return res.status(201).send({ businessId })
     } catch (e) {
-      var errCode = '00014'
+      const errCode = '00014'
       console.error(`#${errCode}`, e.message)
       return res.status(500).send({ error: `#${errCode}` })
     }
@@ -101,7 +101,7 @@ class BusinessController {
       if (!mongoIdIsValid(templateId)) return res.status(400).send({ error: 'O ID do template é inválido' })
 
       if (moment(activeUntil, 'YYYY-MM-DD').format('YYYY-MM-DD') !== activeUntil) return res.status(400).send({ error: 'A data active_until está com formato inválido. O formato válido é YYYY-MM-DD' })
-      // if (moment(activeUntil).diff(moment()) < 0) return res.status(400).send({ error: 'A data active_until não pode ser anterior a data de hoje, somente posterior' })
+      if (moment(activeUntil, 'YYYY-MM-DD').diff(moment().format('YYYY-MM-DD')) < 0) return res.status(400).send({ error: 'A data active_until não pode ser anterior a data de hoje, somente igual ou posterior' })
 
       const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
       const newBusiness = this._getInstanceBusiness(req.app)
@@ -116,9 +116,9 @@ class BusinessController {
       const businessList = await newBusiness.getByNameAndTemplateId(companyToken, req.body.name, templateId)
       if (businessList.length) return res.status(400).send({ error: `${req.body.name} já foi cadastrado` })
 
-      var jumpFirstLine = (req.body.jump_first_line) ? (req.body.jump_first_line.toLowerCase() === 'true') : false
+      const jumpFirstLine = (req.body.jump_first_line) ? (req.body.jump_first_line.toLowerCase() === 'true') : false
 
-      var dataSeparator = ';'
+      let dataSeparator = ';'
       if (req.body.data_separator) {
         if (req.body.data_separator === ',' || req.body.data_separator === 'v') dataSeparator = ','
         else dataSeparator = req.body.data_separator
@@ -152,7 +152,7 @@ class BusinessController {
       const activeUntil = req.body.active_until
 
       if (moment(activeUntil, 'YYYY-MM-DD').format('YYYY-MM-DD') !== activeUntil) return res.status(400).send({ error: 'A data active_until está com formato inválido. O formato válido é YYYY-MM-DD' })
-      // if (moment(activeUntil).diff(moment()) < 0) return res.status(400).send({ error: 'A data active_until não pode ser anterior a data de hoje, somente posterior' })
+      if (moment(activeUntil, 'YYYY-MM-DD').diff(moment().format('YYYY-MM-DD')) < 0) return res.status(400).send({ error: 'A data active_until não pode ser anterior a data de hoje, somente igual ou posterior' })
 
       if (!mongoIdIsValid(templateId)) return res.status(400).send({ error: 'O ID do template é inválido' })
 
@@ -221,7 +221,7 @@ class BusinessController {
       if (businessId === null) return res.status(400).send({ error: dataInvalids })
 
       if (dataInvalids.length) return res.status(400).send({ businessId, isBatch, invalids: dataInvalids })
-      return res.status(201).send({ businessId, isBatch, contactId: contactIds[0] })
+      return res.status(201).send({ businessId, isBatch, customerId: contactIds[0] })
     } catch (e) {
       console.error('CREATE BUSINESS FROM JSON ==> ', e)
       return res.status(500).send({ error: e.message })
@@ -237,22 +237,22 @@ class BusinessController {
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      var searchData = req.body.data
-      var fields = []
+      const searchData = req.body.data
+      let fields = []
       if (req.body.fields) fields = req.body.fields
       fields.push('_id')
 
-      var businessData = []
+      const businessData = []
 
       if (searchData && Array.isArray(searchData)) {
-        var listBusinessId = searchData.map(s => s.lote_id)
-        var businessList = await businessRepository.getDataByListId(companyToken, listBusinessId)
-        var listDataId = searchData.map(s => s.item_id)
+        const listBusinessId = searchData.map(s => s.lote_id)
+        const businessList = await businessRepository.getDataByListId(companyToken, listBusinessId)
+        const listDataId = searchData.map(s => s.item_id)
         businessList.forEach((business) => {
           business.data
             .filter(d => listDataId.includes(d._id))
             .forEach((it) => {
-              var item = it
+              let item = it
               if (fields.length > 1) {
                 item = Object.keys(item)
                   .filter(k => fields.includes(k))
@@ -283,7 +283,7 @@ class BusinessController {
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       const businessList = await newBusiness.getAllBatches(companyToken)
-      var business = businessList.map(b => {
+      const business = businessList.map(b => {
         return {
           _id: b._id,
           name: b.name,
@@ -409,10 +409,10 @@ class BusinessController {
 
       const searchParams = req.body.search_params
 
-      var businessList = await businessRepository.listAllByTemplate(companyToken, req.body.template_id)
-      var resultList = []
+      const businessList = await businessRepository.listAllByTemplate(companyToken, req.body.template_id)
+      const resultList = []
       businessList.filter((b) => {
-        var dataR = b.data.filter(r => Object.values(r).includes(searchParams.value))
+        const dataR = b.data.filter(r => Object.values(r).includes(searchParams.value))
         if (dataR.length > 0) {
           const b1 = b
           b1.data = dataR
@@ -477,13 +477,13 @@ class BusinessController {
       const template = await templateRepository.getById(templateId, companyToken)
       if (!template) return res.status(400).send({ error: 'Template não identificado' })
 
-      var fieldEditableList = template.fields.filter(f => f.editable)
+      let fieldEditableList = template.fields.filter(f => f.editable)
       if (!Array.isArray(fieldEditableList)) fieldEditableList = []
 
       const business = await newBusiness.getDataById(companyToken, businessId)
       if (!business) return res.status(400).send({ error: 'Business não identificado.' })
 
-      var register = null
+      let register = null
 
       business.data.forEach(d => {
         if (d._id === registerId) {
@@ -521,9 +521,9 @@ class BusinessController {
 
       const business = await newBusiness.getDataById(companyToken, req.params.businessId)
       if (!business) return res.status(400).send({ error: 'Business não identificado.' })
-      var data = business.data.filter(d => d._id === req.params.registerId)
+      const data = business.data.filter(d => d._id === req.params.registerId)
 
-      var respBusiness = {
+      const respBusiness = {
         _id: business._id,
         name: business.name
       }

@@ -10,7 +10,7 @@ class BusinessRepository {
     const data = { companyToken, name, filePath, templateId, jumpFirstLine, dataSeparator, isBatch, quantityRows, data: fieldsData, activeUntil, invalids, flow_passed: false, active: true, createdAt: moment().format(), updatedAt: moment().format() }
 
     try {
-      var r = await this.db.collection('business').insertOne(data)
+      const r = await this.db.collection('business').insertOne(data)
       const id = r.insertedId
       return id
     } catch (err) {
@@ -131,7 +131,7 @@ class BusinessRepository {
   }
 
   async getDataByListId (companyToken, listId) {
-    var listIdQuery = listId.map(l => new ObjectID(l))
+    const listIdQuery = listId.map(l => new ObjectID(l))
     try {
       const business = await this.db.collection('business').find({ companyToken: companyToken, _id: { $in: listIdQuery } }).toArray()
 

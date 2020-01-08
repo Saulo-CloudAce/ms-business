@@ -57,14 +57,14 @@ class TemplateController {
     const templateId = req.params.id
 
     try {
-      var { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
+      const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
 
       if (!mongoIdIsValid(templateId)) return res.status(400).send({ error: 'ID não válido' })
 
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      var template = await templateRepository.getNameById(templateId, companyToken)
+      const template = await templateRepository.getNameById(templateId, companyToken)
       if (!template) return res.status(400).send({ error: 'Template não identificado' })
 
       await templateRepository.updateActive(templateId, true)
@@ -81,14 +81,14 @@ class TemplateController {
     const templateId = req.params.id
 
     try {
-      var { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
+      const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
 
       if (!mongoIdIsValid(templateId)) return res.status(400).send({ error: 'ID não válido' })
 
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      var template = await templateRepository.getNameById(templateId, companyToken)
+      const template = await templateRepository.getNameById(templateId, companyToken)
       if (!template) return res.status(400).send({ error: 'Template não identificado' })
 
       await templateRepository.updateActive(templateId, false)
@@ -105,14 +105,14 @@ class TemplateController {
     const templateId = req.params.id
 
     try {
-      var { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
+      const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
       if (!mongoIdIsValid(templateId)) return res.status(400).send({ error: 'ID não válido' })
 
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      var template = await templateRepository.getNameById(templateId, companyToken)
+      const template = await templateRepository.getNameById(templateId, companyToken)
       if (!template) return res.status(400).send({ error: 'Template não identificado' })
 
       const businessData = await businessRepository.listAllByTemplate(companyToken, templateId)
@@ -128,7 +128,7 @@ class TemplateController {
     const companyToken = req.headers['token']
 
     try {
-      var { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
+      const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
@@ -147,7 +147,7 @@ class TemplateController {
     const templateId = req.params.id
 
     try {
-      var { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
+      const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
 
       if (!mongoIdIsValid(templateId)) return res.status(400).send({ error: 'ID não válido' })
 
@@ -174,7 +174,7 @@ class TemplateController {
 
     try {
       const { name, fields } = req.body
-      var { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
+      const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
 
       if (!mongoIdIsValid(templateId)) return res.status(400).send({ error: 'ID não válido' })
 
