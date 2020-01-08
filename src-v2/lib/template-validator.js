@@ -24,7 +24,7 @@ function formatFieldsOptions (fields) {
     f.key = (String(f.key) === 'true')
     f.unique = (String(f.unique) === 'true')
     f.required = (String(f.required) === 'true')
-    f.editable = (String(f.editable) === 'true')
+    f.editable = (String(f.editable) === 'true' && !f.key)
     f.operator_can_view = (String(f.operatorCanView) === 'true' || String(f.operator_can_view) === 'true')
     f.visible = (String(f.visible) === 'true')
     f.quick_search = (String(f.quick_search) === 'true')
