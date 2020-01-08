@@ -21,26 +21,29 @@ function validateKey (fields) {
 function formatFieldsOptions (fields) {
   return fields.map(f => {
     if (f.type) f.type = f.type.toLowerCase()
-    if (!f.key) f.key = false
-    if (!f.unique) f.unique = false
-    if (!f.required) f.required = false
-    if (!f.editable) f.editable = false
-    if (!f.operatorCanView || !f.operator_can_view) f.operator_can_view = true
-    if (!f.visible) f.visible = true
+    f.key = (String(f.key) === 'true')
+    f.unique = (String(f.unique) === 'true')
+    f.required = (String(f.required) === 'true')
+    f.editable = (String(f.editable) === 'true')
+    f.operator_can_view = (String(f.operatorCanView) === 'true' || String(f.operator_can_view) === 'true')
+    f.visible = (String(f.visible) === 'true')
+    f.quick_search = (String(f.quick_search) === 'true')
 
-    f.label = (f.label) ? f.label : f.column
+    f.label = (f.label) ? String(f.label) : String(f.column)
     f.column = clearString(f.column.toLowerCase())
 
     if (f.type === 'array') {
       if (f.fields) {
         f.fields.map(ff => {
-          if (!ff.key) ff.key = false
+          ff.key = (String(ff.key) === 'true')
           if (!ff.required) ff.required = false
-          if (!ff.editable) ff.editable = false
-          if (!ff.operatorCanView || f.operator_can_view) ff.operator_can_view = true
-          if (!ff.visible) ff.visible = true
+          ff.required = (String(ff.required) === 'true')
+          ff.editable = (String(ff.editable) === 'true')
+          ff.operator_can_view = (String(ff.operatorCanView) === 'true' || String(ff.operator_can_view) === 'true')
+          ff.visible = (String(ff.visible) === 'true')
+          ff.quick_search = (String(ff.quick_search) === 'true')
 
-          ff.label = (ff.label) ? ff.label : ff.column
+          ff.label = (ff.label) ? String(ff.label) : String(ff.column)
           ff.column = clearString(ff.column.toLowerCase())
         })
       }
