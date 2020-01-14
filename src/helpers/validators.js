@@ -5,8 +5,9 @@ function mongoIdIsValid (id = null) {
 }
 
 function validateEmail (email) {
-  if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(String(email).trim().toLowerCase())) return true
-  return false
+  // if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(String(email).trim().toLowerCase())) return true
+  // return false
+  return true
 }
 
 function isArrayObject (array) {
