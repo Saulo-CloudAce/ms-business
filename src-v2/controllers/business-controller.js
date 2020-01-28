@@ -488,7 +488,7 @@ class BusinessController {
       business.data.forEach(d => {
         if (d._id === registerId) {
           fieldEditableList.forEach(f => {
-            if (req.body[f.column] && req.body[f.column].length > 0) {
+            if (req.body[f.column] && String(req.body[f.column]).length > 0) {
               d[f.column] = req.body[f.column]
             }
           })
