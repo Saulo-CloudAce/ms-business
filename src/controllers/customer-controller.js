@@ -88,7 +88,7 @@ class CustomerController {
 
       var customer = request.data
       let templateList = []
-      if (customer && customer.business_template_list) templateList = customer.business_template_list
+      if (customer && typeof customer === 'objetct' && customer.business_template_list) templateList = customer.business_template_list
       var templates = []
       if (templateList && templateList.length > 0) {
         templates = await Promise.all(templateList.map(async templateId => {
