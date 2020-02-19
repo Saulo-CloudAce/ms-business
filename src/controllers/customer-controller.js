@@ -87,7 +87,8 @@ class CustomerController {
       if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
 
       var customer = request.data
-      var templateList = customer.business_template_list
+      let templateList = []
+      if (customer && customer.business_template_list) templateList = customer.business_template_list
       var templates = []
       if (templateList && templateList.length > 0) {
         templates = await Promise.all(templateList.map(async templateId => {
