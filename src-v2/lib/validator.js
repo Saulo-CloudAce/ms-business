@@ -179,8 +179,8 @@ class Validator {
     const firstLineData = listLineData.shift()
     listLineData.forEach(line => {
       columnsArray.forEach(col => {
-        const lineFilled = line[col.data].filter(l => Object.keys(l).filter(lk => String(l[lk]).length > 0).length > 0)
-        if (lineFilled.length) firstLineData[col.data] = firstLineData[col.data].concat(lineFilled)
+        const lineFilled = line[col.column].filter(l => Object.keys(l).filter(lk => String(l[lk]).length > 0).length > 0)
+        if (lineFilled.length) firstLineData[col.column] = firstLineData[col.column].concat(lineFilled)
       })
     })
 
@@ -194,8 +194,9 @@ class Validator {
     let dataIndexedByKeyColumn = {}
     dataBatch.forEach(data => {
       const dataKeyValue = data[columnKey]
-      if (Object.keys(dataIndexedByKeyColumn).includes(dataKeyValue)) dataIndexedByKeyColumn[dataKeyValue].push(data)
-      else {
+      if (dataIndexedByKeyColumn[dataKeyValue]) {
+        dataIndexedByKeyColumn[dataKeyValue].push(data)
+      } else {
         dataIndexedByKeyColumn[dataKeyValue] = [data]
       }
     })
@@ -203,6 +204,7 @@ class Validator {
       if (dataIndexedByKeyColumn[k].length > 1) return this._mergeData(dataIndexedByKeyColumn[k], columnsArray)
       return dataIndexedByKeyColumn[k][0]
     })
+
     return dataIndexedByKeyColumn
   }
 
