@@ -182,7 +182,7 @@ class CustomerController {
       } else {
         request = await getAllCustomersByCompany(companyToken)
       }
-
+console.log('qweqweq------------------------------------------>', request)
       if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
 
       var customer = (request.data) ? request.data : []
