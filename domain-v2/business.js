@@ -114,6 +114,14 @@ class Business {
     }
   }
 
+  async getAllBatchesBasic (companyToken) {
+    try {
+      return this.repository.getAllBatchesBasic(companyToken)
+    } catch (err) {
+      return err
+    }
+  }
+
   async getDataById (companyToken, id) {
     try {
       return this.repository.getDataById(companyToken, id)

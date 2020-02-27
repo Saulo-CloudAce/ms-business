@@ -199,6 +199,7 @@ class CustomerController {
             if (fieldKey) {
               const keyCpfCnpj = fieldKey.column
               let data = await businessRepository.listAllByTemplateSortedReverse(companyToken, templateId)
+              data = data.filter(d => d.data)
               if (data && data.length > 0) {
 //                data = data.filter(d => businessList.includes(d._id.toString()))
                 data.map(m => {

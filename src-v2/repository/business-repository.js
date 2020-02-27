@@ -99,6 +99,20 @@ class BusinessRepository {
     }
   }
 
+  async getAllBatchesBasic (companyToken) {
+    try {
+      let businessList = await this.db.collection('business')
+        .find({ companyToken: companyToken }, ['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'quantityRows'])
+        .toArray()
+
+      businessList = businessList.sort((a, b) => moment(b.createdAt) - moment(a.createdAt))
+
+      return businessList
+    } catch (err) {
+      throw new Error(err)
+    }
+  }
+
   async listAllByTemplate (companyToken, templateId) {
     try {
       const businessList = await this.db.collection('business').find({ templateId, companyToken }, ['_id', 'name', 'data', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'flow_passed', 'activeUntil', 'active'])

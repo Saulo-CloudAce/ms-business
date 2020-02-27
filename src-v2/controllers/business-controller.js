@@ -282,7 +282,7 @@ class BusinessController {
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      const businessList = await newBusiness.getAllBatches(companyToken)
+      const businessList = await newBusiness.getAllBatchesBasic(companyToken)
       const business = businessList.map(b => {
         return {
           _id: b._id,
@@ -291,7 +291,7 @@ class BusinessController {
           active: b.active,
           createdAt: b.createdAt,
           updatedAt: b.updatedAt,
-          dataAmount: b.data.length,
+          dataAmount: b.quantityRows,
           templateId: b.templateId
         }
       })
