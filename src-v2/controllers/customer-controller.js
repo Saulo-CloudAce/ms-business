@@ -250,7 +250,8 @@ class CustomerController {
               const fieldKey = template.fields.find(f => f.data === 'customer_cpfcnpj')
               if (fieldKey) {
                 const keyCpfCnpj = fieldKey.column
-                const data = await businessRepository.listAllByTemplateSortedReverse(companyToken, templateId)
+                let data = await businessRepository.listAllByTemplateSortedReverse(companyToken, templateId)
+                data = data.filter(m => m.data)
                 if (data && data.length > 0) {
                   const customerKey = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
                   data.map(m => { m.data = m.data.filter(md => md[keyCpfCnpj] === customerKey) })

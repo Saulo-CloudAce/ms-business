@@ -10,7 +10,8 @@ async function sendData (data, companyToken, businessId, templateId, fieldKeyLis
   }
 
   // try {
-  return await getAxiosInstance(companyToken).post(`${process.env.CRM_URL}/customers`, payload)
+  const result = await getAxiosInstance(companyToken).post(`${process.env.CRM_URL}/customers`, payload)
+  return result
   // } catch (err) {
   //   console.error('SEND DATA CRM ==>', err)
   //   return err
@@ -81,7 +82,8 @@ function getAxiosInstance (companyToken) {
     baseURL: process.env.CRM_URL,
     headers: { 'token' : `${companyToken}` },
     maxContentLength: Infinity,
-    maxBodyLength: Infinity
+    maxBodyLength: Infinity,
+    timeout: 0
   })
 }
 
@@ -90,7 +92,8 @@ function getAxiosInstanceByCompanyElastic (companyToken, prefixIndexElastic) {
     baseURL: process.env.CRM_URL,
     headers: { 'token' : `${companyToken}`, 'prefix-index-elastic': prefixIndexElastic },
     maxContentLength: Infinity,
-    maxBodyLength: Infinity
+    maxBodyLength: Infinity,
+    timeout: 0
   })
 }
 
