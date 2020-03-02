@@ -301,6 +301,31 @@ class BusinessController {
     }
   }
 
+  async updateCustomerStorageStatus (req, res) {
+    const companyToken = req.headers['token']
+
+    const { businessId, status } = req.body
+    if (!mongoIdIsValid(businessId)) return res.status(500).send({ error: 'Código do lote inválido' })
+
+    if (!status || status.trim().length === 0) return res.status(500).send({ error: 'Status inválido' })
+
+    try {
+      const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
+
+      const business = await businessRepository.getById(companyToken, businessId)
+      if (!business) return res.status(400).send({ error: 'Business não identificado' })
+
+      await businessRepository.updateCustomerStorageStatus(businessId, status)
+
+      return res.sendStatus(200)
+    } catch (e) {
+      return res.status(500).send({ error: e.message })
+    }
+  }
+
   async markBusinessFlowPassed (req, res) {
     const companyToken = req.headers['token']
 

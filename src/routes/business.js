@@ -5,6 +5,7 @@ const multipartyMiddleware = multiparty()
 const businessController = new BusinessController(null)
 
 const businessRoute = (app) => {
+  app.post('/api/business/customer-storaging', (req, res) => businessController.updateCustomerStorageStatus(req, res))
   app.post('/api/v1/business', multipartyMiddleware, (req, res) => businessController.create(req, res))
   app.post('/api/v1/business_url_file', multipartyMiddleware, (req, res) => businessController.createFromUrlFile(req, res))
   app.post('/api/v1/business_json', (req, res) => businessController.createFromJson(req, res))
