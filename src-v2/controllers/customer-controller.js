@@ -5,7 +5,8 @@ const {
   searchCustomer,
   updateCustomer,
   getCustomerById,
-  getCustomerFormattedById } = require('../services/crm-service')
+  getCustomerFormattedById,
+  getAllCustomersByCompanyPaginated } = require('../services/crm-service')
 const { clearCPFCNPJ } = require('../helpers/formatters')
 const CompanyRepository = require('../repository/company-repository')
 const TemplateRepository = require('../repository/template-repository')
@@ -92,9 +93,17 @@ class CustomerController {
             const fieldKey = template.fields.find(f => f.data === 'customer_cpfcnpj')
             if (fieldKey) {
               const keyCpfCnpj = fieldKey.column
-              const data = await businessRepository.listAllByTemplate(companyToken, templateId)
+              let data = await businessRepository.listAllAndChildsByTemplateSortedReverse(companyToken, templateId)
+              data = data.filter(d => d.data)
               if (data && data.length > 0) {
-                data.map(m => { m.data = m.data.filter(md => md[keyCpfCnpj] === customer.cpfcnpj) })
+                data.map(m => {
+                  m.data = m.data.filter(md => md[keyCpfCnpj] === customer.cpfcnpj)
+
+                  if (m.parentBatchId) {
+                    m._id = m.parentBatchId
+                    delete m.parentBatchId
+                  }
+                })
               }
 
               if (data.length > 0) templateFinal.lote_data_list = data.filter(d => d.data.length > 0)
@@ -141,9 +150,17 @@ class CustomerController {
             const fieldKey = template.fields.find(f => f.data === 'customer_cpfcnpj')
             if (fieldKey) {
               const keyCpfCnpj = fieldKey.column
-              const data = await businessRepository.listAllByTemplate(companyToken, templateId)
+              let data = await businessRepository.listAllAndChildsByTemplateSortedReverse(companyToken, templateId)
+              data = data.filter(d => d.data)
               if (data && data.length > 0) {
-                data.map(m => { m.data = m.data.filter(md => md[keyCpfCnpj] === customer.customer_cpfcnpj) })
+                data.map(m => {
+                  m.data = m.data.filter(md => md[keyCpfCnpj] === customer.customer_cpfcnpj)
+
+                  if (m.parentBatchId) {
+                    m._id = m.parentBatchId
+                    delete m.parentBatchId
+                  }
+                })
               }
 
               if (data.length > 0) templateFinal.lote_data_list = data.filter(d => d.data.length > 0)
@@ -188,7 +205,6 @@ class CustomerController {
 
       const customer = (request.data) ? request.data : []
       const templateList = (customer && customer.business_template_list) ? customer.business_template_list : []
-      const businessList = (customer && customer.business_list) ? customer.business_list : []
       let templates = []
       if (templateList && templateList.length > 0) {
         templates = await Promise.all(templateList.map(async templateId => {
@@ -198,12 +214,15 @@ class CustomerController {
             const fieldKey = template.fields.find(f => f.data === 'customer_cpfcnpj')
             if (fieldKey) {
               const keyCpfCnpj = fieldKey.column
-              let data = await businessRepository.listAllByTemplateSortedReverse(companyToken, templateId)
+              let data = await businessRepository.listAllAndChildsByTemplateSortedReverse(companyToken, templateId)
               data = data.filter(d => d.data)
               if (data && data.length > 0) {
-//                data = data.filter(d => businessList.includes(d._id.toString()))
                 data.map(m => {
                   m.data = m.data.filter(md => md[keyCpfCnpj] === cpfcnpj)
+                  if (m.parentBatchId) {
+                    m._id = m.parentBatchId
+                    delete m.parentBatchId
+                  }
                 })
               }
               if (data.length > 0) templateFinal.lote_data_list = data.filter(d => d.data.length > 0)
@@ -218,6 +237,30 @@ class CustomerController {
       delete customer.business_template_list
 
       return res.status(200).send(customer)
+    } catch (err) {
+      console.error(err)
+      return res.status(500).send({ error: err.message })
+    }
+  }
+
+  async getAllByCompanyPaginated (req, res) {
+    const companyToken = req.headers['token']
+    let page = 0
+    let limit = 10
+    if (req.query.page && parseInt(req.query.page) >= 0) page = parseInt(req.query.page)
+    if (req.query.limit && parseInt(req.query.limit) >= 0) limit = parseInt(req.query.limit)
+
+    try {
+      var { companyRepository } = this._getInstanceRepositories(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
+
+      const request = await getAllCustomersByCompanyPaginated(companyToken, page, limit)
+
+      if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
+
+      return res.status(200).send(request.data)
     } catch (err) {
       console.error(err)
       return res.status(500).send({ error: err.message })
@@ -254,7 +297,14 @@ class CustomerController {
                 data = data.filter(m => m.data)
                 if (data && data.length > 0) {
                   const customerKey = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
-                  data.map(m => { m.data = m.data.filter(md => md[keyCpfCnpj] === customerKey) })
+                  data.map(m => {
+                    m.data = m.data.filter(md => md[keyCpfCnpj] === customerKey)
+
+                    if (m.parentBatchId) {
+                      m._id = m.parentBatchId
+                      delete m.parentBatchId
+                    }
+                  })
                 }
 
                 if (data.length > 0) templateFinal.lote_data_list = data.filter(d => d.data.length > 0)

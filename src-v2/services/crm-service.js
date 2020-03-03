@@ -77,10 +77,18 @@ async function getAllCustomersByCompany (companyToken) {
   }
 }
 
+async function getAllCustomersByCompanyPaginated (companyToken, page = 0, limit = 0) {
+  try {
+    return await getAxiosInstance(companyToken).get(`${process.env.CRM_URL}/customers/all?page=${page}&limit=${limit}`)
+  } catch (err) {
+    return err
+  }
+}
+
 function getAxiosInstance (companyToken) {
   return axios.create({
     baseURL: process.env.CRM_URL,
-    headers: { 'token' : `${companyToken}` },
+    headers: { token: `${companyToken}` },
     maxContentLength: Infinity,
     maxBodyLength: Infinity,
     timeout: 0
@@ -90,11 +98,21 @@ function getAxiosInstance (companyToken) {
 function getAxiosInstanceByCompanyElastic (companyToken, prefixIndexElastic) {
   return axios.create({
     baseURL: process.env.CRM_URL,
-    headers: { 'token' : `${companyToken}`, 'prefix-index-elastic': prefixIndexElastic },
+    headers: { token: `${companyToken}`, 'prefix-index-elastic': prefixIndexElastic },
     maxContentLength: Infinity,
     maxBodyLength: Infinity,
     timeout: 0
   })
 }
 
-module.exports = { sendData, createSingleCustomer, getByCpfCnpj, getAllCustomersByCompany, updateCustomer, searchCustomer, getCustomerById, getCustomerFormattedById }
+module.exports = {
+  sendData,
+  createSingleCustomer,
+  getByCpfCnpj,
+  getAllCustomersByCompany,
+  updateCustomer,
+  searchCustomer,
+  getCustomerById,
+  getCustomerFormattedById,
+  getAllCustomersByCompanyPaginated
+}

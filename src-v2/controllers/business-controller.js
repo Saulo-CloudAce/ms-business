@@ -302,6 +302,43 @@ class BusinessController {
     }
   }
 
+  async getAllPaginated (req, res) {
+    const companyToken = req.headers['token']
+    let page = 0
+    let limit = 10
+
+    if (req.query.page && parseInt(req.query.page) >= 0) page = parseInt(req.query.page)
+    if (req.query.limit && parseInt(req.query.limit) >= 0) limit = parseInt(req.query.limit)
+
+    try {
+      const { companyRepository } = this._getInstanceRepositories(req.app)
+      const newBusiness = this._getInstanceBusiness(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
+
+      const { businessList, pagination } = await newBusiness.getAllBatchesBasicPaginated(companyToken, page, limit)
+      const business = { data: [], pagination }
+      business.data = businessList.map(b => {
+        return {
+          _id: b._id,
+          name: b.name,
+          activeUntil: b.activeUntil,
+          active: b.active,
+          createdAt: b.createdAt,
+          updatedAt: b.updatedAt,
+          dataAmount: b.quantityRows,
+          templateId: b.templateId
+        }
+      })
+
+      return res.status(200).send(business)
+    } catch (e) {
+      console.error(e)
+      return res.status(500).send({ error: e.message })
+    }
+  }
+
   async markBusinessFlowPassed (req, res) {
     const companyToken = req.headers['token']
 
@@ -317,7 +354,7 @@ class BusinessController {
       const business = await businessRepository.getById(companyToken, businessId)
       if (!business) return res.status(400).send({ error: 'Business não identificado' })
 
-      await businessRepository.markFlowPassed(businessId)
+      await businessRepository.markFlowPassed(companyToken, businessId)
 
       return res.sendStatus(200)
     } catch (e) {
@@ -340,7 +377,7 @@ class BusinessController {
       const business = await businessRepository.getById(companyToken, businessId)
       if (!business) return res.status(400).send({ error: 'Business não identificado' })
 
-      await businessRepository.unmarkFlowPassed(businessId)
+      await businessRepository.unmarkFlowPassed(companyToken, businessId)
 
       return res.sendStatus(200)
     } catch (e) {
@@ -359,15 +396,19 @@ class BusinessController {
     if (!mongoIdIsValid(businessId)) return res.status(500).send({ error: 'Código do lote inválido' })
 
     try {
+      const activeUntil = req.body.active_until
       const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
+      if (moment(activeUntil, 'YYYY-MM-DD').format('YYYY-MM-DD') !== activeUntil) return res.status(400).send({ error: 'A data active_until está com formato inválido. O formato válido é YYYY-MM-DD' })
+      if (moment(activeUntil, 'YYYY-MM-DD').diff(moment().format('YYYY-MM-DD')) < 0) return res.status(400).send({ error: 'A data active_until não pode ser anterior a data de hoje, somente igual ou posterior' })
+
       const business = await businessRepository.getById(companyToken, businessId)
       if (!business) return res.status(400).send({ error: 'Business não identificado' })
 
-      await businessRepository.activate(businessId, req.body.active_until)
+      await businessRepository.activate(companyToken, businessId, activeUntil)
 
       return res.sendStatus(200)
     } catch (e) {
@@ -390,7 +431,7 @@ class BusinessController {
       const business = await businessRepository.getById(companyToken, businessId)
       if (!business) return res.status(400).send({ error: 'Business não identificado' })
 
-      await businessRepository.deactivate(businessId)
+      await businessRepository.deactivate(companyToken, businessId)
 
       return res.sendStatus(200)
     } catch (e) {
@@ -401,6 +442,10 @@ class BusinessController {
   async searchDataInBusiness (req, res) {
     const companyToken = req.headers['token']
 
+    const templateId = req.body.template_id
+
+    if (!templateId) return res.status(400).send({ error: 'Informe o ID do template' })
+
     try {
       const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
@@ -409,7 +454,7 @@ class BusinessController {
 
       const searchParams = req.body.search_params
 
-      const businessList = await businessRepository.listAllByTemplate(companyToken, req.body.template_id)
+      const businessList = await businessRepository.listAllBatchesAndChildsByTemplate(companyToken, templateId)
       const resultList = []
       businessList.filter((b) => {
         const dataR = b.data.filter(r => Object.values(r).includes(searchParams.value))
@@ -419,10 +464,11 @@ class BusinessController {
           resultList.push(b1)
         }
         return (dataR.length > 0)
-      })
+      }).map(b => delete b.childBatchesId)
 
       return res.status(200).send(resultList)
     } catch (e) {
+      console.error(e)
       return res.status(500).send({ error: e.message })
     }
   }
@@ -438,6 +484,30 @@ class BusinessController {
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       const business = await newBusiness.getDataById(companyToken, req.params.id)
+
+      delete business.childBatchesId
+
+      return res.status(200).send(business)
+    } catch (e) {
+      return res.status(500).send({ error: e.message })
+    }
+  }
+
+  async getByIdWithDataPaginated (req, res) {
+    const companyToken = req.headers['token']
+    let page = 0
+    let limit = 10
+    if (req.query.page && parseInt(req.query.page) >= 0) page = parseInt(req.query.page)
+    if (req.query.limit && parseInt(req.query.limit) >= 0) limit = parseInt(req.query.limit)
+
+    try {
+      const { companyRepository } = this._getInstanceRepositories(req.app)
+      const newBusiness = this._getInstanceBusiness(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
+
+      const business = await newBusiness.getDataByIdPaginated(companyToken, req.params.id, page, limit)
 
       return res.status(200).send(business)
     } catch (e) {
@@ -464,11 +534,17 @@ class BusinessController {
   async updateBusinessRegisterById (req, res) {
     const companyToken = req.headers['token']
     const templateId = req.headers['templateid']
+
+    if (!templateId) return res.status(400).send({ error: 'Informar o ID do tempolate no header' })
+
     const registerId = req.params.registerId
+    if (!registerId) return res.status(400).send({ error: 'Informar o ID do registro que deseja alterar.' })
+
     const businessId = req.params.businessId
+    if (!businessId) return res.status(400).send({ error: 'Informar o ID do lote que deseja alterar.' })
 
     try {
-      const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
+      const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
       const newBusiness = this._getInstanceBusiness(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
@@ -480,13 +556,18 @@ class BusinessController {
       let fieldEditableList = template.fields.filter(f => f.editable)
       if (!Array.isArray(fieldEditableList)) fieldEditableList = []
 
-      const business = await newBusiness.getDataById(companyToken, businessId)
-      if (!business) return res.status(400).send({ error: 'Business não identificado.' })
+      const businessList = await businessRepository.getDataByIdAndChildReference(companyToken, businessId)
+      if (!businessList) return res.status(400).send({ error: 'Business não identificado.' })
 
       let register = null
 
+      const business = businessList.find(bl => bl.data
+        .filter(bld => bld._id.toString() === String(registerId)).length > 0)
+
+      if (!business) return res.status(400).send({ error: 'Registro não encontrado.' })
+
       business.data.forEach(d => {
-        if (d._id === registerId) {
+        if (d._id.toString() === String(registerId)) {
           fieldEditableList.forEach(f => {
             if (req.body[f.column] && String(req.body[f.column]).length > 0) {
               d[f.column] = req.body[f.column]
@@ -496,7 +577,7 @@ class BusinessController {
         }
       })
 
-      await newBusiness.updateDataBusiness(businessId, business.data)
+      await newBusiness.updateDataBusiness(business._id, business.data)
 
       return res.status(200).send(register)
     } catch (err) {
@@ -528,6 +609,7 @@ class BusinessController {
         name: business.name
       }
       if (data && data.length > 0) respBusiness.data = data[0]
+      else return res.status(400).send({ error: 'Registro não encontrado.' })
 
       return res.status(200).send(respBusiness)
     } catch (err) {
@@ -549,16 +631,17 @@ class BusinessController {
       const template = await templateRepository.getById(templateId, companyToken)
       if (!template) return res.status(400).send({ error: 'Template não identificado' })
 
-      const businessList = await newBusiness.listAllByTemplateId(companyToken, templateId)
+      let businessList = await newBusiness.listAllBatchesAndChildsByTemplateId(companyToken, templateId)
       if (!businessList) return res.status(400).send({ error: 'Erro ao listar os business deste template.' })
 
       const listKeyFields = template.fields.filter(f => f.key)
+      businessList = businessList.filter(bl => bl.data)
 
       const querySearch = req.query.cpfcnpj
       let response = {}
 
-      const resBusiness = businessList.filter(b => {
-        let res = {}
+      const resBusiness = businessList.map(b => {
+        const res = {}
         const register = b.data.filter(d => {
           const index = listKeyFields.filter(keyField => {
             const index = d[keyField.column].toLowerCase().search(querySearch)
@@ -573,11 +656,15 @@ class BusinessController {
           res.data = register[0]
           return res
         }
-      })
+        return false
+      }).filter(b => b !== false)
+
       if (resBusiness && resBusiness.length > 0) response = resBusiness[0]
+      else return res.status(400).send(response)
 
       return res.status(200).send(response)
     } catch (err) {
+      console.error(err)
       return res.status(500).send({ error: err.message })
     }
   }

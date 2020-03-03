@@ -90,6 +90,14 @@ class Business {
     }
   }
 
+  async listAllBatchesAndChildsByTemplateId (companyToken, templateId) {
+    try {
+      return this.repository.listAllBatchesAndChildsByTemplate(companyToken, templateId)
+    } catch (err) {
+      return err
+    }
+  }
+
   async getByNameAndTemplateId (companyToken, businessName, templateId) {
     try {
       return this.repository.getByNameAndTemplateId(companyToken, businessName, templateId)
@@ -122,9 +130,25 @@ class Business {
     }
   }
 
+  async getAllBatchesBasicPaginated (companyToken, page = 0, limit = 10) {
+    try {
+      return this.repository.getAllBatchesBasicPaginated(companyToken, page, limit)
+    } catch (err) {
+      return err
+    }
+  }
+
   async getDataById (companyToken, id) {
     try {
       return this.repository.getDataById(companyToken, id)
+    } catch (err) {
+      return err
+    }
+  }
+
+  async getDataByIdPaginated (companyToken, id, page = 0, limit = 10) {
+    try {
+      return this.repository.getDataByIdPaginated(companyToken, id, page, limit)
     } catch (err) {
       return err
     }
