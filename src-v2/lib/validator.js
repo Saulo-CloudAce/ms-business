@@ -81,15 +81,21 @@ class Validator {
     const mapColumnsFile = []
     fileColumnsName.forEach((c, index) => { mapColumnsFile[c.trim()] = index })
     templateFields.forEach(tf => {
-      if (tf.type === 'array' && Object.keys(tf).includes('fields')) {
-        const listSubFieldData = {}
-        tf.fields.forEach(subField => {
-          const jsonDataSubField = subField.column
-          const fileDataIndex = mapColumnsFile[subField.column]
-          listSubFieldData[jsonDataSubField] = fileData[fileDataIndex]
-        })
-        const jsonDataField = tf.column
-        jsonData[jsonDataField] = [listSubFieldData]
+      if (tf.type === 'array') {
+        if (Object.keys(tf).includes('fields')) {
+          const listSubFieldData = {}
+          tf.fields.forEach(subField => {
+            const jsonDataSubField = subField.column
+            const fileDataIndex = mapColumnsFile[subField.column]
+            listSubFieldData[jsonDataSubField] = fileData[fileDataIndex]
+          })
+          const jsonDataField = tf.column
+          jsonData[jsonDataField] = [listSubFieldData]
+        } else {
+          const jsonDataField = tf.column
+          const fileDataIndex = mapColumnsFile[tf.column]
+          jsonData[jsonDataField] = [fileData[fileDataIndex]]
+        }
       } else {
         const jsonDataField = tf.column
         const fileDataIndex = mapColumnsFile[tf.column]
@@ -213,11 +219,15 @@ class Validator {
     const readStream = await new Promise((resolve, reject) => {
       fetch(filePath)
         .then(res => {
-          const dest = fs.createWriteStream('/tmp/teste')
+          const tempFilename = md5(new Date())
+          const dest = fs.createWriteStream(`/tmp/${tempFilename}`)
           res.body.pipe(dest)
-          resolve(fs.createReadStream('/tmp/teste'))
+          resolve(fs.createReadStream(`/tmp/${tempFilename}`))
+        }).catch(err => {
+          console.error('S3: ', err)
         })
     })
+
     const reader = readline.createInterface({
       input: readStream
     })
@@ -276,6 +286,9 @@ class Validator {
         .on('error', function (err) {
           console.error('READ_FILE_URL', err)
           throw new Error(err)
+        })
+        .on('end', () => {
+          console.log('aaaa')
         })
     })
 
@@ -540,6 +553,7 @@ class Validator {
           }
         })
       }
+      console.log(arrData)
     } else {
       if (Array.isArray(fieldData)) {
         fieldData.filter(fd => Object.keys(fd).filter(fdk => String(fd[fdk]).length > 0).length > 0)
