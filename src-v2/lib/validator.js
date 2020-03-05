@@ -397,7 +397,7 @@ class Validator {
       elText = elText.replace('-', '')
       if (isNaN(elText)) {
         errors.push({ column: rules.column, error: 'O valor informado não é um número de telefone', current_value: fieldData })
-      } else if (!elText.length >= 10) {
+      } else if (!(elText.length >= 10)) {
         errors.push({ column: rules.column, error: 'O telefone informado não tem a quantidade mínima de 10 números', current_value: fieldData })
       }
     } else {
@@ -522,7 +522,7 @@ class Validator {
     elText = elText.replace(')', '')
     elText = elText.replace(' ', '')
 
-    if (elText.length <= 8) return ""
+    if (elText.length <= 8) return ''
 
     return elText
   }
