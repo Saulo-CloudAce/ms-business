@@ -276,6 +276,9 @@ class BusinessRepository {
         businessIndexed[businessChildData.parentBatchId].data = businessIndexed[businessChildData.parentBatchId].data.concat(businessChildData.data)
       })
 
+      businessList.filter(business => !business.childBatchesId)
+        .forEach(business => { businessIndexed[business._id] = business })
+
       return Object.values(businessIndexed)
     } catch (err) {
       throw new Error(err)
