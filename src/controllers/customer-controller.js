@@ -88,7 +88,7 @@ class CustomerController {
 
       var customer = request.data
       let templateList = []
-      if (customer && typeof customer === 'objetct' && customer.business_template_list) templateList = customer.business_template_list
+      if (customer && typeof customer === 'object' && customer.business_template_list) templateList = customer.business_template_list
       var templates = []
       if (templateList && templateList.length > 0) {
         templates = await Promise.all(templateList.map(async templateId => {
@@ -136,6 +136,7 @@ class CustomerController {
       var templates = []
       if (templateList && templateList.length > 0) {
         templates = await Promise.all(templateList.map(async templateId => {
+console.log(templateId)
           var template = await templateRepository.getNameById(templateId, companyToken)
           if (template) {
             var data = await businessRepository.listAllByTemplate(companyToken, templateId)
@@ -182,7 +183,7 @@ class CustomerController {
       } else {
         request = await getAllCustomersByCompany(companyToken)
       }
-console.log('qweqweq------------------------------------------>', request)
+// console.log('qweqweq------------------------------------------>', request)
       if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
 
       var customer = (request.data) ? request.data : []
@@ -191,13 +192,18 @@ console.log('qweqweq------------------------------------------>', request)
       var templates = []
       if (templateList && templateList.length > 0) {
         templates = await Promise.all(templateList.map(async templateId => {
+console.log(templateId)
           var template = await templateRepository.getNameById(templateId, companyToken)
+console.log(template)
           if (template) {
             var data = await businessRepository.listAllByTemplate(companyToken, templateId)
+		console.log(data.length)
             if (data && data.length > 0) {
               data = data.filter(d => businessList.includes(d._id.toString()))
+	      const customerKey = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
+		console.log(customerKey)
               data.map(m => {
-                m.data = m.data.filter(md => md.customer_cpfcnpj === cpfcnpj)
+                m.data = m.data.filter(md => md.customer_cpfcnpj === customerKey)
               })
             }
             if (data.length > 0) template.lote_data_list = data.filter(d => d.data.length > 0)
