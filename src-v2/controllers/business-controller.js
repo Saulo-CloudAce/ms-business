@@ -455,17 +455,17 @@ class BusinessController {
       const searchParams = req.body.search_params
       let searchParamsValues = []
       if (typeof searchParams === 'object' && !Array.isArray(searchParams)) {
-        searchParamsValues = [searchParams.value]
+        searchParamsValues = [String(searchParams.value).toLowerCase()]
       } else {
-        searchParamsValues = searchParams.map(sp => sp.value)
+        searchParamsValues = searchParams.map(sp => String(sp.value).toLowerCase())
       }
 
       const businessList = await businessRepository.listAllBatchesAndChildsByTemplate(companyToken, templateId)
       const resultList = []
       businessList.filter((business) => {
         const dataFiltered = business.data.filter(row => {
-          const rowValues = Object.values(row)
-          return rowValues.filter(rv => searchParamsValues.filter(spv => String(spv).toLowerCase() === String(rv).toLowerCase()).length > 0).length > 0
+          const rowValues = Object.values(row).map(rv => String(rv).toLowerCase())
+          return rowValues.filter(rv => searchParamsValues.filter(spv => spv === rv).length > 0).length > 0
         })
         if (dataFiltered.length > 0) {
           const b1 = business
