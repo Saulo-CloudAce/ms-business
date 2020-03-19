@@ -453,17 +453,29 @@ class BusinessController {
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       const searchParams = req.body.search_params
+      let searchParamsValues = []
+      if (typeof searchParams === 'object' && !Array.isArray(searchParams)) {
+        searchParamsValues = [searchParams.value]
+      } else {
+        searchParamsValues = searchParams.map(sp => sp.value)
+      }
 
       const businessList = await businessRepository.listAllBatchesAndChildsByTemplate(companyToken, templateId)
       const resultList = []
-      businessList.filter((b) => {
-        const dataR = b.data.filter(r => Object.values(r).includes(searchParams.value))
-        if (dataR.length > 0) {
-          const b1 = b
-          b1.data = dataR
+      businessList.filter((business) => {
+        const dataFiltered = business.data.filter(row => {
+          const rowValues = Object.values(row)
+          rowValues.filter(rv => {
+            return searchParamsValues.filter(spv => spv === rv).length > 0
+          })
+          return rowValues.filter(rv => searchParamsValues.filter(spv => spv === rv).length > 0).length > 0
+        })
+        if (dataFiltered.length > 0) {
+          const b1 = business
+          b1.data = dataFiltered
           resultList.push(b1)
         }
-        return (dataR.length > 0)
+        return (dataFiltered.length > 0)
       }).map(b => delete b.childBatchesId)
 
       return res.status(200).send(resultList)
