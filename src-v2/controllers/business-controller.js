@@ -465,10 +465,7 @@ class BusinessController {
       businessList.filter((business) => {
         const dataFiltered = business.data.filter(row => {
           const rowValues = Object.values(row)
-          rowValues.filter(rv => {
-            return searchParamsValues.filter(spv => spv === rv).length > 0
-          })
-          return rowValues.filter(rv => searchParamsValues.filter(spv => spv === rv).length > 0).length > 0
+          return rowValues.filter(rv => searchParamsValues.filter(spv => String(spv).toLowerCase() === String(rv).toLowerCase()).length > 0).length > 0
         })
         if (dataFiltered.length > 0) {
           const b1 = business
