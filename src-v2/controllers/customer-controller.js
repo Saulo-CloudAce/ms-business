@@ -1,3 +1,4 @@
+const moment = require('moment')
 const {
   createSingleCustomer,
   getByCpfCnpj,
@@ -210,7 +211,7 @@ class CustomerController {
         templates = await Promise.all(templateList.map(async templateId => {
           const template = await templateRepository.getById(templateId, companyToken)
           if (template) {
-            const templateFinal = { _id: template._id, name: template.name }
+            const templateFinal = { _id: template._id, name: template.name, updatedAt: template.updatedAt }
             const fieldKey = template.fields.find(f => f.data === 'customer_cpfcnpj')
             if (fieldKey) {
               const keyCpfCnpj = fieldKey.column
@@ -232,7 +233,7 @@ class CustomerController {
         }))
       }
 
-      customer.schema_list = templates.filter(t => t)
+      customer.schema_list = templates.filter(t => t).sort((a, b) => moment(b.updatedAt) - moment(a.updatedAt))
       delete customer.business_list
       delete customer.business_template_list
 
