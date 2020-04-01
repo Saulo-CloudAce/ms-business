@@ -188,10 +188,13 @@ class BusinessController {
       return res.status(400).send({ errors: req.validationErrors() })
     }
 
+    const { templateId, data } = req.body
+
+    if (data.length > 1) return res.status(400).send({ error: 'É possível cadastrar apenas um registro.' })
+
     const companyToken = req.headers['token']
 
     try {
-      const { templateId, data } = req.body
       const activeUntil = (req.body.active_until) ? req.body.active_until : moment().add(1, 'days').format('YYYY-MM-DD')
 
       if (moment(activeUntil, 'YYYY-MM-DD').format('YYYY-MM-DD') !== activeUntil) return res.status(400).send({ error: 'A data active_until está com formato inválido. O formato válido é YYYY-MM-DD' })
@@ -221,7 +224,8 @@ class BusinessController {
       if (businessId === null) return res.status(400).send({ error: dataInvalids })
 
       if (dataInvalids.length) return res.status(400).send({ businessId, isBatch, invalids: dataInvalids })
-      return res.status(201).send({ businessId, isBatch, customerId: contactIds[0] })
+
+      return res.status(201).send({ businessId, isBatch, customerId: contactIds })
     } catch (e) {
       console.error('CREATE BUSINESS FROM JSON ==> ', e)
       return res.status(500).send({ error: e.message })
