@@ -170,9 +170,13 @@ class Validator {
         })
     })
 
-    let { invalids, valids, validsCustomer } = data
+    const { invalids, valids, validsCustomer } = data
 
-    valids = this._joinDataBatch(valids, fields)
+    // console.log(valids.length)
+    // valids = this._joinDataBatch(valids, fields)
+
+    // console.log(valids.length)
+    // console.log(validsCustomer.length)
 
     return {
       invalids,
@@ -182,15 +186,18 @@ class Validator {
   }
 
   _mergeData (listLineData, columnsArray) {
-    const firstLineData = listLineData.shift()
-    listLineData.forEach(line => {
-      columnsArray.forEach(col => {
-        const lineFilled = line[col.column].filter(l => Object.keys(l).filter(lk => String(l[lk]).length > 0).length > 0)
-        if (lineFilled.length) firstLineData[col.column] = firstLineData[col.column].concat(lineFilled)
+    if (columnsArray.length) {
+      const firstLineData = listLineData.shift()
+      listLineData.forEach(line => {
+        columnsArray.forEach(col => {
+          const lineFilled = line[col.column].filter(l => Object.keys(l).filter(lk => String(l[lk]).length > 0).length > 0)
+          if (lineFilled.length) firstLineData[col.column] = firstLineData[col.column].concat(lineFilled)
+        })
       })
-    })
 
-    return firstLineData
+      return firstLineData
+    }
+    return listLineData
   }
 
   _joinDataBatch (dataBatch, rules) {
@@ -203,7 +210,8 @@ class Validator {
       if (dataIndexedByKeyColumn[dataKeyValue]) {
         dataIndexedByKeyColumn[dataKeyValue].push(data)
       } else {
-        dataIndexedByKeyColumn[dataKeyValue] = [data]
+        dataIndexedByKeyColumn[dataKeyValue] = []
+        dataIndexedByKeyColumn[dataKeyValue].push(data)
       }
     })
     dataIndexedByKeyColumn = Object.keys(dataIndexedByKeyColumn).map(k => {
