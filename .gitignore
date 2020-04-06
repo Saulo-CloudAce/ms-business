@@ -4,3 +4,4 @@ npm-*
 
 .env
 *.txt
+core
