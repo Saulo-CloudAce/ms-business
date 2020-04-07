@@ -436,15 +436,18 @@ class Validator {
     elText = elText.replace(/\//g, '')
     elText = elText.trim()
 
-    if (elText.length === 11) {
-      if (!validCpf(elText)) {
-        errors.push({ column: rules.column, error: 'O CPF informado é inválido', current_value: fieldData })
-      }
-    } else if (elText.length === 14) {
-      if (!validCnpj(elText)) {
-        errors.push({ column: rules.column, error: 'O CNPJ informado é inválido', current_value: fieldData })
-      }
-    } else {
+    // if (elText.length === 11) {
+    //   if (!validCpf(elText)) {
+    //     errors.push({ column: rules.column, error: 'O CPF informado é inválido', current_value: fieldData })
+    //   }
+    // } else if (elText.length === 14) {
+    //   if (!validCnpj(elText)) {
+    //     errors.push({ column: rules.column, error: 'O CNPJ informado é inválido', current_value: fieldData })
+    //   }
+    // } else {
+    //   errors.push({ column: rules.column, error: 'O valor informado não tem a quantidade de caracteres válidos para um CPF ou CNPJ', current_value: fieldData })
+    // }
+    if (elText.length !== 11 && elText.length !== 14) {
       errors.push({ column: rules.column, error: 'O valor informado não tem a quantidade de caracteres válidos para um CPF ou CNPJ', current_value: fieldData })
     }
 
