@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon --max-old-space-size=10240 index.js"
   },
   "author": "Silas Silva <silas.ti2010@gmail.com>",
   "license": "ISC",

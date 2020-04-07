@@ -301,7 +301,26 @@ class BusinessRepository {
   async listAllAndChildsByTemplateSortedReverse (companyToken, templateId) {
     try {
       let businessList = await this.db.collection('business')
-        .find({ templateId, companyToken }, ['_id', 'name', 'data', 'parentBatchId', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'flow_passed', 'activeUntil', 'active'])
+        .find(
+          { templateId, companyToken },
+          ['_id', 'name', 'data', 'parentBatchId', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'flow_passed', 'activeUntil', 'active'])
+        .toArray()
+      businessList = businessList.sort((a, b) => (a.createdAt > b.createdAt) ? -1 : ((b.createdAt > a.createdAt) ? 1 : 0))
+
+      return businessList
+    } catch (err) {
+      throw new Error(err)
+    }
+  }
+
+  async listAllAndChildsByTemplateAndKeySortedReverse (companyToken, templateId, keyColumn = '', keyValue = '') {
+    const matchParams = {}
+    matchParams[keyColumn] = keyValue
+    try {
+      let businessList = await this.db.collection('business')
+        .find(
+          { templateId, companyToken, data: { $elemMatch: matchParams } },
+          ['_id', 'name', 'data', 'parentBatchId', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'flow_passed', 'activeUntil', 'active'])
         .toArray()
       businessList = businessList.sort((a, b) => (a.createdAt > b.createdAt) ? -1 : ((b.createdAt > a.createdAt) ? 1 : 0))
 
