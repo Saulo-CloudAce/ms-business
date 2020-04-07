@@ -68,8 +68,11 @@ class Business {
       return { businessId: null, invalids }
     }
 
+    const uploadContentRequestBody = requestBody
+    uploadContentRequestBody.invalids = invalids
+
     const filename = `${name}.json`
-    const filePath = await this.uploader.uploadContent(companyToken, requestBody, filename)
+    const filePath = await this.uploader.uploadContent(companyToken, uploadContentRequestBody, filename)
     const businessId = await this.repository.save(companyToken, name, filePath, templateId, valids.length, valids, activeUntil, false, '', isBatch, invalids)
 
     if (hasCustomerFields(fields)) {
