@@ -213,9 +213,16 @@ class CustomerController {
           if (template) {
             const templateFinal = { _id: template._id, name: template.name, updatedAt: template.updatedAt }
             const fieldKey = template.fields.find(f => f.data === 'customer_cpfcnpj')
+
             if (fieldKey) {
               const keyCpfCnpj = fieldKey.column
-              let data = await businessRepository.listAllAndChildsByTemplateSortedReverse(companyToken, templateId)
+              let data = []
+              if (cpfcnpj) {
+                data = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, cpfcnpj)
+              } else {
+                data = await businessRepository.listAllAndChildsByTemplateSortedReverse(companyToken, templateId)
+              }
+
               data = data.filter(d => d.data)
               if (data && data.length > 0) {
                 data.map(m => {
@@ -279,6 +286,7 @@ class CustomerController {
 
       const search = req.query.search
       const request = await searchCustomer(search, companyToken, company.prefix_index_elastic)
+
       if (request.response && request.response.status && request.response.status !== 200) return res.status(request.response.status).send(request.response.data)
       let customers = (Array.isArray(request.data)) ? request.data : []
 
@@ -294,7 +302,7 @@ class CustomerController {
               const fieldKey = template.fields.find(f => f.data === 'customer_cpfcnpj')
               if (fieldKey) {
                 const keyCpfCnpj = fieldKey.column
-                let data = await businessRepository.listAllByTemplateSortedReverse(companyToken, templateId)
+                let data = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, search)
                 data = data.filter(m => m.data)
                 if (data && data.length > 0) {
                   const customerKey = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
