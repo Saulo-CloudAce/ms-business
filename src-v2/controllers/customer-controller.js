@@ -94,7 +94,7 @@ class CustomerController {
             const fieldKey = template.fields.find(f => f.data === 'customer_cpfcnpj')
             if (fieldKey) {
               const keyCpfCnpj = fieldKey.column
-              let data = await businessRepository.listAllAndChildsByTemplateSortedReverse(companyToken, templateId)
+              let data = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, customer.cpfcnpj)
               data = data.filter(d => d.data)
               if (data && data.length > 0) {
                 data.map(m => {
@@ -151,7 +151,7 @@ class CustomerController {
             const fieldKey = template.fields.find(f => f.data === 'customer_cpfcnpj')
             if (fieldKey) {
               const keyCpfCnpj = fieldKey.column
-              let data = await businessRepository.listAllAndChildsByTemplateSortedReverse(companyToken, templateId)
+              let data = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, customer.customer_cpfcnpj)
               data = data.filter(d => d.data)
               if (data && data.length > 0) {
                 data.map(m => {
