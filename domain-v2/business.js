@@ -82,7 +82,7 @@ class Business {
       if (responseSendData.data && responseSendData.data.contact_ids) contactIdList = responseSendData.data.contact_ids
     }
 
-    return { businessId, invalids, contactIds: contactIdList }
+    return { businessId, invalids, contactIds: contactIdList, valids }
   }
 
   async listAllByTemplateId (companyToken, templateId) {

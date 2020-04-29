@@ -217,7 +217,7 @@ class BusinessController {
 
       const isBatch = false
 
-      const { businessId, invalids, contactIds } = await newBusiness.createFromJson(companyToken, businessName, template.fields, templateId, data, activeUntil, company.prefix_index_elastic, req.body, isBatch)
+      const { businessId, invalids, contactIds, valids } = await newBusiness.createFromJson(companyToken, businessName, template.fields, templateId, data, activeUntil, company.prefix_index_elastic, req.body, isBatch)
 
       let dataInvalids = []
       if (invalids.length) dataInvalids = invalids[0].errors
@@ -225,7 +225,13 @@ class BusinessController {
 
       if (dataInvalids.length) return res.status(400).send({ businessId, isBatch, invalids: dataInvalids })
 
-      return res.status(201).send({ businessId, isBatch, customerId: contactIds })
+      const crmIds = {
+        templateId,
+        businessId,
+        registerId: valids[0]._id
+      }
+
+      return res.status(201).send({ businessId, isBatch, customerId: contactIds, crmIds })
     } catch (e) {
       console.error('CREATE BUSINESS FROM JSON ==> ', e)
       return res.status(500).send({ error: e.message })
