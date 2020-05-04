@@ -346,8 +346,12 @@ class Validator {
   }
 
   _validateFieldDate (rules, fieldData, errors) {
-    const date = fieldData.trim()
-    if (!moment(date, rules.mask).isValid()) errors.push({ column: rules.column, error: 'O valor informado não é uma data válida', current_value: date })
+    if (fieldData) {
+      const date = fieldData.trim()
+      if (!moment(date, rules.mask).isValid()) errors.push({ column: rules.column, error: 'O valor informado não é uma data válida', current_value: date })
+    } else {
+      errors.push({ column: rules.column, error: 'O valor informado para data está vazio', current_value: fieldData })
+    }
     return errors
   }
 
