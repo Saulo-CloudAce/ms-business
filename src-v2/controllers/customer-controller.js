@@ -277,6 +277,7 @@ class CustomerController {
 
   async search (req, res) {
     const companyToken = req.headers['token']
+    const queryTemplateId = req.headers['template_id']
 
     try {
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
@@ -290,9 +291,17 @@ class CustomerController {
       if (request.response && request.response.status && request.response.status !== 200) return res.status(request.response.status).send(request.response.data)
       let customers = (Array.isArray(request.data)) ? request.data : []
 
+      if (queryTemplateId && String(queryTemplateId).length > 0) {
+        customers = customers.filter(c => c.business_template_list.indexOf(queryTemplateId) >= 0)
+      }
+
       for (const i in customers) {
         const customer = customers[i]
-        const templateList = customer.business_template_list
+        let templateList = customer.business_template_list
+        if (queryTemplateId && String(queryTemplateId).length > 0) {
+          templateList = [queryTemplateId]
+        }
+
         let templates = []
         if (templateList && templateList.length > 0) {
           templates = await Promise.all(templateList.map(async templateId => {
