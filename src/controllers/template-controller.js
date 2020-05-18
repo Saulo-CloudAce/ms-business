@@ -103,6 +103,11 @@ class TemplateController {
   async getDataByTemplateId (req, res) {
     const companyToken = req.headers['token']
     const templateId = req.params.id
+    let flowPassed = ''
+
+    if (req.query['flow_passed'] && ['true', 'false'].includes(String(req.query['flow_passed']))) {
+      flowPassed = (String(req.query['flow_passed']) === 'true') ? true : false
+    }
 
     try {
       var { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
@@ -115,7 +120,7 @@ class TemplateController {
       var template = await templateRepository.getNameById(templateId, companyToken)
       if (!template) return res.status(400).send({ error: 'Template não identificado' })
 
-      const businessData = await businessRepository.listAllByTemplate(companyToken, templateId)
+      const businessData = await businessRepository.listAllByTemplate(companyToken, templateId, flowPassed)
       template.data = businessData
 
       return res.status(200).send(template)

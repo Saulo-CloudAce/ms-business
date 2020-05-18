@@ -107,9 +107,17 @@ class BusinessRepository {
     }
   }
 
-  async listAllByTemplate (companyToken, templateId) {
+  async listAllByTemplate (companyToken = '', templateId = '', flowPassed = '') {
     try {
-      const businessList = await this.db.collection('business').find({ templateId, companyToken }, ['_id', 'name', 'data', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'flow_passed', 'activeUntil', 'active'])
+      const filter = { templateId, companyToken }
+
+      if (flowPassed !== '') {
+        console.log(flowPassed)
+        filter['flow_passed'] = flowPassed
+      }
+
+      const businessList = await this.db.collection('business')
+        .find(filter, ['_id', 'name', 'data', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'flow_passed', 'activeUntil', 'active'])
         .toArray()
 
       return businessList
