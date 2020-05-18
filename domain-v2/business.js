@@ -14,20 +14,30 @@ class Business {
       listBatches = await this.listAllByTemplateId(companyToken, templateId)
     }
 
+    console.time('validate')
     const { invalids, valids, validsCustomer } = await this.validator.validateAndFormat(file.path, fields, jumpFirstLine, dataSeparator, listBatches)
+    console.timeEnd('validate')
 
     if (valids.length === 0) {
       return { businessId: null, invalids }
     }
 
-    const filePath = await this.uploader.upload(file)
+    // const filePath = await this.uploader.upload(file)
+    const filePath = ''
+    console.time('save mongodb')
     const businessId = await this.repository.save(companyToken, name, filePath, templateId, valids.length, valids, activeUntil, jumpFirstLine, dataSeparator, false, invalids)
+    console.timeEnd('save mongodb')
 
+    console.time('send crm')
     if (hasCustomerFields(fields)) {
       const listFieldKey = fields.filter(f => f.key).map(f => f.data)
 
-      await this.crmService.sendData(validsCustomer, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic)
+      this.crmService.sendData(validsCustomer, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic)
+        .catch(() => {
+          console.log('Errro ao enviar customers para CRM - BUSINESS_ID:', businessId)
+        })
     }
+    console.timeEnd('send crm')
 
     return { businessId, invalids }
   }
@@ -49,13 +59,47 @@ class Business {
     if (hasCustomerFields(fields)) {
       const listFieldKey = fields.filter(f => f.key).map(f => f.data)
 
-      await this.crmService.sendData(validsCustomer, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic)
+      this.crmService.sendData(validsCustomer, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic)
+        .catch(() => {
+          console.log('Errro ao enviar customers para CRM - BUSINESS_ID:', businessId)
+        })
     }
 
     return { businessId, invalids }
   }
 
   async createFromJson (companyToken, name, fields, templateId, data, activeUntil, prefixIndexElastic, requestBody, isBatch = true) {
+    let listBatches = []
+    if (hasFieldUnique(fields)) {
+      listBatches = await this.listAllByTemplateId(companyToken, templateId)
+    }
+
+    const { invalids, valids, validsCustomer } = await this.validator.validateAndFormatFromJson(data, fields, listBatches)
+
+    if (valids.length === 0) {
+      return { businessId: null, invalids }
+    }
+
+    const uploadContentRequestBody = requestBody
+    uploadContentRequestBody.invalids = invalids
+
+    const filename = `${name}.json`
+    const filePath = await this.uploader.uploadContent(companyToken, uploadContentRequestBody, filename)
+    const businessId = await this.repository.save(companyToken, name, filePath, templateId, valids.length, valids, activeUntil, false, '', isBatch, invalids)
+
+    if (hasCustomerFields(fields)) {
+      const listFieldKey = fields.filter(f => f.key).map(f => f.data)
+
+      this.crmService.sendData(validsCustomer, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic)
+        .catch(() => {
+          console.log('Errro ao enviar customers para CRM - BUSINESS_ID:', businessId)
+        })
+    }
+
+    return { businessId, invalids, valids }
+  }
+
+  async createSingleFromJson (companyToken, name, fields, templateId, data, activeUntil, prefixIndexElastic, requestBody, isBatch = true) {
     let listBatches = []
     let contactIdList = []
     if (hasFieldUnique(fields)) {

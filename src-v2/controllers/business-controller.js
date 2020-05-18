@@ -217,7 +217,7 @@ class BusinessController {
 
       const isBatch = false
 
-      const { businessId, invalids, contactIds, valids } = await newBusiness.createFromJson(companyToken, businessName, template.fields, templateId, data, activeUntil, company.prefix_index_elastic, req.body, isBatch)
+      const { businessId, invalids, contactIds, valids } = await newBusiness.createSingleFromJson(companyToken, businessName, template.fields, templateId, data, activeUntil, company.prefix_index_elastic, req.body, isBatch)
 
       let dataInvalids = []
       if (invalids.length) dataInvalids = invalids[0].errors
