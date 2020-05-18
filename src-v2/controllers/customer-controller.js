@@ -94,7 +94,7 @@ class CustomerController {
             const fieldKey = template.fields.find(f => f.data === 'customer_cpfcnpj')
             if (fieldKey) {
               const keyCpfCnpj = fieldKey.column
-              let data = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, customer.cpfcnpj)
+              let data = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, customer.cpfcnpj, customer.business_list)
               data = data.filter(d => d.data)
               if (data && data.length > 0) {
                 data.map(m => {
@@ -151,7 +151,7 @@ class CustomerController {
             const fieldKey = template.fields.find(f => f.data === 'customer_cpfcnpj')
             if (fieldKey) {
               const keyCpfCnpj = fieldKey.column
-              let data = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, customer.customer_cpfcnpj)
+              let data = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, customer.customer_cpfcnpj, customer.business_list)
               data = data.filter(d => d.data)
               if (data && data.length > 0) {
                 data.map(m => {
@@ -218,7 +218,7 @@ class CustomerController {
               const keyCpfCnpj = fieldKey.column
               let data = []
               if (cpfcnpj) {
-                data = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, cpfcnpj)
+                data = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, cpfcnpj, customer.business_list)
               } else {
                 data = await businessRepository.listAllAndChildsByTemplateSortedReverse(companyToken, templateId)
               }
@@ -312,7 +312,7 @@ class CustomerController {
               if (fieldKey) {
                 const keyCpfCnpj = fieldKey.column
                 const customerKey = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
-                let data = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, customerKey)
+                let data = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, customerKey, customer.business_list)
                 data = data.filter(m => m.data)
                 if (data && data.length > 0) {
                   data.map(m => {
