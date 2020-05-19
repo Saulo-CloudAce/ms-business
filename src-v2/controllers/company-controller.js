@@ -65,9 +65,9 @@ class CompanyController {
       const companyRepository = new CompanyRepository(req.app.locals.db)
       const company = new Company(companyRepository)
 
-      const companyUpdated = await company.update(req.params.id, req.body.name, req.body.callback, req.body.activated)
+      await company.update(req.params.id, req.body.name, req.body.callback, req.body.activated)
 
-      return res.status(201).send(companyUpdated)
+      return res.sendStatus(204)
     } catch (err) {
       return res.status(500).send({ error: err.message })
     }
