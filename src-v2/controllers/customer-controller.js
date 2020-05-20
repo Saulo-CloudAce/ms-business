@@ -297,6 +297,8 @@ class CustomerController {
         customers = customers.filter(c => c.business_template_list.indexOf(queryTemplateId) >= 0)
       }
 
+      let customerResultList = []
+
       for (const i in customers) {
         const customer = customers[i]
         let templateList = customer.business_template_list
@@ -314,38 +316,32 @@ class CustomerController {
               if (fieldKey) {
                 const keyCpfCnpj = fieldKey.column
                 const customerKey = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
-                const data = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, customerKey)
-                console.log('total data', data.length)
+                const templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, customerKey)
 
-                console.time('format data')
-                data.map(m => {
-                  m.data = m.data.filter(md => md[keyCpfCnpj] === customerKey)
-                  if (m.parentBatchId) {
-                    m._id = m.parentBatchId
-                    delete m.parentBatchId
-                  }
-                })
-                console.timeEnd('format data')
-
-                console.log('total encontrado', data.length)
-
-                if (data.length > 0) templateFinal.lote_data_list = data.filter(d => d.data.length > 0)
-                return templateFinal
+                if (templateData.length) {
+                  templateFinal.lote_data_list = templateData
+                  return templateFinal
+                }
               }
             }
           }))
         }
 
-        if (customer) {
-          customer.schema_list = templates.filter(t => t)
-          delete customer.business_list
-          delete customer.business_template_list
+        const customerResult = {
+          id: customer.id,
+          customer_name: customer.customer_name,
+          customer_cpfcnpj: customer.customer_cpfcnpj,
+          customer_phome: customer.customer_phome,
+          customer_email: customer.customer_email,
+          schema_list: templates
         }
+
+        customerResultList.push(customerResult)
       }
 
-      customers = customers.sort((a, b) => (a.customer_name > b.customer_name) ? 1 : ((b.customer_name > a.customer_name) ? -1 : 0))
+      customerResultList = customerResultList.sort((a, b) => (a.customer_name > b.customer_name) ? 1 : ((b.customer_name > a.customer_name) ? -1 : 0))
 
-      return res.status(200).send(customers)
+      return res.status(200).send(customerResultList)
     } catch (err) {
       console.error(err)
       return res.status(500).send({ error: err.message })
