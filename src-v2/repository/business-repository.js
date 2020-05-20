@@ -319,9 +319,9 @@ class BusinessRepository {
     try {
       const searchParams = { companyToken, templateId, data: { $elemMatch: matchParams } }
 
-      if (businessListId.length > 0) {
-        searchParams['_id'] = { $in: businessListId.map(b => ObjectID(b)) }
-      }
+//      if (businessListId.length > 0) {
+//        searchParams['_id'] = { $in: businessListId.map(b => ObjectID(b)) }
+//      }
 
       let businessList = await this.db.collection('business')
         .find(
