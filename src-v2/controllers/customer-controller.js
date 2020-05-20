@@ -94,7 +94,7 @@ class CustomerController {
             const fieldKey = template.fields.find(f => f.data === 'customer_cpfcnpj')
             if (fieldKey) {
               const keyCpfCnpj = fieldKey.column
-              let data = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, customer.cpfcnpj, customer.business_list)
+              let data = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, customer.cpfcnpj)
               data = data.filter(d => d.data)
               if (data && data.length > 0) {
                 data.map(m => {
@@ -151,7 +151,7 @@ class CustomerController {
             const fieldKey = template.fields.find(f => f.data === 'customer_cpfcnpj')
             if (fieldKey) {
               const keyCpfCnpj = fieldKey.column
-              let data = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, customer.customer_cpfcnpj, customer.business_list)
+              let data = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, customer.customer_cpfcnpj)
               data = data.filter(d => d.data)
               if (data && data.length > 0) {
                 data.map(m => {
@@ -218,7 +218,7 @@ class CustomerController {
               const keyCpfCnpj = fieldKey.column
               let data = []
               if (cpfcnpj) {
-                data = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, cpfcnpj, customer.business_list)
+                data = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, cpfcnpj)
               } else {
                 data = await businessRepository.listAllAndChildsByTemplateSortedReverse(companyToken, templateId)
               }
@@ -286,7 +286,9 @@ class CustomerController {
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       const search = req.query.search
+      console.time('search customer on CRM')
       const request = await searchCustomer(search, companyToken, company.prefix_index_elastic)
+      console.timeEnd('search customer on CRM')
 
       if (request.response && request.response.status && request.response.status !== 200) return res.status(request.response.status).send(request.response.data)
       let customers = (Array.isArray(request.data)) ? request.data : []
@@ -312,17 +314,20 @@ class CustomerController {
               if (fieldKey) {
                 const keyCpfCnpj = fieldKey.column
                 const customerKey = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
-                let data = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, customerKey, customer.business_list)
-                data = data.filter(m => m.data)
-                if (data && data.length > 0) {
-                  data.map(m => {
-                    m.data = m.data.filter(md => md[keyCpfCnpj] === customerKey)
-                    if (m.parentBatchId) {
-                      m._id = m.parentBatchId
-                      delete m.parentBatchId
-                    }
-                  })
-                }
+                const data = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, customerKey)
+                console.log('total data', data.length)
+
+                console.time('format data')
+                data.map(m => {
+                  m.data = m.data.filter(md => md[keyCpfCnpj] === customerKey)
+                  if (m.parentBatchId) {
+                    m._id = m.parentBatchId
+                    delete m.parentBatchId
+                  }
+                })
+                console.timeEnd('format data')
+
+                console.log('total encontrado', data.length)
 
                 if (data.length > 0) templateFinal.lote_data_list = data.filter(d => d.data.length > 0)
                 return templateFinal

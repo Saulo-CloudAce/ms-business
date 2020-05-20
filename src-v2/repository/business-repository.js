@@ -313,20 +313,16 @@ class BusinessRepository {
     }
   }
 
-  async listAllAndChildsByTemplateAndKeySortedReverse (companyToken, templateId, keyColumn = '', keyValue = '', businessListId = []) {
+  async listAllAndChildsByTemplateAndKeySortedReverse (companyToken, templateId, keyColumn = '', keyValue = '') {
     const matchParams = {}
     matchParams[keyColumn] = keyValue
     try {
       const searchParams = { companyToken, templateId, data: { $elemMatch: matchParams } }
 
-//      if (businessListId.length > 0) {
-//        searchParams['_id'] = { $in: businessListId.map(b => ObjectID(b)) }
-//      }
-
       let businessList = await this.db.collection('business')
         .find(
           searchParams,
-          ['_id', 'name', 'data', 'parentBatchId', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'flow_passed', 'activeUntil', 'active'])
+          { name: 1, parentBatchId: 1, activeUntil: 1, active: 1, createdAt: 1, updatedAt: 1, flow_passed: 1, data: { $elemMatch: matchParams } })
         .toArray()
       businessList = businessList.sort((a, b) => (a.createdAt > b.createdAt) ? -1 : ((b.createdAt > a.createdAt) ? 1 : 0))
 
