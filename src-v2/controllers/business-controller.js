@@ -239,7 +239,20 @@ class BusinessController {
   }
 
   async getPoolData (req, res) {
+    const fields = ['_id']
+
     const companyToken = req.headers['token']
+
+    if (!companyToken) return res.status(400).send({ error: 'O token da company é obrigatório.' })
+
+    const searchData = req.body.data
+    if (!Array.isArray(searchData)) return res.status(400).send({ error: 'O data é um array obrigatório.' })
+    else if (searchData.length === 0) return res.status(400).send({ error: 'O data deve ter no mínimo um item.' })
+
+    if (!req.body['fields']) return res.status(400).send({ error: 'Indique no mínimo um campo para ser retornado no item fields.' })
+    else if (!Array.isArray(req.body.fields)) return res.status(400).send({ error: 'O fields é um array de preenchimento obrigatório.' })
+
+    fields.push(...req.body.fields)
 
     try {
       const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
@@ -247,33 +260,22 @@ class BusinessController {
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      const searchData = req.body.data
-      let fields = []
-      if (req.body.fields) fields = req.body.fields
-      fields.push('_id')
+      let searchDataInvalid = 0
+      for (const i in searchData) {
+        const data = searchData[i]
+        if (!data['schama']) searchDataInvalid += 1
+        else if (!data['lote_id']) searchDataInvalid += 1
+        else if (!data['item_id']) searchDataInvalid += 1
+      }
+
+      if (searchDataInvalid) return res.status(400).send({ error: "Os itens no campo 'data' não estão corretos." })
 
       const businessData = []
 
-      if (searchData && Array.isArray(searchData)) {
-        const listBusinessId = searchData.map(s => s.lote_id)
-        const businessList = await businessRepository.getDataByListId(companyToken, listBusinessId)
-        const listDataId = searchData.map(s => s.item_id)
-        businessList.forEach((business) => {
-          business.data
-            .filter(d => listDataId.includes(d._id))
-            .forEach((it) => {
-              let item = it
-              if (fields.length > 1) {
-                item = Object.keys(item)
-                  .filter(k => fields.includes(k))
-                  .reduce((obj, k) => {
-                    obj[k] = item[k]
-                    return obj
-                  }, {})
-              }
-              businessData.push(item)
-            })
-        })
+      const businessDataList = await businessRepository.getDataByListId(companyToken, searchData, fields)
+      for (const i in businessDataList) {
+        const business = businessDataList[i]
+        businessData.push(...business.data)
       }
 
       return res.status(200).send(businessData)

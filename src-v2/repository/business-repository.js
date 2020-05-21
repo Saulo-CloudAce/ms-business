@@ -371,17 +371,40 @@ class BusinessRepository {
     }
   }
 
-  async getDataByListId (companyToken, listId) {
-    const listIdQuery = listId.map(l => new ObjectID(l))
+  async getDataByListId (companyToken = '', searchData = [], searchFields = []) {
+    const listBusinessIdQuery = []
+    const listTemplateIdQuery = []
+    const listItemIdQuery = []
+
+    for (const i in searchData) {
+      const data = searchData[i]
+      listBusinessIdQuery.push(new ObjectID(data.lote_id))
+      listTemplateIdQuery.push(data.schama)
+      listItemIdQuery.push(data.item_id)
+    }
+
+    const resultFields = {}
+    searchFields.forEach(sf => {
+      resultFields[`data.${sf}`] = 1
+    })
 
     try {
       const business = await this.db.collection('business')
-        .find({
-          companyToken: companyToken,
-          $or: [
-            { _id: { $in: listIdQuery } },
-            { parentBatchId: { $in: listIdQuery } }
-          ] })
+        .find(
+          {
+            companyToken,
+            templateId: { $in: listTemplateIdQuery },
+            $or: [
+              { _id: { $in: listBusinessIdQuery } },
+              { parentBatchId: { $in: listBusinessIdQuery } }
+            ],
+            'data._id': { $in: listItemIdQuery }
+          },
+          {
+            data: { $elemMatch: { _id: { $in: listItemIdQuery } } },
+            ...resultFields
+          }
+        )
         .toArray()
 
       return business
