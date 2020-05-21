@@ -640,9 +640,13 @@ class BusinessController {
     const companyToken = req.headers['token']
     const templateId = req.headers['templateid']
 
+    if (!req.query['cpfcnpj']) return res.status(400).send({ error: 'É obrigatório informar o CPF/CNPJ.' })
+
     try {
-      const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
-      const newBusiness = this._getInstanceBusiness(req.app)
+      const querySearch = req.query.cpfcnpj
+      const response = []
+
+      const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
@@ -650,36 +654,24 @@ class BusinessController {
       const template = await templateRepository.getById(templateId, companyToken)
       if (!template) return res.status(400).send({ error: 'Template não identificado' })
 
-      let businessList = await newBusiness.listAllBatchesAndChildsByTemplateId(companyToken, templateId)
-      if (!businessList) return res.status(400).send({ error: 'Erro ao listar os business deste template.' })
+      const fieldCPFCNPJ = template.fields.find(f => f.data === 'customer_cpfcnpj')
 
-      const listKeyFields = template.fields.filter(f => f.key)
-      businessList = businessList.filter(bl => bl.data)
+      const keyCPFCNPJ = fieldCPFCNPJ.column
 
-      const querySearch = req.query.cpfcnpj
-      let response = {}
+      const templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCPFCNPJ, querySearch)
 
-      const resBusiness = businessList.map(b => {
-        const res = {}
-        const register = b.data.filter(d => {
-          const index = listKeyFields.filter(keyField => {
-            const index = d[keyField.column].toLowerCase().search(querySearch)
-            return index >= 0
-          }).length
-          return index > 0
-        })
-        if (register && register.length) {
-          res._id = b._id
-          res.name = b.name
-          res.createdAt = b.createdAt
-          res.data = register[0]
-          return res
+      for (const i in templateData) {
+        const data = templateData[i]
+        const occurrency = {
+          _id: data._id,
+          name: data.name,
+          createdAt: data.createdAt,
+          data: data.data
         }
-        return false
-      }).filter(b => b !== false)
+        response.push(occurrency)
+      }
 
-      if (resBusiness && resBusiness.length > 0) response = resBusiness[0]
-      else return res.status(400).send(response)
+      if (response.length === 0) return res.status(404).send([])
 
       return res.status(200).send(response)
     } catch (err) {

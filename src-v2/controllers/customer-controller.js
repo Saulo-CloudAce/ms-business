@@ -254,7 +254,9 @@ class CustomerController {
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
+      console.time('lista customers')
       const request = await getAllCustomersByCompanyPaginated(companyToken, page, limit)
+      console.timeEnd('lista customers')
 
       if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
 
