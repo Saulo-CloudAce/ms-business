@@ -259,21 +259,23 @@ class BusinessRepository {
 
   async listAllBatchesAndChildsByTemplate (companyToken, templateId) {
     try {
+      console.time('get parent batch')
       const businessList = await this.db.collection('business')
         .find({ templateId, companyToken, parentBatchId: { $exists: false } }, ['_id', 'name', 'childBatchesId', 'data', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'flow_passed', 'activeUntil', 'active'])
         .toArray()
+      console.timeEnd('get parent batch')
 
-      let businessChildList = []
+      const businessChildList = []
       const businessIndexed = {}
       businessList.filter(business => business.childBatchesId && business.childBatchesId.length > 0)
         .forEach(business => {
-          businessChildList = businessChildList.concat(business.childBatchesId)
+          businessChildList.push(...business.childBatchesId)
           businessIndexed[business._id] = business
         })
 
       const businessChildDataList = await this.getChildBatches(businessChildList)
       businessChildDataList.forEach(businessChildData => {
-        businessIndexed[businessChildData.parentBatchId].data = businessIndexed[businessChildData.parentBatchId].data.concat(businessChildData.data)
+        businessIndexed[businessChildData.parentBatchId].data.push(...businessChildData.data)
       })
 
       businessList.filter(business => !business.childBatchesId)

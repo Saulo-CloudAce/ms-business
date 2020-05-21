@@ -457,10 +457,16 @@ class BusinessController {
     if (!templateId) return res.status(400).send({ error: 'Informe o ID do template' })
 
     try {
-      const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
+      const { companyRepository, businessRepository, templateRepository } = this._getInstanceRepositories(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
+
+      const template = await templateRepository.getById(templateId, companyToken)
+      if (!template) return res.status(400).send({ error: 'Template não identificado' })
+
+      const allowedColumnType = ['string', 'text', 'cpfcnpj', 'email', 'phone_number', 'cep']
+      const keyColumnList = template.fields.filter(f => allowedColumnType.includes(f.type)).map(f => f.column)
 
       const searchParams = req.body.search_params
       let searchParamsValues = []
@@ -470,20 +476,15 @@ class BusinessController {
         searchParamsValues = searchParams.map(sp => String(sp.value).toLowerCase())
       }
 
-      const businessList = await businessRepository.listAllBatchesAndChildsByTemplate(companyToken, templateId)
       const resultList = []
-      businessList.filter((business) => {
-        const dataFiltered = business.data.filter(row => {
-          const rowValues = Object.values(row).map(rv => String(rv).toLowerCase())
-          return rowValues.filter(rv => searchParamsValues.filter(spv => spv === rv).length > 0).length > 0
-        })
-        if (dataFiltered.length > 0) {
-          const b1 = business
-          b1.data = dataFiltered
-          resultList.push(b1)
-        }
-        return (dataFiltered.length > 0)
-      }).map(b => delete b.childBatchesId)
+
+      for (const indexKey in keyColumnList) {
+        const keyColumn = keyColumnList[indexKey]
+
+        const templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyColumn, searchParamsValues[0])
+
+        resultList.push(...templateData)
+      }
 
       return res.status(200).send(resultList)
     } catch (e) {
