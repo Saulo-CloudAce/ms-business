@@ -154,7 +154,8 @@ class Validator {
               if (valid) {
                 const dataFormatted = self.format(jsonData, rulesByColumn)
                 lineValids.push(dataFormatted)
-                lineValidsCustomer.push(self.formatCustomer(jsonData, rulesByColumn))
+                const customerFormatted = self.formatCustomer(jsonData, rulesByColumn)
+                lineValidsCustomer.push(customerFormatted)
               } else {
                 lineInvalids.push(lineErrors)
               }
@@ -171,12 +172,6 @@ class Validator {
     })
 
     const { invalids, valids, validsCustomer } = data
-
-    // console.log(valids.length)
-    // valids = this._joinDataBatch(valids, fields)
-
-    // console.log(valids.length)
-    // console.log(validsCustomer.length)
 
     return {
       invalids,
@@ -465,7 +460,7 @@ class Validator {
     const fieldsWithoutRules = Object.keys(data).filter(k => typeof data[k].rules !== 'object')
 
     if (fieldsWithoutRules.length) {
-      const listFieldsRequired = fields.filter(f => fieldsWithoutRules.includes(f.data)).map(f => f.column)
+      const listFieldsRequired = fields.filter(f => fieldsWithoutRules[f.data]).map(f => f.column)
       lineErrors.errors.push({ error: 'Tem campos diferentes do que os definidos no template', fields_list_unkown: listFieldsRequired })
       return { valid: false, lineErrors }
     }
@@ -558,7 +553,7 @@ class Validator {
 
   _formatFieldArray (fieldRules, fieldData) {
     const arrData = []
-    if (!Object.keys(fieldRules).includes('fields')) {
+    if (!fieldRules['fields']) {
       if (Array.isArray(fieldData)) {
         fieldData.forEach((element, x) => {
           if (String(element).length) {
@@ -568,7 +563,6 @@ class Validator {
           }
         })
       }
-      console.log(arrData)
     } else {
       if (Array.isArray(fieldData)) {
         fieldData.filter(fd => Object.keys(fd).filter(fdk => String(fd[fdk]).length > 0).length > 0)
@@ -587,7 +581,11 @@ class Validator {
 
   format (data, rules) {
     const formatted = {}
-    Object.keys(data).forEach(fieldKey => {
+    const fieldKeyList = Object.keys(data)
+
+    for (const indexFieldKey in fieldKeyList) {
+      const fieldKey = fieldKeyList[indexFieldKey]
+
       const el = data[fieldKey]
       const fieldRules = rules[fieldKey]
 
@@ -604,14 +602,18 @@ class Validator {
         elText = this._formatFieldArray(fieldRules, elText)
       }
       formatted[fieldRules.column] = elText
-    })
+    }
+
     formatted['_id'] = md5(new Date() + Math.random())
     return formatted
   }
 
   formatCustomer (data, rules) {
     const formatted = {}
-    Object.keys(data).forEach(fieldKey => {
+    const fieldKeyList = Object.keys(data)
+    for (const indexFieldKey in fieldKeyList) {
+      const fieldKey = fieldKeyList[indexFieldKey]
+
       const el = data[fieldKey]
       const fieldRules = rules[fieldKey]
 
@@ -631,8 +633,8 @@ class Validator {
       formatted[fieldRules.data] = elText
 
       if (fieldRules.data === 'customer_phone_number') {
-        if (Object.keys(formatted).includes('customer_phone_number')) {
-          if (Object.keys(formatted).includes('customer_phone')) {
+        if (formatted['customer_phone_number']) {
+          if (formatted['customer_phone']) {
             formatted['customer_phone'] = [...formatted['customer_phone']]
             formatted['customer_phone'].push({ customer_phone_number: elText })
             delete formatted.customer_phone_number
@@ -640,11 +642,11 @@ class Validator {
             formatted['customer_phone'] = [{ customer_phone_number: elText }]
             delete formatted.customer_phone_number
           }
-        } else if (Object.keys(formatted).includes('customer_phone')) {
+        } else if (formatted['customer_phone']) {
           formatted['customer_phone'].push({ customer_phone_number: elText })
         }
       }
-    })
+    }
 
     formatted['_id'] = md5(new Date() + Math.random())
     return formatted
