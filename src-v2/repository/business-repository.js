@@ -207,7 +207,10 @@ class BusinessRepository {
   async getAllBatchesBasic (companyToken) {
     try {
       let businessList = await this.db.collection('business')
-        .find({ companyToken: companyToken, parentBatchId: { $exists: false } }, ['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'quantityRows'])
+        .find(
+          { companyToken: companyToken, parentBatchId: { $exists: false } },
+          ['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'quantityRows']
+        )
         .toArray()
 
       businessList = businessList.sort((a, b) => moment(b.createdAt) - moment(a.createdAt))
@@ -267,13 +270,15 @@ class BusinessRepository {
 
       const businessChildList = []
       const businessIndexed = {}
+      const businessIdList = []
       businessList.filter(business => business.childBatchesId && business.childBatchesId.length > 0)
         .forEach(business => {
           businessChildList.push(...business.childBatchesId)
           businessIndexed[business._id] = business
+          businessIdList.push(new ObjectID(business._id))
         })
 
-      const businessChildDataList = await this.getChildBatches(businessChildList)
+      const businessChildDataList = await this.getChildBatches(businessIdList)
       businessChildDataList.forEach(businessChildData => {
         businessIndexed[businessChildData.parentBatchId].data.push(...businessChildData.data)
       })
@@ -413,10 +418,10 @@ class BusinessRepository {
     }
   }
 
-  async getChildBatches (listChildBatchId) {
+  async getChildBatches (listParentBatchId = []) {
     try {
       const businessList = await this.db.collection('business')
-        .find({ _id: { $in: listChildBatchId } }, ['_id', 'parentBatchId', 'data'])
+        .find({ parentBatchId: { $in: listParentBatchId } }, ['_id', 'parentBatchId', 'data'])
         .toArray()
 
       return businessList
@@ -431,7 +436,7 @@ class BusinessRepository {
         .findOne({ _id: new ObjectID(id), companyToken: companyToken })
 
       if (business && business.childBatchesId && business.childBatchesId.length > 0) {
-        const businessChildList = await this.getChildBatches(business.childBatchesId)
+        const businessChildList = await this.getChildBatches([new ObjectID(id)])
         businessChildList.forEach(businessChild => {
           if (businessChild.parentBatchId.toString() === business._id.toString()) {
             business.data = business.data.concat(businessChild.data)
@@ -453,10 +458,11 @@ class BusinessRepository {
         .findOne({ _id: new ObjectID(businessId), companyToken: companyToken })
 
       if (business.childBatchesId) {
-        const businessChildBatchesDataList = await this.getChildBatches(business.childBatchesId)
-        businessChildBatchesDataList.forEach(businessChildBatchData => {
-          business.data = business.data.concat(businessChildBatchData.data)
-        })
+        const businessChildBatchesDataList = await this.getChildBatches([new ObjectID(businessId)])
+        for (const i in businessChildBatchesDataList) {
+          const businessChildBatchData = businessChildBatchesDataList[i]
+          business.data.push(...businessChildBatchData.data)
+        }
       }
 
       business.data = business.data.slice(skipDocs, (skipDocs + limit))

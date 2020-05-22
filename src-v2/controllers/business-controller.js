@@ -522,6 +522,9 @@ class BusinessController {
     if (req.query.page && parseInt(req.query.page) >= 0) page = parseInt(req.query.page)
     if (req.query.limit && parseInt(req.query.limit) >= 0) limit = parseInt(req.query.limit)
 
+    const businessId = req.params.id
+    if (!businessId) return res.status(400).send({ error: 'O ID do business é obrigatório.' })
+
     try {
       const { companyRepository } = this._getInstanceRepositories(req.app)
       const newBusiness = this._getInstanceBusiness(req.app)
@@ -529,7 +532,9 @@ class BusinessController {
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      const business = await newBusiness.getDataByIdPaginated(companyToken, req.params.id, page, limit)
+      console.time('get data business')
+      const business = await newBusiness.getDataByIdPaginated(companyToken, businessId, page, limit)
+      console.timeEnd('get data business')
 
       return res.status(200).send(business)
     } catch (e) {
