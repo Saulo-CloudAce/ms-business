@@ -298,25 +298,26 @@ class CustomerController {
           templateList = [queryTemplateId]
         }
 
-        let templates = []
-        if (templateList && templateList.length > 0) {
-          templates = await Promise.all(templateList.map(async templateId => {
-            const template = await templateRepository.getById(templateId, companyToken)
-            if (template) {
-              const templateFinal = { _id: template._id, name: template.name }
-              const fieldKey = template.fields.find(f => f.data === 'customer_cpfcnpj')
-              if (fieldKey) {
-                const keyCpfCnpj = fieldKey.column
-                const customerKey = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
-                const templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, customerKey)
+        const templates = []
 
-                if (templateData.length) {
-                  templateFinal.lote_data_list = templateData
-                  return templateFinal
-                }
+        for (const iTemplate in templateList) {
+          const templateId = templateList[iTemplate]
+
+          const template = await templateRepository.getById(templateId, companyToken)
+          if (template) {
+            const templateFinal = { _id: template._id, name: template.name }
+            const fieldKey = template.fields.find(f => f.data === 'customer_cpfcnpj')
+            if (fieldKey) {
+              const keyCpfCnpj = fieldKey.column
+              const customerKey = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
+              const templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, customerKey)
+
+              if (templateData.length) {
+                templateFinal.lote_data_list = templateData
+                templates.push(templateFinal)
               }
             }
-          }))
+          }
         }
 
         const customerResult = {
