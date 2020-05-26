@@ -249,13 +249,11 @@ class BusinessController {
     if (!Array.isArray(searchData)) return res.status(400).send({ error: 'O data é um array obrigatório.' })
     else if (searchData.length === 0) return res.status(400).send({ error: 'O data deve ter no mínimo um item.' })
 
-    if (!req.body['fields']) return res.status(400).send({ error: 'Indique no mínimo um campo para ser retornado no item fields.' })
+    if (!req.body['fields'] || req.body.fields.length === 0) return res.status(400).send({ error: 'Indique no mínimo um campo para ser retornado no item fields.' })
     else if (!Array.isArray(req.body.fields)) return res.status(400).send({ error: 'O fields é um array de preenchimento obrigatório.' })
 
-    fields.push(...req.body.fields)
-
     try {
-      const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
+      const { companyRepository, businessRepository, templateRepository } = this._getInstanceRepositories(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
@@ -270,6 +268,20 @@ class BusinessController {
 
       if (searchDataInvalid) return res.status(400).send({ error: "Os itens no campo 'data' não estão corretos." })
 
+      if (req.body.fields.indexOf('*') >= 0) {
+        const listTemplateId = searchData.map(sd => sd['schama'])
+        const templateList = await templateRepository.getByListId(listTemplateId, companyToken)
+        const visibleFieldList = []
+        for (const i in templateList) {
+          const template = templateList[i]
+          const vfieldList = template.fields.filter(f => f.visible).map(f => f.column)
+          visibleFieldList.push(...vfieldList)
+        }
+        fields.push(...visibleFieldList)
+      } else {
+        fields.push(...req.body.fields)
+      }
+
       const businessData = []
 
       const businessDataList = await businessRepository.getDataByListId(companyToken, searchData, fields)
@@ -280,6 +292,7 @@ class BusinessController {
 
       return res.status(200).send(businessData)
     } catch (err) {
+      console.error(err)
       return res.status(500).send({ error: err.message })
     }
   }

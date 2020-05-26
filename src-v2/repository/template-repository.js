@@ -81,6 +81,20 @@ class TemplateRepository {
     }
   }
 
+  async getByListId (listId = [], companyToken = '') {
+    try {
+      const listObjectId = listId.map(id => new ObjectID(id))
+
+      const result = await this.db.collection('business_template')
+        .find({ _id: { $in: listObjectId }, companyToken }, ['_id', 'name', 'fields', 'active', 'createdAt', 'updatedAt'])
+        .toArray()
+
+      return result
+    } catch (err) {
+      throw new Error(err)
+    }
+  }
+
   async getNameById (id, companyToken) {
     try {
       const result = await this.db.collection('business_template').findOne({ _id: new ObjectID(id), companyToken }, ['_id', 'name'])
