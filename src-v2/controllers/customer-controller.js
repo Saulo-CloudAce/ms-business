@@ -91,10 +91,20 @@ class CustomerController {
           const template = await templateRepository.getById(templateId, companyToken)
           if (template) {
             const templateFinal = { _id: template._id, name: template.name }
-            const fieldKey = template.fields.find(f => f.data === 'customer_cpfcnpj')
+            const fieldKey = template.fields.find(f => f.key)
             if (fieldKey) {
-              const keyCpfCnpj = fieldKey.column
-              const templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, customer.cpfcnpj)
+              const keyColumn = fieldKey.column
+
+              let keyValue = ''
+              if (fieldKey.data === 'customer_cpfcnpj') {
+                keyValue = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
+              } else if (fieldKey.data === 'customer_phone' || fieldKey.data === 'customer_phone_number') {
+                keyValue = (customer.phone) ? customer.phone[0].number : customer.customer_phome[0].number
+              } else if (fieldKey.data === 'customer_email') {
+                keyValue = (customer.email) ? customer.email[0].email : customer.customer_email[0].email
+              }
+
+              const templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyColumn, keyValue)
 
               if (templateData.length) {
                 templateFinal.lote_data_list = templateData
@@ -139,10 +149,20 @@ class CustomerController {
           const template = await templateRepository.getById(templateId, companyToken)
           if (template) {
             const templateFinal = { _id: template._id, name: template.name }
-            const fieldKey = template.fields.find(f => f.data === 'customer_cpfcnpj')
+            const fieldKey = template.fields.find(f => f.key)
             if (fieldKey) {
-              const keyCpfCnpj = fieldKey.column
-              const templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, customer.customer_cpfcnpj)
+              const keyColumn = fieldKey.column
+
+              let keyValue = ''
+              if (fieldKey.data === 'customer_cpfcnpj') {
+                keyValue = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
+              } else if (fieldKey.data === 'customer_phone' || fieldKey.data === 'customer_phone_number') {
+                keyValue = (customer.phone) ? customer.phone[0].number : customer.customer_phone[0].customer_phone_number
+              } else if (fieldKey.data === 'customer_email') {
+                keyValue = (customer.email) ? customer.email[0].email : customer.customer_email[0].customer_email
+              }
+
+              const templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyColumn, keyValue)
 
               if (templateData.length) {
                 templateFinal.lote_data_list = templateData
@@ -306,11 +326,20 @@ class CustomerController {
           const template = await templateRepository.getById(templateId, companyToken)
           if (template) {
             const templateFinal = { _id: template._id, name: template.name }
-            const fieldKey = template.fields.find(f => f.data === 'customer_cpfcnpj')
+            const fieldKey = template.fields.find(f => f.key)
             if (fieldKey) {
-              const keyCpfCnpj = fieldKey.column
-              const customerKey = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
-              const templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, customerKey)
+              const keyColumn = fieldKey.column
+
+              let keyValue = ''
+              if (fieldKey.data === 'customer_cpfcnpj') {
+                keyValue = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
+              } else if (fieldKey.data === 'customer_phone' || fieldKey.data === 'customer_phone_number') {
+                keyValue = (customer.phone) ? customer.phone[0].number : customer.customer_phome[0].number
+              } else if (fieldKey.data === 'customer_email') {
+                keyValue = (customer.email) ? customer.email[0].email : customer.customer_email[0].email
+              }
+
+              const templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyColumn, keyValue)
 
               if (templateData.length) {
                 templateFinal.lote_data_list = templateData
