@@ -262,11 +262,9 @@ class BusinessRepository {
 
   async listAllBatchesAndChildsByTemplate (companyToken, templateId) {
     try {
-      console.time('get parent batch')
       const businessList = await this.db.collection('business')
         .find({ templateId, companyToken, parentBatchId: { $exists: false } }, ['_id', 'name', 'childBatchesId', 'data', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'flow_passed', 'activeUntil', 'active'])
         .toArray()
-      console.timeEnd('get parent batch')
 
       const businessChildList = []
       const businessIndexed = {}
