@@ -558,7 +558,7 @@ class Validator {
         fieldData.forEach((element, x) => {
           if (String(element).length) {
             const item = {}
-            item[fieldRules.data] = element
+            item[fieldRules.column] = element
             arrData.push(item)
           }
         })
@@ -569,7 +569,7 @@ class Validator {
           .forEach(element => {
             const item = {}
             fieldRules.fields.forEach(field => {
-              item[field.data] = element[field.column]
+              item[field.column] = element[field.column]
             })
             arrData.push(item)
           })
