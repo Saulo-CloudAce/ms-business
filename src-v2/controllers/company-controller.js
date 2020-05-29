@@ -24,6 +24,7 @@ class CompanyController {
 
       return res.status(201).send(newCompany)
     } catch (err) {
+      console.error(err)
       return res.status(500).send({ error: err.message })
     }
   }

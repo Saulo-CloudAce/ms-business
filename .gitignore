@@ -5,3 +5,5 @@ npm-*
 .env
 *.txt
 core
+
+coverage

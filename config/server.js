@@ -36,10 +36,13 @@ templateRoutesV2(app)
 customerRoutesV2(app)
 
 const port = process.env.PORT || 3000
-connect(app, () => {
-  app.listen(port, () => {
-    console.log(`API is live on port ${port}`)
+
+if (process.env.NODE_ENV !== 'test') {
+  connect(app, () => {
+    app.listen(port, () => {
+      console.log(`API is live on port ${port}`)
+    })
   })
-})
+}
 
 module.exports = app

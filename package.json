@@ -3,9 +3,20 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "jest": {
+    "testPathIgnorePatterns": [
+      "__tests__/utils"
+    ],
+    "collectCoverage": true,
+    "coverageReporters": [
+      "html"
+    ],
+    "testSequencer": "./__tests__/utils/custom-sequencer.js"
+  },
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon --max-old-space-size=4096 index.js"
+    "dev": "nodemon --max-old-space-size=4096 index.js",
+    "test": "cross-env NODE_ENV=test ./node_modules/.bin/run.env jest --testTimeout=10000 --detectOpenHandles --runInBand"
   },
   "author": "Silas Silva <silas.ti2010@gmail.com>",
   "license": "ISC",
@@ -32,13 +43,18 @@
     "s3": "^4.4.0"
   },
   "devDependencies": {
+    "cross-env": "^7.0.2",
     "eslint": "^6.1.0",
     "eslint-config-standard": "^13.0.1",
     "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-node": "^9.1.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.0",
+    "jest": "^26.0.1",
+    "jest-config": "^26.0.1",
+    "jest-serial-runner": "^1.1.0",
     "nodemon": "^1.19.1",
+    "supertest": "^4.0.2",
     "tap-spec": "^5.0.0",
     "tape": "^4.11.0"
   }
