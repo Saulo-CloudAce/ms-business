@@ -5,7 +5,8 @@ class CustomSequencer extends TestSequencer {
     const orderPath = [
       'company',
       'template',
-      'business'
+      'business',
+      'customer'
     ]
     return tests.sort((testA, testB) => {
       let filenameA = testA.path.split('/')
