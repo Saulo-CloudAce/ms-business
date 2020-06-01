@@ -382,7 +382,7 @@ class BusinessRepository {
     for (const i in searchData) {
       const data = searchData[i]
       listBusinessIdQuery.push(new ObjectID(data.lote_id))
-      listTemplateIdQuery.push(data.schama)
+      listTemplateIdQuery.push(new ObjectID(data.schama))
       listItemIdQuery.push(data.item_id)
     }
 

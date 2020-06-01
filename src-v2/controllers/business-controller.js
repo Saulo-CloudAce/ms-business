@@ -545,9 +545,7 @@ class BusinessController {
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      console.time('get data business')
       const business = await newBusiness.getDataByIdPaginated(companyToken, businessId, page, limit)
-      console.timeEnd('get data business')
 
       return res.status(200).send(business)
     } catch (e) {
