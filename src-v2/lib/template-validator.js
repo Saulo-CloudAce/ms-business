@@ -3,7 +3,7 @@ const { isArrayElementSameTypes, isArrayOfObjects, isArrayWithEmptyElement } = r
 const { isTypeOptions, isTypeDate } = require('../helpers/field-methods')
 
 const supportedTypes = ['text', 'string', 'int', 'array', 'boolean', 'cpfcnpj', 'cep', 'phone_number', 'decimal', 'email', 'options', 'date', 'timestamp']
-const supportedKeys = ['customer_cpfcnpj', 'customer_name', 'customer_phone_number', 'customer_email']
+const supportedKeys = ['customer_cpfcnpj', 'customer_name', 'customer_phone_number', 'customer_email', 'customer_email_address']
 
 function hasFieldUnique (fields) {
   return fields.filter(f => f.unique).length > 0

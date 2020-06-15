@@ -100,7 +100,7 @@ class CustomerController {
                 keyValue = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
               } else if (fieldKey.data === 'customer_phone' || fieldKey.data === 'customer_phone_number') {
                 keyValue = (customer.phone) ? customer.phone[0].number : customer.customer_phome[0].number
-              } else if (fieldKey.data === 'customer_email') {
+              } else if (fieldKey.data === 'customer_email' || fieldKey.data === 'customer_email_address') {
                 keyValue = (customer.email) ? customer.email[0].email : customer.customer_email[0].email
               }
 
@@ -158,7 +158,7 @@ class CustomerController {
                 keyValue = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
               } else if (fieldKey.data === 'customer_phone' || fieldKey.data === 'customer_phone_number') {
                 keyValue = (customer.phone) ? customer.phone[0].number : customer.customer_phone[0].customer_phone_number
-              } else if (fieldKey.data === 'customer_email') {
+              } else if (fieldKey.data === 'customer_email' || fieldKey.data === 'customer_email_address') {
                 keyValue = (customer.email) ? customer.email[0].email : customer.customer_email[0].customer_email
               }
 
@@ -335,7 +335,7 @@ class CustomerController {
                 keyValue = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
               } else if (fieldKey.data === 'customer_phone' || fieldKey.data === 'customer_phone_number') {
                 keyValue = (customer.phone) ? customer.phone[0].number : customer.customer_phome[0].number
-              } else if (fieldKey.data === 'customer_email') {
+              } else if (fieldKey.data === 'customer_email' || fieldKey.data === 'customer_email_address') {
                 keyValue = (customer.email) ? customer.email[0].email : customer.customer_email[0].email
               }
 
