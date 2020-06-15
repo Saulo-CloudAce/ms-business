@@ -8,10 +8,14 @@ function normalizeArraySubfields (templateData = [], template = {}) {
       const data = batch.data
       let dataNormalized = data
       for (let field of  fieldArrayList) {
-        const firstItemArray = data[0][field.column][0]
-        const dataFirstField = field.fields[0].data
-        if (firstItemArray[dataFirstField]) {
-          dataNormalized = normalizeField(dataNormalized, field)
+        let firstItemArray = data[0][field.column]
+        if (firstItemArray && firstItemArray.length > 0) {
+            firstItemArray = firstItemArray[0]
+
+            const dataFirstField = field.fields[0].data
+            if (firstItemArray[dataFirstField]) {
+            dataNormalized = normalizeField(dataNormalized, field)
+            }
         }
       }
       const loteNormalized = batch
