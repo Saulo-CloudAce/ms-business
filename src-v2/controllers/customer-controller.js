@@ -289,7 +289,7 @@ class CustomerController {
 
   async search (req, res) {
     const companyToken = req.headers['token']
-    const queryTemplateId = req.headers['template_id']
+    const queryTemplateId = req.headers['templateid']
 
     try {
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
