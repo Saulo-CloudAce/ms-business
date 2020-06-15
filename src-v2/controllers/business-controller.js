@@ -8,6 +8,7 @@ const Uploader = require('../lib/uploader')
 const Validator = require('../lib/validator')
 const crmService = require('../services/crm-service')
 const { mongoIdIsValid } = require('../helpers/validators')
+const { normalizeArraySubfields } = require('../lib/data-transform')
 
 class BusinessController {
   constructor (businessService) {
@@ -646,11 +647,15 @@ class BusinessController {
         _id: business._id,
         name: business.name
       }
-      if (data && data.length > 0) respBusiness.data = data[0]
+      if (data && data.length > 0) {
+        const businessNormalized = normalizeArraySubfields([business], template)
+        respBusiness.data = businessNormalized[0].data[0]
+      }
       else return res.status(400).send({ error: 'Registro não encontrado.' })
 
       return res.status(200).send(respBusiness)
     } catch (err) {
+      console.error(err)
       return res.status(500).send({ error: err.message })
     }
   }

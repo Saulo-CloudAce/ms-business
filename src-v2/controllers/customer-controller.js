@@ -9,6 +9,7 @@ const {
   getCustomerFormattedById,
   getAllCustomersByCompanyPaginated } = require('../services/crm-service')
 const { clearCPFCNPJ } = require('../helpers/formatters')
+const { normalizeArraySubfields } = require('../lib/data-transform')
 const CompanyRepository = require('../repository/company-repository')
 const TemplateRepository = require('../repository/template-repository')
 const BusinessRepository = require('../repository/business-repository')
@@ -104,9 +105,10 @@ class CustomerController {
                 keyValue = (customer.email) ? customer.email[0].email : customer.customer_email[0].email
               }
 
-              const templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyColumn, keyValue)
+              let templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyColumn, keyValue)
 
               if (templateData.length) {
+                templateData = normalizeArraySubfields(templateData, template)
                 templateFinal.lote_data_list = templateData
                 return templateFinal
               }
@@ -162,9 +164,10 @@ class CustomerController {
                 keyValue = (customer.email) ? customer.email[0].email : customer.customer_email[0].customer_email
               }
 
-              const templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyColumn, keyValue)
+              let templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyColumn, keyValue)
 
               if (templateData.length) {
+                templateData = normalizeArraySubfields(templateData, template)
                 templateFinal.lote_data_list = templateData
                 return templateFinal
               }
@@ -241,6 +244,7 @@ class CustomerController {
               }
 
               if (templateData.length > 0) {
+                templateData = normalizeArraySubfields(templateData, template)
                 templateFinal.lote_data_list = templateData
                 return templateFinal
               }
@@ -339,9 +343,10 @@ class CustomerController {
                 keyValue = (customer.email) ? customer.email[0].email : customer.customer_email[0].email
               }
 
-              const templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyColumn, keyValue)
+              let templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyColumn, keyValue)
 
               if (templateData.length) {
+                templateData = normalizeArraySubfields(templateData, template)
                 templateFinal.lote_data_list = templateData
                 templates.push(templateFinal)
               }
