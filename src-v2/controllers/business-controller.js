@@ -643,6 +643,8 @@ class BusinessController {
       if (!business) return res.status(400).send({ error: 'Business não identificado.' })
       const dataIndex = business.data.findIndex(d => d._id === req.params.registerId)
 
+      business.data = [business.data[dataIndex]]
+
       const respBusiness = {
         _id: business._id,
         name: business.name
