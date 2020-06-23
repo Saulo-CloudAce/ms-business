@@ -641,17 +641,19 @@ class BusinessController {
 
       const business = await newBusiness.getDataById(companyToken, req.params.businessId)
       if (!business) return res.status(400).send({ error: 'Business não identificado.' })
-      const data = business.data.filter(d => d._id === req.params.registerId)
+      const dataIndex = business.data.findIndex(d => d._id === req.params.registerId)
 
       const respBusiness = {
         _id: business._id,
         name: business.name
       }
-      if (data && data.length > 0) {
-        const businessNormalized = normalizeArraySubfields([business], template)
-        respBusiness.data = businessNormalized[0].data[0]
+
+      if (dataIndex < 0) {
+        return res.status(400).send({ error: 'Registro não encontrado.' })
       }
-      else return res.status(400).send({ error: 'Registro não encontrado.' })
+
+      const businessNormalized = normalizeArraySubfields([business], template)
+      respBusiness.data = businessNormalized[0].data[dataIndex]
 
       return res.status(200).send(respBusiness)
     } catch (err) {
