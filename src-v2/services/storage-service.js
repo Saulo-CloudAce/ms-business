@@ -1,4 +1,5 @@
 const fs = require('fs')
+const AWS = require('aws-sdk')
 
 const S3Client = require('../../config/s3')
 
@@ -7,6 +8,7 @@ const bucketDefault = process.env.BUCKET
 class StorageService {
   constructor () {
     this._client = S3Client.newInstance()
+    this._nativeClient = S3Client.newNativeInstance()
   }
 
   async upload (dirBucket, dirFile, fileName, bucket = bucketDefault, publicAccess = false) {
@@ -32,6 +34,26 @@ class StorageService {
         }
       })
     })
+  }
+
+  async uploadFromEncoded (dirBucket, buffer, fileName, bucket = bucketDefault, publicAccess = false) {
+    let urlFile = null
+    
+    if (dirBucket && dirBucket.length > 0) fileName = `${dirBucket}/${fileName}`
+    
+    await this._nativeClient.putObject({
+      Bucket: bucket,
+      Key: fileName,
+      Body: buffer,
+      ContentEncoding: 'utf8',
+      ContentType: 'application/json',
+      ACL: (publicAccess) ? 'public-read' : 'private'
+    }, function (err) {
+      if (err) { throw new Error(err) }
+    })
+    urlFile = `https://${bucket}.s3.amazonaws.com/${fileName}`
+
+    return urlFile
   }
 
   async listObjects (dirBucket, bucket) {

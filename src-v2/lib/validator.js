@@ -223,28 +223,21 @@ class Validator {
 
   async validateAndFormatFromUrlFile (filePath, fields, jumpFirstLine = false, dataSeparator = ';', listBatches = []) {
     const rulesByColumn = this._indexTemplateFieldsByColumn(fields)
-    console.log(filePath)
+    
     const filePathParts = filePath.split('/')
     const fileName = filePathParts[filePathParts.length - 1]
     const dirFile = filePathParts[filePathParts.length - 2]
     const bucket = filePathParts[filePathParts.length - 3]
-    console.log(fileName, dirFile, bucket)
+    
     const readStream = await new Promise((resolve, reject) => {
-      storageService.downloadFile(`${dirFile}/${fileName}`, bucket, `/tmp/${md5(new Date())}`)
+      const tmpFilename = `/tmp/${md5(new Date())}`
+      storageService.downloadFile(`${dirFile}/${fileName}`, bucket, tmpFilename)
         .then(() => {
-          console.log('ok')
+          resolve(fs.createReadStream(tmpFilename))
         })
         .catch(err => {
-          console.error(err)
-        })
-      fetch(filePath)
-        .then(res => {
-          const tempFilename = md5(new Date())
-          const dest = fs.createWriteStream(`/tmp/${tempFilename}`)
-          res.body.pipe(dest)
-          resolve(fs.createReadStream(`/tmp/${tempFilename}`))
-        }).catch(err => {
           console.error('S3: ', err)
+          reject()
         })
     })
 

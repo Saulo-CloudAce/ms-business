@@ -1,4 +1,5 @@
 const s3 = require('s3')
+const AWS = require('aws-sdk')
 
 class S3Client {
   static newInstance () {
@@ -12,6 +13,13 @@ class S3Client {
         accessKeyId: process.env.ACCESSKEYID,
         secretAccessKey: process.env.SECRETACCESSKEY
       }
+    })
+  }
+
+  static newNativeInstance () {
+    return new AWS.S3({
+      accessKeyId: process.env.ACCESSKEYID,
+      secretAccessKey: process.env.SECRETACCESSKEY
     })
   }
 }
