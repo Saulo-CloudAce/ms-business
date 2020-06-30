@@ -55,7 +55,7 @@ describe ('Customer functions', () => {
     const customerResult = customer
     customerResult.customer_id = 5
 
-    nock('http://localhost:7000', {
+    nock('http://localhost:4000', {
       reqheaders: {
         token: companyCreated.token
       }
@@ -87,7 +87,7 @@ describe ('Customer functions', () => {
     const customerResult = customer
     customerResult.customer_id = 5
 
-    nock('http://localhost:7000', {
+    nock('http://localhost:4000', {
       reqheaders: {
         token: companyCreated.token
       }
@@ -132,7 +132,7 @@ describe ('Customer functions', () => {
       schema_list: []
     }
 
-    nock('http://localhost:7000', {
+    nock('http://localhost:4000', {
       reqheaders: {
         token: companyCreated.token
       }
@@ -195,7 +195,7 @@ describe ('Customer functions', () => {
       schema_list: []
     }
 
-    nock('http://localhost:7000', {
+    nock('http://localhost:4000', {
       reqheaders: {
         token: companyCreated.token
       }
@@ -252,7 +252,7 @@ describe ('Customer functions', () => {
       schema_list: []
     }
 
-    nock('http://localhost:7000', {
+    nock('http://localhost:4000', {
       reqheaders: {
         token: companyCreated.token
       }
@@ -298,7 +298,7 @@ describe ('Customer functions', () => {
       business_template_list: []
     }
 
-    nock('http://localhost:7000', {
+    nock('http://localhost:4000', {
       reqheaders: {
         token: companyCreated.token
       }
@@ -348,7 +348,7 @@ describe ('Customer functions', () => {
       }
     }
 
-    nock('http://localhost:7000', {
+    nock('http://localhost:4000', {
       reqheaders: {
         token: companyCreated.token
       }
