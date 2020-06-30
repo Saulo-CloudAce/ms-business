@@ -642,8 +642,7 @@ class BusinessController {
       const business = await newBusiness.getDataById(companyToken, req.params.businessId)
       if (!business) return res.status(400).send({ error: 'Business não identificado.' })
       const dataIndex = business.data.findIndex(d => d._id === req.params.registerId)
-
-      business.data = [business.data[dataIndex]]
+      console.log("BusinessController -> getBusinessRegisterById -> dataIndex", dataIndex)
 
       const respBusiness = {
         _id: business._id,
@@ -656,6 +655,7 @@ class BusinessController {
 
       const businessNormalized = normalizeArraySubfields([business], template)
       respBusiness.data = businessNormalized[0].data[dataIndex]
+      console.log("BusinessController -> getBusinessRegisterById -> businessNormalized", businessNormalized[0])
 
       return res.status(200).send(respBusiness)
     } catch (err) {
@@ -710,3 +710,4 @@ class BusinessController {
 }
 
 module.exports = BusinessController
+
