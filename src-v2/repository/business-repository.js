@@ -376,13 +376,15 @@ class BusinessRepository {
 
   async getDataByListId (companyToken = '', searchData = [], searchFields = []) {
     const listBusinessIdQuery = []
+    const listParentBusinessIdQuery = []
     const listTemplateIdQuery = []
     const listItemIdQuery = []
 
     for (const i in searchData) {
       const data = searchData[i]
       listBusinessIdQuery.push(new ObjectID(data.lote_id))
-      listTemplateIdQuery.push(new ObjectID(data.schama))
+      listParentBusinessIdQuery.push(data.lote_id)
+      listTemplateIdQuery.push(data.schama)
       listItemIdQuery.push(data.item_id)
     }
 
@@ -399,7 +401,7 @@ class BusinessRepository {
             templateId: { $in: listTemplateIdQuery },
             $or: [
               { _id: { $in: listBusinessIdQuery } },
-              { parentBatchId: { $in: listBusinessIdQuery } }
+              { parentBatchId: { $in: listParentBusinessIdQuery } }
             ],
             'data._id': { $in: listItemIdQuery }
           },
