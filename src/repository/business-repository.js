@@ -126,6 +126,41 @@ class BusinessRepository {
     }
   }
 
+  async listAllAndChildsByTemplateAndKeySortedReverse (companyToken, templateId, keyColumn = '', keyValue = '') {
+    const businessList = []
+
+    const matchParams = {}
+    matchParams[keyColumn] = keyValue
+    try {
+      const searchParams = { companyToken, templateId, data: { $elemMatch: matchParams } }
+
+      let businessListStored = await this.db.collection('business')
+        .find(
+          searchParams,
+          { name: 1, parentBatchId: 1, activeUntil: 1, active: 1, createdAt: 1, updatedAt: 1, flow_passed: 1, data: { $elemMatch: matchParams } })
+        .toArray()
+      businessListStored = businessListStored.sort((a, b) => (a.createdAt > b.createdAt) ? -1 : ((b.createdAt > a.createdAt) ? 1 : 0))
+
+      for (const i in businessListStored) {
+        const bData = businessListStored[i]
+        businessList.push({
+          _id: (bData.parentBatchId) ? bData.parentBatchId : bData._id,
+          name: bData.name,
+          data: bData.data,
+          activeUntil: bData.activeUntil,
+          flow_passed: bData.flow_passed,
+          active: bData.active,
+          createdAt: bData.createdAt,
+          updatedAt: bData.updatedAt
+        })
+      }
+
+      return businessList
+    } catch (err) {
+      throw new Error(err)
+    }
+  }
+
   async getAllBasicByTemplate (companyToken, templateId) {
     try {
       const businessList = await this.db.collection('business').find({ templateId, companyToken }, ['_id', 'name', 'activeUntil', 'active', 'createdAt']).toArray()

@@ -237,36 +237,93 @@ console.log(template)
       if (request.response && request.response.status && request.response.status !== 200) return res.status(request.response.status).send(request.response.data)
       var customers = (Array.isArray(request.data)) ? request.data : []
 
-      for (var i in customers) {
-        var customer = customers[i]
-        var templateList = customer.business_template_list
-        var templates = []
-        if (templateList && templateList.length > 0) {
-          templates = await Promise.all(templateList.map(async templateId => {
-            var template = await templateRepository.getNameById(templateId, companyToken)
-            if (template) {
-              var data = await businessRepository.listAllByTemplate(companyToken, templateId)
-              if (data && data.length > 0) {
-                var customerKey = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
-                data.map(m => { m.data = m.data.filter(md => md.customer_cpfcnpj === customerKey) })
+      // for (var i in customers) {
+      //   var customer = customers[i]
+      //   var templateList = customer.business_template_list
+      //   var templates = []
+      //   if (templateList && templateList.length > 0) {
+      //     templates = await Promise.all(templateList.map(async templateId => {
+      //       var template = await templateRepository.getNameById(templateId, companyToken)
+      //       if (template) {
+      //         var data = await businessRepository.listAllByTemplate(companyToken, templateId)
+      //         if (data && data.length > 0) {
+      //           var customerKey = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
+      //           data.map(m => { m.data = m.data.filter(md => md.customer_cpfcnpj === customerKey) })
+      //         }
+
+      //         if (data.length > 0) template.lote_data_list = data.filter(d => d.data.length > 0)
+      //         return template
+      //       }
+      //     }))
+      //   }
+
+      //   if (customer) {
+      //     customer.schema_list = templates.filter(t => t)
+      //     delete customer.business_list
+      //     delete customer.business_template_list
+      //   }
+      // }
+
+      // customers = customers.sort((a, b) => (a.customer_name > b.customer_name) ? 1 : ((b.customer_name > a.customer_name) ? -1 : 0))
+
+      let customerResultList = []
+
+      for (const i in customers) {
+        const customer = customers[i]
+        let templateList = customer.business_template_list
+        // if (queryTemplateId && String(queryTemplateId).length > 0) {
+        //   templateList = [queryTemplateId]
+        // }
+
+        const templates = []
+
+        for (const iTemplate in templateList) {
+          const templateId = templateList[iTemplate]
+
+          const template = await templateRepository.getById(templateId, companyToken)
+          if (template) {
+            const templateFinal = { _id: template._id, name: template.name }
+            const fieldKey = template.fields.find(f => f.key)
+            if (fieldKey) {
+              const keyColumn = fieldKey.data
+
+              let keyValue = ''
+              if (fieldKey.data === 'customer_cpfcnpj') {
+                keyValue = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
+              } else if (fieldKey.data === 'customer_phone' || fieldKey.data === 'customer_phone_number') {
+                keyValue = (customer.phone) ? customer.phone[0].number : customer.customer_phome[0].number
+              } else if (fieldKey.data === 'customer_email' || fieldKey.data === 'customer_email_address') {
+                keyValue = (customer.email) ? customer.email[0].email : customer.customer_email[0].email
+              } else if (fieldKey.data === 'customer_name') {
+                keyValue = (customer.name) ? customer.name : customer.customer_name
               }
 
-              if (data.length > 0) template.lote_data_list = data.filter(d => d.data.length > 0)
-              return template
+              let templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyColumn, keyValue)
+
+              if (templateData.length) {
+                templateFinal.lote_data_list = templateData
+                templates.push(templateFinal)
+              }
             }
-          }))
+          }
         }
 
-        if (customer) {
-          customer.schema_list = templates.filter(t => t)
-          delete customer.business_list
-          delete customer.business_template_list
+        const customerResult = {
+          id: customer.id,
+          customer_name: customer.customer_name,
+          customer_cpfcnpj: customer.customer_cpfcnpj,
+          customer_phome: customer.customer_phome,
+          customer_email: customer.customer_email,
+          schema_list: templates
         }
+
+        customerResultList.push(customerResult)
       }
 
-      customers = customers.sort((a, b) => (a.customer_name > b.customer_name) ? 1 : ((b.customer_name > a.customer_name) ? -1 : 0))
+      customerResultList = customerResultList.sort((a, b) => (a.customer_name > b.customer_name) ? 1 : ((b.customer_name > a.customer_name) ? -1 : 0))
 
-      return res.status(200).send(customers)
+      return res.status(200).send(customerResultList)
+      // return res.status(200).send(customers)
     } catch (err) {
 console.error(err)
       return res.status(500).send({ error: err.message })
