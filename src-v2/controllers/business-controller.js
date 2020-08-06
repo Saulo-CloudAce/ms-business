@@ -654,8 +654,9 @@ class BusinessController {
         return res.status(400).send({ error: 'Registro não encontrado.' })
       }
 
-      const businessNormalized = normalizeArraySubfields([business], template)
-      respBusiness.data = businessNormalized[0].data[dataIndex]
+      // const businessNormalized = normalizeArraySubfields([business], template)
+      // respBusiness.data = businessNormalized[0].data[dataIndex]
+      respBusiness.data = business.data[0]
 
       return res.status(200).send(respBusiness)
     } catch (err) {
