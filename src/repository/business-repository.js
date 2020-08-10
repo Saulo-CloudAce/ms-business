@@ -1,17 +1,95 @@
 const ObjectID = require('mongodb').ObjectID
 const moment = require('moment')
 
+const BYTES_ON_MEGA = 1048576
+const LIMIT_SIZE_DOC_BSON_MEGABYTES = 14
+
 class BusinessRepository {
   constructor (db) {
     this.db = db
   }
 
+  _createNewInstance (data = {}) {
+    return {
+      _id: new ObjectID(),
+      companyToken: data.companyToken,
+      name: data.name,
+      filePath: data.filePath,
+      templateId: data.templateId,
+      jumpFirstLine: data.jumpFirstLine,
+      customerStorage: 'running',
+      dataSeparator: data.dataSeparator,
+      isBatch: data.isBatch,
+      childBatchesId: [],
+      quantityRows: 0,
+      data: [],
+      activeUntil: data.activeUntil,
+      invalids: data.invalids,
+      flow_passed: false,
+      active: true,
+      createdAt: moment().format(),
+      updatedAt: moment().format()
+    }
+  }
+
+  _calculateSizeBatch (batch) {
+    const sizeBytes = Buffer.byteLength(JSON.stringify(batch), 'utf-8')
+    const sizeMegaBytes = (sizeBytes / BYTES_ON_MEGA)
+    return sizeMegaBytes
+  }
+
+  _splitDataBatch (data, sizeDataMegaBytes) {
+    const batches = []
+    const quantityParts = Math.ceil(sizeDataMegaBytes / LIMIT_SIZE_DOC_BSON_MEGABYTES)
+    const quantityRows = data.data.length
+    const quantityRowsByPart = Math.ceil(quantityRows / quantityParts)
+
+    const firstBatch = this._createNewInstance(data)
+    firstBatch.data = data.data.splice(0, quantityRowsByPart)
+    firstBatch.quantityBatchRows = firstBatch.data.length
+    firstBatch.quantityRows = quantityRows
+    batches.push(firstBatch)
+
+    for (let i = 0; i < quantityParts - 1; i++) {
+      const indexInit = i * quantityRowsByPart
+      const indexEnd = indexInit + quantityRowsByPart
+      const batch = this._createNewInstance(data)
+      const batchData = data.data.slice(indexInit, indexEnd)
+      batch.data = batchData
+      batch.quantityRows = batch.data.length
+      batch.quantityBatchRows = batch.data.length
+      batch.parentBatchId = firstBatch._id
+
+      batches[0].childBatchesId.push(batch._id)
+      batches.push(batch)
+    }
+
+    return batches
+  }
+
   async save (companyToken, name, filePath, templateId, quantityRows, fieldsData, activeUntil, jumpFirstLine = false, dataSeparator = '', isBatch = true, invalids = []) {
-    const data = { companyToken, name, filePath, templateId, jumpFirstLine, customerStorage: 'running', dataSeparator, isBatch, quantityRows, data: fieldsData, activeUntil, invalids, flow_passed: false, active: true, createdAt: moment().format(), updatedAt: moment().format() }
+    // const data = { companyToken, name, filePath, templateId, jumpFirstLine, customerStorage: 'running', dataSeparator, isBatch, quantityRows, data: fieldsData, activeUntil, invalids, flow_passed: false, active: true, createdAt: moment().format(), updatedAt: moment().format() }
+
+    // try {
+    //   var r = await this.db.collection('business').insertOne(data)
+    //   const id = r.insertedId
+    //   return id
+    // } catch (err) {
+    //   throw new Error(err)
+    // }
+
+    const data = { _id: new ObjectID(), companyToken, name, filePath, templateId, jumpFirstLine, customerStorage: 'running', dataSeparator, isBatch, quantityRows, data: fieldsData, activeUntil, invalids, flow_passed: false, active: true, createdAt: moment().format(), updatedAt: moment().format() }
+    let batches = [data]
+
+    const sizeDataMegaBytes = this._calculateSizeBatch(data)
+
+    if (sizeDataMegaBytes > LIMIT_SIZE_DOC_BSON_MEGABYTES) {
+      batches = this._splitDataBatch(data, sizeDataMegaBytes)
+    }
 
     try {
-      var r = await this.db.collection('business').insertOne(data)
-      const id = r.insertedId
+      await this.db.collection('business').insertMany(batches)
+      const id = batches[0]._id
       return id
     } catch (err) {
       throw new Error(err)
