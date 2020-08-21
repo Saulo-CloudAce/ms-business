@@ -166,8 +166,13 @@ class Validator {
 
     let { invalids, valids, validsCustomer } = data
 
+    console.log('data bb: ', valids.length)
+    console.log('customers bb: ', validsCustomer.length)
+
     valids = this._joinDataBatch(valids, fields)
 
+    console.log('data ab: ', valids.length)
+    
     return {
       invalids,
       valids,
@@ -192,18 +197,21 @@ class Validator {
     const columnKey = (fieldKey.length && Object.keys(fieldKey[0]).includes('data')) ? fieldKey[0].data : rules.find(r => r.unique).data
     const columnsArray = rules.filter(r => isTypeArray(r))
     let dataIndexedByKeyColumn = {}
+    let listDataIndexed = []
     dataBatch.forEach(data => {
       const dataKeyValue = data[columnKey]
-      if (Object.keys(dataIndexedByKeyColumn).includes(dataKeyValue)) dataIndexedByKeyColumn[dataKeyValue].push(data)
+      if (dataIndexedByKeyColumn[dataKeyValue]) dataIndexedByKeyColumn[dataKeyValue].push(data)
       else {
         dataIndexedByKeyColumn[dataKeyValue] = [data]
       }
     })
-    dataIndexedByKeyColumn = Object.keys(dataIndexedByKeyColumn).map(k => {
-      if (dataIndexedByKeyColumn[k].length > 1) return this._mergeData(dataIndexedByKeyColumn[k], columnsArray)
-      return dataIndexedByKeyColumn[k][0]
+
+    Object.keys(dataIndexedByKeyColumn).forEach(k => {
+      if (dataIndexedByKeyColumn[k].length > 1 && columnsArray.length > 0) return listDataIndexed.push(this._mergeData(dataIndexedByKeyColumn[k], columnsArray))
+      else if (dataIndexedByKeyColumn[k].length > 1 && columnsArray.length === 0) return listDataIndexed.push(...dataIndexedByKeyColumn[k])
+      return listDataIndexed.push(dataIndexedByKeyColumn[k][0])
     })
-    return dataIndexedByKeyColumn
+    return listDataIndexed
   }
 
   async validateAndFormatFromUrlFile (filePath, fields, jumpFirstLine = false, dataSeparator = ';', listBatches = []) {

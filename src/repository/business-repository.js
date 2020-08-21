@@ -81,10 +81,14 @@ class BusinessRepository {
     const data = { _id: new ObjectID(), companyToken, name, filePath, templateId, jumpFirstLine, customerStorage: 'running', dataSeparator, isBatch, quantityRows, data: fieldsData, activeUntil, invalids, flow_passed: false, active: true, createdAt: moment().format(), updatedAt: moment().format() }
     let batches = [data]
 
+    console.time('calculate')
     const sizeDataMegaBytes = this._calculateSizeBatch(data)
+    console.timeEnd('calculate')
 
     if (sizeDataMegaBytes > LIMIT_SIZE_DOC_BSON_MEGABYTES) {
+      console.time('split')
       batches = this._splitDataBatch(data, sizeDataMegaBytes)
+      console.timeEnd('split')
     }
 
     try {
@@ -190,7 +194,6 @@ class BusinessRepository {
       const filter = { templateId, companyToken }
 
       if (flowPassed !== '') {
-        console.log(flowPassed)
         filter['flow_passed'] = flowPassed
       }
 
