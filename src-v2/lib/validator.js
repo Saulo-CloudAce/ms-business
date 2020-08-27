@@ -361,6 +361,7 @@ class Validator {
   }
 
   _validateFieldOptions (rules, fieldData, errors) {
+    if (!Array.isArray(fieldData)) fieldData = [fieldData]
     const fieldDataValues = {}
     fieldData.forEach(fd => {
       fieldDataValues[String(fd)] = fd
@@ -593,6 +594,11 @@ class Validator {
     return arrData
   }
 
+  _formatFieldOptions(fieldRules, fieldData) {
+    if (!Array.isArray(fieldData)) return [fieldData]
+    return fieldData
+  }
+
   format (data, rules) {
     const formatted = {}
     const fieldKeyList = Object.keys(data)
@@ -614,6 +620,8 @@ class Validator {
         elText = this._formatFieldDecimal(elText)
       } else if (isTypeArray(fieldRules)) {
         elText = this._formatFieldArray(fieldRules, elText)
+      } else if (isTypeOptions(fieldRules)) {
+        elText = this._formatFieldOptions(fieldRules, elText)
       }
       formatted[fieldRules.column] = elText
     }
