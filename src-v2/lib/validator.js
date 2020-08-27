@@ -473,7 +473,7 @@ class Validator {
     const lineErrors = { line: lineNumberOnFile, errors: [] }
 
     const fieldsWithoutRules = Object.keys(data).filter(k => typeof data[k].rules !== 'object')
-
+    
     if (fieldsWithoutRules.length) {
       const listFieldsRequired = fields.filter(f => fieldsWithoutRules[f.data]).map(f => f.column)
       lineErrors.errors.push({ error: 'Tem campos diferentes do que os definidos no template', fields_list_unkown: listFieldsRequired })
@@ -649,7 +649,7 @@ class Validator {
       } else if (isTypeDecimal(fieldRules)) {
         elText = this._formatFieldDecimal(elText)
       } else if (isTypeArray(fieldRules)) {
-        elText = this._formatFieldArray(fieldRules, elText)
+        elText = this._formatCustomerFieldArray(fieldRules, elText)
       }
 
       formatted[fieldRules.data] = elText
@@ -672,6 +672,34 @@ class Validator {
 
     formatted['_id'] = md5(new Date() + Math.random())
     return formatted
+  }
+
+  _formatCustomerFieldArray (fieldRules, fieldData) {
+    const arrData = []
+    if (!fieldRules['fields']) {
+      if (Array.isArray(fieldData)) {
+        fieldData.forEach((element, x) => {
+          if (String(element).length) {
+            const item = {}
+            item[fieldRules.data] = element
+            arrData.push(item)
+          }
+        })
+      }
+    } else {
+      if (Array.isArray(fieldData)) {
+        fieldData.filter(fd => Object.keys(fd).filter(fdk => String(fd[fdk]).length > 0).length > 0)
+          .forEach(element => {
+            const item = {}
+            fieldRules.fields.forEach(field => {
+              item[field.data] = element[field.column]
+            })
+            arrData.push(item)
+          })
+      }
+    }
+
+    return arrData
   }
 }
 
