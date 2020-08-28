@@ -15,18 +15,22 @@ class Business {
     }
 
     const { invalids, valids } = await this.validator.validateAndFormat(file.path, fields, jumpFirstLine, dataSeparator, listBatches)
-
+    
     if (valids.length === 0) {
       return { businessId: null, invalids }
     }
 
     const filePath = await this.uploader.upload(file)
     const businessId = await this.repository.save(companyToken, name, filePath, templateId, valids.length, valids, activeUntil, jumpFirstLine, dataSeparator, false, invalids)
-
+    
     if (hasCustomerFields(fields)) {
       const listFieldKey = fields.filter(f => f.key).map(f => f.data)
 
-      await this.crmService.sendData(valids, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic)
+      this.crmService.sendData(valids, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic)
+        .catch(err => {
+          console.log('Erro ao enviar customers para CRM - BUSINESS_ID:', businessId)
+          // console.error(err)
+        })
     }
 
     return { businessId, invalids }
