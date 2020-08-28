@@ -195,6 +195,7 @@ console.log(templateId)
           const template = await templateRepository.getNameById(templateId, companyToken)
 
           if (template) {
+            const templateFinal = { _id: template._id, name: template.name, updatedAt: template.updatedAt }
             let data = await businessRepository.listAllByTemplate(companyToken, templateId)
 		
             if (data && data.length > 0) {
@@ -202,7 +203,9 @@ console.log(templateId)
               const customerKey = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
               
               let templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, 'customer_cpfcnpj', customerKey)
-              return templateData
+              templateFinal.lote_data_list = templateData
+
+              if (templateData.length) return templateFinal
             }
           }
         }))
