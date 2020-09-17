@@ -131,6 +131,22 @@ class Business {
       return err
     }
   }
+
+  async getDataByIdPaginated (companyToken, id, page = 0, limit = 10) {
+    try {
+      return this.repository.getDataByIdPaginated(companyToken, id, page, limit)
+    } catch (err) {
+      return err
+    }
+  }
+
+  async getAllBatchesBasicPaginated (companyToken, page = 0, limit = 10) {
+    try {
+      return this.repository.getAllBatchesBasicPaginated(companyToken, page, limit)
+    } catch (err) {
+      return err
+    }
+  }
 }
 
 module.exports = Business

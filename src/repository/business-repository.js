@@ -292,6 +292,67 @@ class BusinessRepository {
       throw new Error(err)
     }
   }
+
+  async getDataByIdPaginated (companyToken, businessId, page = 0, limit = 10) {
+    try {
+      const skipDocs = page * limit
+
+      const business = await this.db.collection('business')
+        .findOne({ _id: new ObjectID(businessId), companyToken: companyToken })
+
+      if (business.childBatchesId) {
+        const businessChildBatchesDataList = await this.getChildBatches([new ObjectID(businessId)])
+        for (const i in businessChildBatchesDataList) {
+          const businessChildBatchData = businessChildBatchesDataList[i]
+          business.data.push(...businessChildBatchData.data)
+        }
+      }
+
+      business.data = business.data.slice(skipDocs, (skipDocs + limit))
+
+      if (business) {
+        delete business.childBatchesId
+
+        business.dataPagination = {
+          numRows: business.quantityRows,
+          page,
+          firstPage: 0,
+          lastPage: (Math.ceil(parseInt(business.quantityRows) / limit) - 1)
+        }
+      }
+
+      return business
+    } catch (err) {
+      throw new Error(err)
+    }
+  }
+
+  async getAllBatchesBasicPaginated (companyToken, page = 0, limit = 10) {
+    const skipDocs = page * limit
+    try {
+      let businessList = await this.db.collection('business')
+        .find({ companyToken: companyToken, parentBatchId: { $exists: false } }, ['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'quantityRows'])
+        .toArray()
+
+      businessList = businessList.sort((a, b) => moment(b.createdAt) - moment(a.createdAt))
+      businessList = businessList.slice(skipDocs, (skipDocs + limit))
+
+      const businessListCount = await this.db.collection('business')
+        .find({ companyToken: companyToken, parentBatchId: { $exists: false } }, ['_id'])
+        .count()
+
+      const pagination = {
+        numRows: parseInt(businessListCount),
+        page,
+        firstPage: 0,
+        lastPage: (Math.ceil(parseInt(businessListCount) / limit) - 1)
+      }
+
+      return { businessList, pagination }
+    } catch (err) {
+      throw new Error(err)
+    }
+  }
 }
 
 module.exports = BusinessRepository

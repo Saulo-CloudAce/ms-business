@@ -469,6 +469,69 @@ class BusinessController {
     }
   }
 
+  async getByIdWithDataPaginated (req, res) {
+    const companyToken = req.headers['token']
+    let page = 0
+    let limit = 10
+    if (req.query.page && parseInt(req.query.page) >= 0) page = parseInt(req.query.page)
+    if (req.query.limit && parseInt(req.query.limit) >= 0) limit = parseInt(req.query.limit)
+
+    const businessId = req.params.id
+    if (!businessId) return res.status(400).send({ error: 'O ID do business é obrigatório.' })
+
+    try {
+      const { companyRepository } = this._getInstanceRepositories(req.app)
+      const newBusiness = this._getInstanceBusiness(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
+
+      const business = await newBusiness.getDataByIdPaginated(companyToken, businessId, page, limit)
+
+      return res.status(200).send(business)
+    } catch (e) {
+      console.log('BusinessController -> getByIdWithDataPaginated', e)
+      return res.status(500).send({ error: "Ocorreu um erro ao buscar os dados do mailing." })
+    }
+  }
+
+  async getAllPaginated (req, res) {
+    const companyToken = req.headers['token']
+    let page = 0
+    let limit = 10
+
+    if (req.query.page && parseInt(req.query.page) >= 0) page = parseInt(req.query.page)
+    if (req.query.limit && parseInt(req.query.limit) >= 0) limit = parseInt(req.query.limit)
+
+    try {
+      const { companyRepository } = this._getInstanceRepositories(req.app)
+      const newBusiness = this._getInstanceBusiness(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
+
+      const { businessList, pagination } = await newBusiness.getAllBatchesBasicPaginated(companyToken, page, limit)
+      const business = { data: [], pagination }
+      business.data = businessList.map(b => {
+        return {
+          _id: b._id,
+          name: b.name,
+          activeUntil: b.activeUntil,
+          active: b.active,
+          createdAt: b.createdAt,
+          updatedAt: b.updatedAt,
+          dataAmount: b.quantityRows,
+          templateId: b.templateId
+        }
+      })
+
+      return res.status(200).send(business)
+    } catch (e) {
+      console.error('BusinessController -> getAllPaginated', e)
+      return res.status(500).send({ error: "Ocorreu um erro ao listar os mailings" })
+    }
+  }
+
   async deactivateExpiredBusiness () {
     const app = require('../../config/server')
     try {

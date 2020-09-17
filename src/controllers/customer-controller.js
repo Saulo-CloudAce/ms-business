@@ -5,7 +5,8 @@ const {
   searchCustomer,
   updateCustomer,
   getCustomerById,
-  getCustomerFormattedById } = require('../services/crm-service')
+  getCustomerFormattedById,
+  getAllCustomersByCompanyPaginated } = require('../services/crm-service')
 const CompanyRepository = require('../repository/company-repository')
 const TemplateRepository = require('../repository/template-repository')
 const BusinessRepository = require('../repository/business-repository')
@@ -293,6 +294,32 @@ console.log(templateId)
     } catch (err) {
       console.error(err)
       return res.status(500).send({ error: err.message })
+    }
+  }
+
+  async getAllByCompanyPaginated (req, res) {
+    const companyToken = req.headers['token']
+    let page = 0
+    let limit = 10
+    if (req.query.page && parseInt(req.query.page) >= 0) page = parseInt(req.query.page)
+    if (req.query.limit && parseInt(req.query.limit) >= 0) limit = parseInt(req.query.limit)
+
+    try {
+      var { companyRepository } = this._getInstanceRepositories(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
+
+      console.time('lista customers')
+      const request = await getAllCustomersByCompanyPaginated(companyToken, page, limit)
+      console.timeEnd('lista customers')
+
+      if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
+
+      return res.status(200).send(request.data)
+    } catch (err) {
+      console.error('CustomerController -> getAllByCompanyPaginated', err)
+      return res.status(500).send({ error: "Ocorreu um erro ao listar os customers" })
     }
   }
 }

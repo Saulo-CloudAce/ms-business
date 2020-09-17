@@ -90,4 +90,22 @@ function getAxiosInstanceByCompanyElastic (companyToken, prefixIndexElastic) {
   })
 }
 
-module.exports = { sendData, createSingleCustomer, getByCpfCnpj, getAllCustomersByCompany, updateCustomer, searchCustomer, getCustomerById, getCustomerFormattedById }
+async function getAllCustomersByCompanyPaginated (companyToken, page = 0, limit = 0) {
+  try {
+    return await getAxiosInstance(companyToken).get(`${process.env.CRM_URL}/customers/all?page=${page}&limit=${limit}`)
+  } catch (err) {
+    return err
+  }
+}
+
+module.exports = {
+  sendData,
+  createSingleCustomer,
+  getByCpfCnpj,
+  getAllCustomersByCompany,
+  updateCustomer,
+  searchCustomer,
+  getCustomerById,
+  getCustomerFormattedById,
+  getAllCustomersByCompanyPaginated
+}
