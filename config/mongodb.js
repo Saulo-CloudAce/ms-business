@@ -26,8 +26,7 @@ async function connect (app, callback) {
     connectionMongo = `mongodb://${config.host}:${config.port}/`
   }
   if (config.additionalParams) connectionMongo = `${connectionMongo}?${config.additionalParams}`
-  console.log('connection_string', connectionMongo)
-
+  
   MongoClient.connect(connectionMongo, { promiseLibrary: Promise }, (err, conn) => {
     if (err) console.error(`#00000 - Falha ao conectar ao banco de dados. ${err.stack}`)
 

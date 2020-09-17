@@ -353,6 +353,18 @@ class BusinessRepository {
       throw new Error(err)
     }
   }
+
+  async getChildBatches (listParentBatchId = []) {
+    try {
+      const businessList = await this.db.collection('business')
+        .find({ parentBatchId: { $in: listParentBatchId } }, ['_id', 'parentBatchId', 'data'])
+        .toArray()
+
+      return businessList
+    } catch (err) {
+      throw new Error(err)
+    }
+  }
 }
 
 module.exports = BusinessRepository
