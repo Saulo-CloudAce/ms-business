@@ -555,7 +555,13 @@ class BusinessController {
   }
 
   async deactivateExpiredBusiness () {
-    const app = require('../../config/server')
+    const app = {}
+    const { connect } = require('../../config/mongodb')
+    await Promise((resolve, reject) => {
+      connect(app, () => {
+        resolve()
+      })
+    })
     try {
       const { businessRepository } = this._getInstanceRepositories(app)
       const currentDate = moment().format('YYYY-MM-DD')
