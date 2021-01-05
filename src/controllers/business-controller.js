@@ -533,6 +533,7 @@ class BusinessController {
   }
 
   async deactivateExpiredBusiness () {
+    console.log('deactivateExpiredBusinessV1')
     const app = { locals: { db: null } }
     const { connect } = require('../../config/mongodb')
     await new Promise((resolve, reject) => {
