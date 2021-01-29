@@ -491,7 +491,7 @@ class BusinessController {
       } else {
         searchParamsValues = searchParams.map(sp => String(sp.value).toLowerCase())
       }
-
+      
       const resultList = []
 
       for (const indexKey in keyColumnList) {

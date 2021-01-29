@@ -322,7 +322,7 @@ class BusinessRepository {
     const businessList = []
 
     const matchParams = {}
-    matchParams[keyColumn] = keyValue
+    matchParams[keyColumn] = { $regex: keyValue, $options: 'i' }
     try {
       const searchParams = { companyToken, templateId, data: { $elemMatch: matchParams } }
 
