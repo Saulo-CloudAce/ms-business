@@ -48,8 +48,8 @@ deploy_homol:
                 rsync -azvr .env ubuntu@$i:/srv/$CI_PROJECT_NAME/;
                 rsync -azr .git .env.example .gitignore .gitlab-ci.yml ubuntu@$i:/srv/$CI_PROJECT_NAME/;
 
-                ssh ubuntu@$i "export PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin; cd /srv/$CI_PROJECT_NAME; npm install ; npm run migrate:latest";
-                ssh ubuntu@$i "export PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin; cd /srv/$CI_PROJECT_NAME; pm2 start -f src/index.js --name $CI_PROJECT_NAME --log-date-format='DD-MM-YYYY HH:mm Z' --log-type json";
+                ssh ubuntu@$i "export PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin; cd /srv/$CI_PROJECT_NAME; npm install";
+                ssh ubuntu@$i "export PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin; cd /srv/$CI_PROJECT_NAME; pm2 start -f index.js --name $CI_PROJECT_NAME --log-date-format='DD-MM-YYYY HH:mm Z' --log-type json";
                 ssh ubuntu@$i "sudo env PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin /usr/local/nvm/versions/node/v10.14.1/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu";
                 ssh ubuntu@$i "sudo systemctl enable pm2-ubuntu";
                 ssh ubuntu@$i "export PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin; pm2 save";
@@ -231,8 +231,8 @@ deploy_prod:
                 rsync -azvr .env ubuntu@$i:/srv/$CI_PROJECT_NAME/;
                 rsync -azr .git .env.example .gitignore .gitlab-ci.yml ubuntu@$i:/srv/$CI_PROJECT_NAME/;
 
-                ssh ubuntu@$i "export PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin; cd /srv/$CI_PROJECT_NAME; npm install ; npm run migrate:latest";
-                ssh ubuntu@$i "export PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin; cd /srv/$CI_PROJECT_NAME; pm2 start -f src/index.js --name $CI_PROJECT_NAME --log-date-format='DD-MM-YYYY HH:mm Z' --log-type json";
+                ssh ubuntu@$i "export PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin; cd /srv/$CI_PROJECT_NAME; npm install";
+                ssh ubuntu@$i "export PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin; cd /srv/$CI_PROJECT_NAME; pm2 start -f index.js --name $CI_PROJECT_NAME --log-date-format='DD-MM-YYYY HH:mm Z' --log-type json";
                 ssh ubuntu@$i "sudo env PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin /usr/local/nvm/versions/node/v10.14.1/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu";
                 ssh ubuntu@$i "sudo systemctl enable pm2-ubuntu";
                 ssh ubuntu@$i "export PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin; pm2 save";
