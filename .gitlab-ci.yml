@@ -46,7 +46,7 @@ deploy_homol:
                 
                 rsync -azvr ../$CI_PROJECT_NAME/* --exclude=aws --exclude=awscliv2.zip ubuntu@$i:/srv/$CI_PROJECT_NAME/;
                 rsync -azvr .env ubuntu@$i:/srv/$CI_PROJECT_NAME/;
-                rsync -azr .git .env.example .gitignore .gitlab-ci.yml ubuntu@$i:/srv/$CI_PROJECT_NAME/;
+                rsync -azr .* ubuntu@$i:/srv/$CI_PROJECT_NAME/;
 
                 ssh ubuntu@$i "export PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin; cd /srv/$CI_PROJECT_NAME; npm install";
                 ssh ubuntu@$i "export PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin; cd /srv/$CI_PROJECT_NAME; pm2 start -f index.js --name $CI_PROJECT_NAME --log-date-format='DD-MM-YYYY HH:mm Z' --log-type json";
