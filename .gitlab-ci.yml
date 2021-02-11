@@ -44,9 +44,9 @@ deploy_homol:
                 ssh ubuntu@$i "sudo chown -R ubuntu:ubuntu /srv/$CI_PROJECT_NAME";
                 ssh ubuntu@$i 'export PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin; pm2 show '${CI_PROJECT_NAME}'; if [ $? -eq 0 ]; then pm2 delete all; else echo "Nenhum processo encontrado" ; fi';
                 
-                #rsync -azvr ../$CI_PROJECT_NAME/* --exclude=aws --exclude=awscliv2.zip ubuntu@$i:/srv/$CI_PROJECT_NAME/;
+                rsync -azvr ../$CI_PROJECT_NAME/* --exclude=aws --exclude=awscliv2.zip ubuntu@$i:/srv/$CI_PROJECT_NAME/;
                 #rsync -azvr .env ubuntu@$i:/srv/$CI_PROJECT_NAME/;
-                rsync -azr .* --exclude=aws --exclude=awscliv2.zip ubuntu@$i:/srv/;
+                rsync -azr .* --exclude=aws --exclude=awscliv2.zip --exclude=$CI_PROJECT_NAME ubuntu@$i:/srv/$CI_PROJECT_NAME;
 
                 ssh ubuntu@$i "export PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin; cd /srv/$CI_PROJECT_NAME; npm install";
                 ssh ubuntu@$i "export PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin; cd /srv/$CI_PROJECT_NAME; pm2 start -f index.js --name $CI_PROJECT_NAME --log-date-format='DD-MM-YYYY HH:mm Z' --log-type json";
