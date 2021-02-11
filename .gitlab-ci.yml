@@ -45,7 +45,7 @@ deploy_homol:
                 ssh ubuntu@$i 'export PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin; pm2 show '${CI_PROJECT_NAME}'; if [ $? -eq 0 ]; then pm2 delete all; else echo "Nenhum processo encontrado" ; fi';
                 
                 rsync -azvr ../$CI_PROJECT_NAME/* --exclude=aws --exclude=awscliv2.zip ubuntu@$i:/srv/$CI_PROJECT_NAME/;
-                rsync -azr .* --exclude=aws --exclude=awscliv2.zip --exclude=$CI_PROJECT_NAME --exclude=msbusiness.tmp ubuntu@$i:/srv/$CI_PROJECT_NAME;
+                rsync -azr .* --exclude=aws --exclude=awscliv2.zip --exclude=$CI_PROJECT_NAME --exclude=$CI_PROJECT_NAME.tmp ubuntu@$i:/srv/$CI_PROJECT_NAME;
                 ssh ubuntu@$i "chmod 755 -R /srv/$CI_PROJECT_NAME";
                 ssh ubuntu@$i "cd /srv/$CI_PROJECT_NAME; git remote set-url origin $CI_PROJECT_URL";
 
@@ -229,7 +229,7 @@ deploy_prod:
                 ssh ubuntu@$i 'export PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin; pm2 show '${CI_PROJECT_NAME}'; if [ $? -eq 0 ]; then pm2 delete all; else echo "Nenhum processo encontrado" ; fi';
 
                 rsync -azvr ../$CI_PROJECT_NAME/* --exclude=aws --exclude=awscliv2.zip ubuntu@$i:/srv/$CI_PROJECT_NAME/;
-                rsync -azr .* --exclude=aws --exclude=awscliv2.zip --exclude=$CI_PROJECT_NAME --exclude=msbusiness.tmp ubuntu@$i:/srv/$CI_PROJECT_NAME;
+                rsync -azr .* --exclude=aws --exclude=awscliv2.zip --exclude=$CI_PROJECT_NAME --exclude=$CI_PROJECT_NAME.tmp ubuntu@$i:/srv/$CI_PROJECT_NAME;
                 ssh ubuntu@$i "chmod 755 -R /srv/$CI_PROJECT_NAME";
                 ssh ubuntu@$i "cd /srv/$CI_PROJECT_NAME; git remote set-url origin $CI_PROJECT_URL";
 
