@@ -244,9 +244,6 @@ deploy_prod:
                 echo "########## Deploy no ambiente $ENV finalizado ##########";
                 ssh ubuntu@$i "export PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin; pm2 list";
 
-                echo "########## Configurando repo autentication ##########";
-                ssh ubuntu@$i "cd /srv/$CI_PROJECT_NAME; git remote set-url origin https://automacao:$AUTOMACAO_TOKEN@$CI_PROJECT_URL";
-
             done
 
     - > 
