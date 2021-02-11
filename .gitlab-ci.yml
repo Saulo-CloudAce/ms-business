@@ -46,6 +46,8 @@ deploy_homol:
                 
                 rsync -azvr ../$CI_PROJECT_NAME/* --exclude=aws --exclude=awscliv2.zip ubuntu@$i:/srv/$CI_PROJECT_NAME/;
                 rsync -azr .* --exclude=aws --exclude=awscliv2.zip --exclude=$CI_PROJECT_NAME --exclude=msbusiness.tmp ubuntu@$i:/srv/$CI_PROJECT_NAME;
+                ssh ubuntu@$i "chmod 755 -R /srv/$CI_PROJECT_NAME";
+                ssh ubuntu@$i "cd /srv/$CI_PROJECT_NAME; git remote set-url origin https://automacao:$AUTOMACAO_TOKEN@$CI_REPOSITORY_URL";
 
                 ssh ubuntu@$i "export PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin; cd /srv/$CI_PROJECT_NAME; npm install";
                 ssh ubuntu@$i "export PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin; cd /srv/$CI_PROJECT_NAME; pm2 start -f index.js --name $CI_PROJECT_NAME --log-date-format='DD-MM-YYYY HH:mm Z' --log-type json";
@@ -57,9 +59,6 @@ deploy_homol:
                 
                 echo "########## Deploy no ambiente $ENV finalizado ##########";
                 ssh ubuntu@$i "export PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin; pm2 list";
-
-                echo "########## Configurando repo autentication ##########";
-                ssh ubuntu@$i "cd /srv/$CI_PROJECT_NAME; git remote set-url origin https://automacao:$AUTOMACAO_TOKEN@$CI_REPOSITORY_URL";
 
             done
   only:
