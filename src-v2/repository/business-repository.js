@@ -318,19 +318,33 @@ class BusinessRepository {
     }
   }
 
-  async listAllAndChildsByTemplateAndKeySortedReverse (companyToken, templateId, keyColumn = '', keyValue = '') {
+  async listAllAndChildsByTemplateAndKeySortedReverse (companyToken, templateId, keyColumnList = [], keyValue = '') {
     const businessList = []
 
-    const matchParams = {}
-    matchParams[keyColumn] = { $regex: keyValue, $options: 'i' }
+    const matchParams = []
+    for (let column of keyColumnList) {
+      let param = {}
+      param["data." + column] = { $in: [new RegExp(keyValue, 'i')] }
+      matchParams.push(param)
+    }
     try {
-      const searchParams = { companyToken, templateId, data: { $elemMatch: matchParams } }
-
       let businessListStored = await this.db.collection('business')
-        .find(
-          searchParams,
-          { name: 1, parentBatchId: 1, activeUntil: 1, active: 1, createdAt: 1, updatedAt: 1, flow_passed: 1, data: { $elemMatch: matchParams } })
-        .toArray()
+        .aggregate([
+          { $unwind: "$data" },
+          { $match: { $or: matchParams, companyToken: companyToken, templateId: templateId } },
+          {
+            $group: {
+              _id: "$_id",
+              name: { $first: "$name" },
+              activeUntil: { $first: "$activeUntil" },
+              flow_passed: { $first: "$flow_passed" },
+              active: { $first: "$active" },
+              createdAt: { $first: "$createdAt" },
+              updatedAt: { $first: "$updatedAt" },
+              data: { $addToSet: "$data" }
+            }
+          }
+        ]).toArray()
       businessListStored = businessListStored.sort((a, b) => (a.createdAt > b.createdAt) ? -1 : ((b.createdAt > a.createdAt) ? 1 : 0))
 
       for (const i in businessListStored) {
@@ -349,6 +363,7 @@ class BusinessRepository {
 
       return businessList
     } catch (err) {
+      console.error(err)
       throw new Error(err)
     }
   }

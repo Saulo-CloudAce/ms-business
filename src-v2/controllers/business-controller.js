@@ -487,20 +487,20 @@ class BusinessController {
       const searchParams = req.body.search_params
       let searchParamsValues = []
       if (typeof searchParams === 'object' && !Array.isArray(searchParams)) {
-        searchParamsValues = [String(searchParams.value).toLowerCase()]
+        searchParamsValues = [String(searchParams.value)]
       } else {
-        searchParamsValues = searchParams.map(sp => String(sp.value).toLowerCase())
+        searchParamsValues = searchParams.map(sp => String(sp.value))
       }
       
       const resultList = []
 
-      for (const indexKey in keyColumnList) {
-        const keyColumn = keyColumnList[indexKey]
+      // for (const indexKey in keyColumnList) {
+        // const keyColumn = keyColumnList[indexKey]
 
-        const templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyColumn, searchParamsValues[0])
+        const templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyColumnList, searchParamsValues[0])
 
         resultList.push(...templateData)
-      }
+      // }
 
       return res.status(200).send(resultList)
     } catch (e) {
