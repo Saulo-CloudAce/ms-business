@@ -694,7 +694,7 @@ class BusinessController {
 
       const keyCPFCNPJ = fieldCPFCNPJ.column
 
-      const templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCPFCNPJ, querySearch)
+      const templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, [keyCPFCNPJ], querySearch)
 
       for (const i in templateData) {
         const data = templateData[i]
