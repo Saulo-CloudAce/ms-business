@@ -107,7 +107,7 @@ class CustomerController {
                 keyValue = (customer.name) ? customer.name : customer.customer_name
               }
 
-              let templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyColumn, keyValue)
+              let templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, [keyColumn], keyValue)
 
               if (templateData.length) {
                 templateData = normalizeArraySubfields(templateData, template)
@@ -168,7 +168,7 @@ class CustomerController {
                 keyValue = (customer.name) ? customer.name : customer.customer_name
               }
 
-              let templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyColumn, keyValue)
+              let templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, [keyColumn], keyValue)
 
               if (templateData.length) {
                 templateData = normalizeArraySubfields(templateData, template)
@@ -229,7 +229,7 @@ class CustomerController {
               const keyCpfCnpj = fieldKey.column
               let data = []
               if (cpfcnpj) {
-                templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyCpfCnpj, cpfcnpj)
+                templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, [keyCpfCnpj], cpfcnpj)
               } else {
                 data = await businessRepository.listAllAndChildsByTemplateSortedReverse(companyToken, templateId)
 
@@ -349,7 +349,7 @@ class CustomerController {
                 keyValue = (customer.name) ? customer.name : customer.customer_name
               }
 
-              let templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyColumn, keyValue)
+              let templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, [keyColumn], keyValue)
 
               if (templateData.length) {
                 templateData = normalizeArraySubfields(templateData, template)
