@@ -349,7 +349,7 @@ class CustomerController {
                 keyValue = (customer.name) ? customer.name : customer.customer_name
               }
 
-              let templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyColumn, [keyValue])
+              let templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, [keyColumn], [keyValue])
 
               if (templateData.length) {
                 templateData = normalizeArraySubfields(templateData, template)
