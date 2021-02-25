@@ -314,7 +314,7 @@ class CustomerController {
       let customers = (Array.isArray(request.data)) ? request.data : []
 
       if (queryTemplateId && String(queryTemplateId).length > 0) {
-        customers = customers.filter(c => c.business_template_list.indexOf(queryTemplateId) >= 0)
+        customers = customers.filter(c => c.business_template_list && c.business_template_list.indexOf(queryTemplateId) >= 0)
       }
 
       let customerResultList = []
