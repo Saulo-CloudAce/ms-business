@@ -36,10 +36,6 @@ deploy_homol:
     - export AWS_ACCESS_KEY_ID="${HOMOL_AWS_ACCESS_KEY_ID}"
     - export AWS_SECRET_ACCESS_KEY="${HOMOL_AWS_SECRET_ACCESS_KEY}"
   script:
-    - > 
-      wget --header='PRIVATE-TOKEN: '${AUTOMACAO_TOKEN}'' 'https://gitlab.com/api/v4/projects/24070595/repository/files/exemple.service/raw?ref=master' -O $CI_PROJECT_NAME.service
-    - sed -i '/$(appName)/ s/$(appName)/'${CI_PROJECT_NAME}'/g' $CI_PROJECT_NAME.service
-
     - >
       KEYS=`vault kv get kv-v1/$ENV/microservicos/$CI_PROJECT_NAME | egrep -v "Data|---|Key" | awk '{print $1}'`
 
@@ -327,10 +323,6 @@ deploy_prod:
     - export AWS_SECRET_ACCESS_KEY="${PROD_AWS_SECRET_ACCESS_KEY}"
     - TAG_RELEASE=`git describe --abbrev=0 --tags`
   script:
-    - > 
-      wget --header='PRIVATE-TOKEN: '${AUTOMACAO_TOKEN}'' 'https://gitlab.com/api/v4/projects/24070595/repository/files/exemple.service/raw?ref=master' -O $CI_PROJECT_NAME.service
-    - sed -i '/$(appName)/ s/$(appName)/'${CI_PROJECT_NAME}'/g' $CI_PROJECT_NAME.service
-
     - >
       KEYS=`vault kv get kv-v1/$ENV/microservicos/$CI_PROJECT_NAME | egrep -v "Data|---|Key" | awk '{print $1}'`
 
