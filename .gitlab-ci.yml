@@ -51,19 +51,19 @@ deploy_homol:
         aws ec2 describe-instances --region $AWS_DEFAULT_REGION --filters "Name=tag:Name,Values=$CI_PROJECT_NAME-$ENV" --query 'Reservations[*].Instances[*].{Name:Tags[?Key==`Name`]|[0].Value,PrivateIP:PrivateIpAddress}' | jq '.[] | .[] | .PrivateIP' > servers.txt
         IP=`cat servers.txt | cut -d '"' -f2`
         echo " "
-
-        echo -e "${TXT_BLUE}**************************************************************************************************************"
-        echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}STARTED AT: $DATE"
-        echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}MICROSERVICO: $CI_PROJECT_NAME"
-        echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}AMBIENTE: $ENV"
-        echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}USER: $GITLAB_USER_LOGIN"
-        echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}SERVIDOR: $INSTANCE_NAME"
-        echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}IP: $IP"
-        echo -e "${TXT_BLUE}**************************************************************************************************************"
-        echo " "
-      
+     
         for s in $(cat servers.txt | cut -d '"' -f2);
         do
+
+          echo -e "${TXT_BLUE}**************************************************************************************************************"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}STARTED AT: $DATE"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}MICROSERVICO: $CI_PROJECT_NAME"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}AMBIENTE: $ENV"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}USER: $GITLAB_USER_LOGIN"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}SERVIDOR: $INSTANCE_NAME"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}IP: $s"
+          echo -e "${TXT_BLUE}**************************************************************************************************************"
+          echo " "
 
           echo -e "${TXT_BLUE}******************************************| ${TXT_YELLOW}CRIANDO ESTRUTURA DE DIRETORIOS E REMOVENDO CONTEUDO ANTIGO"
 
@@ -158,21 +158,21 @@ valida_homol:
         aws ec2 describe-instances --region $AWS_DEFAULT_REGION --filters "Name=tag:Name,Values=$CI_PROJECT_NAME-$ENV" --query 'Reservations[*].Instances[*].{Name:Tags[?Key==`Name`]|[0].Value,PrivateIP:PrivateIpAddress}' | jq '.[] | .[] | .Name' > nameserver.txt
         INSTANCE_NAME=`cat nameserver.txt | cut -d '"' -f2`
         aws ec2 describe-instances --region $AWS_DEFAULT_REGION --filters "Name=tag:Name,Values=$CI_PROJECT_NAME-$ENV" --query 'Reservations[*].Instances[*].{Name:Tags[?Key==`Name`]|[0].Value,PrivateIP:PrivateIpAddress}' | jq '.[] | .[] | .PrivateIP' > servers.txt
-        IP=`cat servers.txt | cut -d '"' -f2`
-        
-        echo " "
-        echo -e "${TXT_BLUE}**************************************************************************************************************"
-        echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}STARTED AT: $DATE"
-        echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}MICROSERVICO: $CI_PROJECT_NAME"
-        echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}AMBIENTE: $ENV"
-        echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}USER: $GITLAB_USER_LOGIN"
-        echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}SERVIDOR: $INSTANCE_NAME"
-        echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}IP: $IP"
-        echo -e "${TXT_BLUE}**************************************************************************************************************"
+        IP=`cat servers.txt | cut -d '"' -f2` 
         echo " "
 
         for s in $(cat servers.txt | cut -d '"' -f2);
         do
+
+          echo -e "${TXT_BLUE}**************************************************************************************************************"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}STARTED AT: $DATE"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}MICROSERVICO: $CI_PROJECT_NAME"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}AMBIENTE: $ENV"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}USER: $GITLAB_USER_LOGIN"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}SERVIDOR: $INSTANCE_NAME"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}IP: $s"
+          echo -e "${TXT_BLUE}**************************************************************************************************************"
+          echo " "
 
           HEALTH_PATH=`vault kv get -field=HEALTHCHECK kv-v1/$ENV/microservicos/$CI_PROJECT_NAME | cut -d "." -f4 | cut -d "/" -f2-6`
 
@@ -337,16 +337,6 @@ deploy_prod:
         aws ec2 describe-instances --region $AWS_DEFAULT_REGION --filters "Name=tag:Name,Values=$CI_PROJECT_NAME-$ENV" --query 'Reservations[*].Instances[*].{Name:Tags[?Key==`Name`]|[0].Value,PrivateIP:PrivateIpAddress}' | jq '.[] | .[] | .PrivateIP' > servers.txt
         IP=`cat servers.txt | cut -d '"' -f2`
         echo " "
-        echo -e "${TXT_BLUE}**************************************************************************************************************"
-        echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}STARTED AT: $DATE"
-        echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}MICROSERVICO: $CI_PROJECT_NAME"
-        echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}TAG RELEASE: $TAG_RELEASE"
-        echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}AMBIENTE: $ENV"
-        echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}USER: $GITLAB_USER_LOGIN"
-        echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}SERVIDOR: $INSTANCE_NAME"
-        echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}IP: $IP"
-        echo -e "${TXT_BLUE}**************************************************************************************************************"
-        echo " "  
         
         for s in $(cat servers.txt | cut -d '"' -f2);
         do
@@ -354,9 +344,20 @@ deploy_prod:
           ssh ubuntu@$s "sudo hostname | grep $CI_PROJECT_NAME" > hostname.txt
           HOSTNAME=`cat hostname.txt`
 
+          echo -e "${TXT_BLUE}**************************************************************************************************************"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}STARTED AT: $DATE"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}MICROSERVICO: $CI_PROJECT_NAME"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}TAG RELEASE: $TAG_RELEASE"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}AMBIENTE: $ENV"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}USER: $GITLAB_USER_LOGIN"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}SERVIDOR: $HOSTNAME"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}IP: $s"
+          echo -e "${TXT_BLUE}**************************************************************************************************************"
+          echo " "  
+
           MS_URL=`vault kv get -field=HEALTHCHECK kv-v1/$ENV/microservicos/$CI_PROJECT_NAME | cut -d "/" -f3`
           
-          echo -e "${TXT_BLUE}******************************************| ${TXT_GREEN}ADICIONANDO DOWNTIME PARA O SERVIDOR $ad NO MONITORAMENTO"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_GREEN}ADICIONANDO DOWNTIME PARA O SERVIDOR $HOSTNAME NO MONITORAMENTO"
           curl -I -s "http://${CHECKMK_HOST}/check_mk/view.py?_username=${CHECKMK_USER}&_secret=${CHECKMK_SECRET}&_transid=-1&_do_confirm=yes&_do_actions=yes&host=${HOSTNAME}&_down_from_now=yes&_down_minutes=15&_down_comment=Deploy_Aplicacao&view_name=hoststatus"
           echo " "
 
@@ -408,7 +409,7 @@ deploy_prod:
           echo " "
           sleep 10
 
-          echo -e "${TXT_BLUE}******************************************| ${TXT_GREEN}REMOVENDO DOWNTIME DO SERVIDOR $dd NO MONITORAMENTO"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_GREEN}REMOVENDO DOWNTIME DO SERVIDOR $HOSTNAME NO MONITORAMENTO"
           curl -I -s "http://${CHECKMK_HOST}/check_mk/view.py?_do_confirm&_transid=-1&_do_actions=yes&_username=${CHECKMK_USER}&_secret=${CHECKMK_SECRET}&view_name=hoststatus&host=${HOSTNAME}&_down_remove=Remove"
           echo " "
 
@@ -467,20 +468,22 @@ valida_prod:
         aws ec2 describe-instances --region $AWS_DEFAULT_REGION --filters "Name=tag:Name,Values=$CI_PROJECT_NAME-$ENV" --query 'Reservations[*].Instances[*].{Name:Tags[?Key==`Name`]|[0].Value,PrivateIP:PrivateIpAddress}' | jq '.[] | .[] | .PrivateIP' > servers.txt
         IP=`cat servers.txt | cut -d '"' -f2`
         
-        echo " "
-        echo -e "${TXT_BLUE}**************************************************************************************************************"
-        echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}STARTED AT: $DATE"
-        echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}MS: $CI_PROJECT_NAME"
-        echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}TAG RELEASE: $TAG_RELEASE"
-        echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}AMBIENTE: $ENV"
-        echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}USER: $GITLAB_USER_LOGIN"
-        echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}SERVIDOR: $INSTANCE_NAME"
-        echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}IP: $IP"
-        echo -e "${TXT_BLUE}**************************************************************************************************************"
-        echo " "
-
         for s in $(cat servers.txt | cut -d '"' -f2);
         do
+
+          ssh ubuntu@$s "sudo hostname | grep $CI_PROJECT_NAME" > hostname.txt
+          HOSTNAME=`cat hostname.txt`
+          
+          echo -e "${TXT_BLUE}**************************************************************************************************************"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}STARTED AT: $DATE"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}MICROSERVICO: $CI_PROJECT_NAME"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}TAG RELEASE: $TAG_RELEASE"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}AMBIENTE: $ENV"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}USER: $GITLAB_USER_LOGIN"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}SERVIDOR: $HOSTNAME"
+          echo -e "${TXT_BLUE}******************************************| ${TXT_CYAN}IP: $s"
+          echo -e "${TXT_BLUE}**************************************************************************************************************"
+          echo " " 
 
           HEALTH_PATH=`vault kv get -field=HEALTHCHECK kv-v1/$ENV/microservicos/$CI_PROJECT_NAME | cut -d "." -f4 | cut -d "/" -f2-6`
           
