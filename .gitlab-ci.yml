@@ -371,6 +371,10 @@ deploy_prod:
           ssh ubuntu@$s "sudo chown -R ubuntu:ubuntu /srv/$CI_PROJECT_NAME"
           echo " "
 
+          echo -e "${TXT_BLUE}******************************************| ${TXT_YELLOW}REMOVENDO APLICACAO EM EXECUSAO"
+          ssh ubuntu@$s 'export PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin; pm2 show '${CI_PROJECT_NAME}'; if [ $? -eq 0 ]; then pm2 delete all; else echo "Nenhum processo encontrado" ; fi'
+          echo " "           
+
           echo -e "${TXT_BLUE}******************************************| ${TXT_YELLOW}REALIZANDO O UPLOAD DOS NOVOS ARQUIVOS PARA O SERVIDOR $s"
           rsync -azr ../$CI_PROJECT_NAME/* --exclude=aws --exclude=awscliv2.zip --exclude=vault.zip --exclude=servers.txt --exclude=nameserver.txt ubuntu@$s:/srv/$CI_PROJECT_NAME/
           rsync -azr .* --exclude=aws --exclude=awscliv2.zip --exclude=vault.zip --exclude=servers.txt --exclude=nameserver.txt --exclude=$CI_PROJECT_NAME --exclude=$CI_PROJECT_NAME.tmp ubuntu@$s:/srv/$CI_PROJECT_NAME/
