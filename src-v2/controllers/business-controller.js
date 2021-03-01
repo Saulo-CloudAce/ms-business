@@ -30,6 +30,7 @@ class BusinessController {
   }
 
   async createFromUrlFile (req, res) {
+    console.log('createFromUrlFile')
     req.assert('name', 'Nome é obrigatório').notEmpty()
     req.assert('file', 'O arquivo é obrigatório').notEmpty()
     req.assert('templateId', 'O ID do template é obrigatório').notEmpty()
@@ -137,6 +138,7 @@ class BusinessController {
   }
 
   async createFromJson (req, res) {
+    console.log('createFromJson')
     req.assert('name', 'Nome é obrigatório').notEmpty()
     req.assert('templateId', 'O ID do template é obrigatório').notEmpty()
     req.assert('data', 'Os dados são obrigatórios.').notEmpty()
@@ -182,6 +184,7 @@ class BusinessController {
   }
 
   async createSingleRegisterBusiness (req, res) {
+    console.log('createSingleRegisterBusiness')
     req.assert('templateId', 'O ID do template é obrigatório').notEmpty()
     req.assert('data', 'Os dados são obrigatórios.').notEmpty()
 
