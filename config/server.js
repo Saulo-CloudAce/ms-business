@@ -6,6 +6,7 @@ const expressValidator = require('express-validator')
 const multipart = require('connect-multiparty')
 const helmet = require('helmet')
 const cors = require('cors')
+const morgan = require('morgan')
 
 const businessRoutes = require('../src/routes/business')
 const companyRoutes = require('../src/routes/company')
@@ -29,6 +30,8 @@ app.use(expressValidator())
 app.use(multipart())
 app.use(helmet())
 app.use(cors())
+
+app.use(morgan('combined'))
 
 businessRoutes(app)
 companyRoutes(app)
