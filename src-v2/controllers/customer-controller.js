@@ -306,10 +306,8 @@ class CustomerController {
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       const search = req.query.search
-      console.time('search customer on CRM')
       const request = await searchCustomer(search, companyToken, company.prefix_index_elastic)
-      console.timeEnd('search customer on CRM')
-
+      
       if (request.response && request.response.status && request.response.status !== 200) return res.status(request.response.status).send(request.response.data)
       let customers = (Array.isArray(request.data)) ? request.data : []
 
