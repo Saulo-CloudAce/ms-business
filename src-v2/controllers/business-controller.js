@@ -302,6 +302,8 @@ class BusinessController {
   }
 
   async getAll (req, res) {
+    const page = 0
+    const limit = 20
     const companyToken = req.headers['token']
 
     try {
@@ -311,7 +313,7 @@ class BusinessController {
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      const businessList = await newBusiness.getAllBatchesBasic(companyToken)
+      const { businessList, pagination } = await newBusiness.getAllBatchesBasicPaginated(companyToken, 0, 10)
       const business = businessList.map(b => {
         return {
           _id: b._id,

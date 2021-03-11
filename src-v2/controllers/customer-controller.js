@@ -306,7 +306,9 @@ class CustomerController {
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       const search = req.query.search
+      console.time('searchCustomer')
       const request = await searchCustomer(search, companyToken, company.prefix_index_elastic)
+      console.timeEnd('searchCustomer')
       
       if (request.response && request.response.status && request.response.status !== 200) return res.status(request.response.status).send(request.response.data)
       let customers = (Array.isArray(request.data)) ? request.data : []
@@ -317,6 +319,7 @@ class CustomerController {
 
       let customerResultList = []
 
+      console.time('searchMongo')
       for (const i in customers) {
         const customer = customers[i]
         let templateList = customer.business_template_list
@@ -369,6 +372,7 @@ class CustomerController {
 
         customerResultList.push(customerResult)
       }
+      console.timeEnd('searchMongo')
 
       customerResultList = customerResultList.sort((a, b) => (a.customer_name > b.customer_name) ? 1 : ((b.customer_name > a.customer_name) ? -1 : 0))
 
