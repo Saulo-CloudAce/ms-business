@@ -211,9 +211,9 @@ class BusinessRepository {
           { companyToken: companyToken, parentBatchId: { $exists: false } },
           ['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'quantityRows']
         )
+        .limit(10)
+        .sort({ createdAt: -1 })
         .toArray()
-
-      businessList = businessList.sort((a, b) => moment(b.createdAt) - moment(a.createdAt))
 
       return businessList
     } catch (err) {
@@ -224,12 +224,13 @@ class BusinessRepository {
   async getAllBatchesBasicPaginated (companyToken, page = 0, limit = 10) {
     const skipDocs = page * limit
     try {
+      console.time('select')
       let businessList = await this.db.collection('business')
         .find({ companyToken: companyToken, parentBatchId: { $exists: false } }, ['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'quantityRows'])
+        .skip(skipDocs)
+        .limit(limit)
+        .sort({ createdAt: -1 })
         .toArray()
-
-      businessList = businessList.sort((a, b) => moment(b.createdAt) - moment(a.createdAt))
-      businessList = businessList.slice(skipDocs, (skipDocs + limit))
 
       const businessListCount = await this.db.collection('business')
         .find({ companyToken: companyToken, parentBatchId: { $exists: false } }, ['_id'])
