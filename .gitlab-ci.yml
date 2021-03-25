@@ -574,7 +574,7 @@ valida_prod:
 
 ###DEPLOY AMBIENTE DONUS
 
-deploy_prod:
+deploy_donus_prod:
   stage: prod
   image: ubuntu
   before_script:
