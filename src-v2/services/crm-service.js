@@ -69,6 +69,14 @@ async function searchCustomer (search, companyToken, prefixIndexElastic) {
   }
 }
 
+async function searchCustomerFormatted (search, companyToken, prefixIndexElastic, page = 0, limit = 10) {
+  try {
+    return await getAxiosInstanceByCompanyElastic(companyToken, prefixIndexElastic).get(`${process.env.CRM_URL}/customers/search/formatted?search=${search}&page=${page}&limit=${limit}`)
+  } catch (err) {
+    return err
+  }
+}
+
 async function getAllCustomersByCompany (companyToken) {
   try {
     return await getAxiosInstance(companyToken).get(`${process.env.CRM_URL}/customers/all`)
@@ -112,6 +120,7 @@ module.exports = {
   getAllCustomersByCompany,
   updateCustomer,
   searchCustomer,
+  searchCustomerFormatted,
   getCustomerById,
   getCustomerFormattedById,
   getAllCustomersByCompanyPaginated
