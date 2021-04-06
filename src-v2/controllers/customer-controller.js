@@ -271,7 +271,8 @@ class CustomerController {
   }
 
   async getAllByCompanyPaginated (req, res) {
-    const companyToken = req.headers['token']
+    const companyToken = req.headers.token
+    const templateId = (req.headers.templateid) ? req.headers.templateid : ''
     let page = 0
     let limit = 10
     if (req.query.page && parseInt(req.query.page) >= 0) page = parseInt(req.query.page)
@@ -284,7 +285,7 @@ class CustomerController {
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       console.time('lista customers')
-      const request = await getAllCustomersByCompanyPaginated(companyToken, page, limit)
+      const request = await getAllCustomersByCompanyPaginated(companyToken, page, limit, templateId)
       console.timeEnd('lista customers')
 
       if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
