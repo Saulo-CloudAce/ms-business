@@ -5,7 +5,11 @@ function mongoIdIsValid (id = null) {
 }
 
 function validateEmail (email) {
-  const re = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+  const emailParts = email.split('.')
+  if ((email.match(/@/g) || []).length > 1) return false
+  if (emailParts[emailParts.length - 1].length > 3) return false
+
+  const re = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w+)+$/;
   return re.test(String(email).trim().toLowerCase())
 }
 
