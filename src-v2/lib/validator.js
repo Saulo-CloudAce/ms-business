@@ -154,7 +154,6 @@ class Validator {
               const lineWithRulesFields = self._mapLineDataToLineDataWithRules(jsonData, rulesByColumn)
               const lineNumberAtFile = lineno - 1
               const { valid, lineErrors } = self.validate(lineWithRulesFields, lineNumberAtFile, listBatches, fields)
-
               if (valid) {
                 const dataFormatted = self.format(jsonData, rulesByColumn)
                 lineValids.push(dataFormatted)
@@ -167,10 +166,11 @@ class Validator {
           }
         })
         .on('close', function () {
+          console.log('End Processing File', filePath)
           return resolve({ invalids: lineInvalids, valids: lineValids, validsCustomer: lineValidsCustomer })
         })
         .on('error', function (err) {
-          console.error('READ_FILE_UPLOAD', err)
+          console.error('Error on read file', filePath, err)
           throw new Error(err)
         })
     })
@@ -479,6 +479,8 @@ class Validator {
       lineErrors.errors.push({ error: 'Tem campos diferentes do que os definidos no template', fields_list_unkown: listFieldsRequired })
       return { valid: false, lineErrors }
     }
+
+    const keysData = Object.keys(data)
 
     Object.keys(data).forEach(k => {
       const el = data[k].value
