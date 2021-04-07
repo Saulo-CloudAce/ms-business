@@ -223,12 +223,12 @@ class Validator {
 
   async validateAndFormatFromUrlFile (filePath, fields, jumpFirstLine = false, dataSeparator = ';', listBatches = []) {
     const rulesByColumn = this._indexTemplateFieldsByColumn(fields)
-    
+
     const filePathParts = filePath.split('/')
     const fileName = filePathParts[filePathParts.length - 1]
     const dirFile = filePathParts[filePathParts.length - 2]
     const bucket = filePathParts[filePathParts.length - 3]
-    
+
     const readStream = await new Promise((resolve, reject) => {
       const tmpFilename = `/tmp/${md5(new Date())}`
       storageService.downloadFile(`${dirFile}/${fileName}`, bucket, tmpFilename)
@@ -353,7 +353,7 @@ class Validator {
   _validateFieldDate (rules, fieldData, errors) {
     if (fieldData) {
       const date = fieldData.trim()
-      if (!moment(date, rules.mask).isValid()) errors.push({ column: rules.column, error: 'O valor informado não é uma data válida', current_value: date })
+      if (!moment(date, rules.mask, true).isValid()) errors.push({ column: rules.column, error: 'O valor informado não é uma data válida', current_value: date })
     } else {
       errors.push({ column: rules.column, error: 'O valor informado para data está vazio', current_value: fieldData })
     }
@@ -473,7 +473,7 @@ class Validator {
     const lineErrors = { line: lineNumberOnFile, errors: [] }
 
     const fieldsWithoutRules = Object.keys(data).filter(k => typeof data[k].rules !== 'object')
-    
+
     if (fieldsWithoutRules.length) {
       const listFieldsRequired = fields.filter(f => fieldsWithoutRules[f.data]).map(f => f.column)
       lineErrors.errors.push({ error: 'Tem campos diferentes do que os definidos no template', fields_list_unkown: listFieldsRequired })
