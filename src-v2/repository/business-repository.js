@@ -379,12 +379,9 @@ class BusinessRepository {
       matchParams.push(param)
     }
     try {
-      console.time('business list')
       let businessIdList = await this.db.collection('business').find({ companyToken, templateId, active: true }, { _id: 1, createdAt: -1 }).toArray()
-      console.timeEnd('business list')
       businessIdList = businessIdList.sort((a, b) => (a.createdAt > b.createdAt) ? -1 : ((b.createdAt > a.createdAt) ? 1 : 0)).map(b => b._id)
       
-      console.time('query')
       let businessListStored = await this.db.collection('business')
         .aggregate([
           { $unwind: "$data" },
@@ -405,7 +402,6 @@ class BusinessRepository {
         .sort({ createdAt: -1 })
         .limit(1)
         .toArray()
-      console.timeEnd('query')
 
       for (const i in businessListStored) {
         const bData = businessListStored[i]
