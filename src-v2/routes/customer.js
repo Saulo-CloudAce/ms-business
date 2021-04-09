@@ -10,6 +10,8 @@ const customerRoute = (app) => {
   app.get('/api/v2/customers/search/paginated', (req, res) => customerController.searchPaginated(req, res))
   app.get('/api/v2/customers/:id', (req, res) => customerController.getById(req, res))
   app.get('/api/v2/customers/:id/formatted', (req, res) => customerController.getByIdFormatted(req, res))
+  app.get('/api/v2/customers/:id/template/:templateId', (req, res) => customerController.getByIdAndTemplateId(req, res))
+  app.get('/api/v2/customers/:id/template/:templateId/formatted', (req, res) => customerController.getByIdAndTemplateIdFormatted(req, res))
   app.put('/api/v2/customers/:id', (req, res) => customerController.update(req, res))
 }
 
