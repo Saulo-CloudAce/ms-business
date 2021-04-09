@@ -133,6 +133,75 @@ class CustomerController {
     }
   }
 
+  async getByIdAndTemplateId (req, res) {
+    const companyToken = req.headers['token']
+    const customerId = req.params.id
+    const templateId = req.params.templateId
+    if (!customerId) return res.status(400).send({ error: 'Informe o ID do customer.' })
+    if (!templateId) return res.status(400).send({ error: 'Informe o ID do template.' })
+
+    try {
+      const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
+
+      const request = await getCustomerById(customerId, companyToken)
+
+      if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
+
+      const customer = request.data
+      const templateList = customer.business_template_list
+      if (!templateList || !Array.isArray(templateList)) {
+        return res.status(404).send({ error: 'Este customer não está vinculado a um mailing.' })
+      }
+      const hasTemplate = templateList.find(tl => tl === templateId)
+      if (!hasTemplate) {
+        return res.status(404).send({ error: 'Este customer não está vinculado a um mailing do template informado.' })
+      }
+      
+      let templateFinal = {}
+      const template = await templateRepository.getById(templateId, companyToken)
+      if (template) {
+        templateFinal = { _id: template._id, name: template.name }
+        const fieldKey = template.fields.find(f => f.key)
+        if (fieldKey) {
+          const keyColumn = fieldKey.column
+
+          let keyValue = ''
+          if (fieldKey.data === 'customer_cpfcnpj') {
+            keyValue = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
+          } else if (fieldKey.data === 'customer_phone' || fieldKey.data === 'customer_phone_number') {
+            keyValue = (customer.phone) ? customer.phone[0].number : customer.customer_phome[0].number
+          } else if (fieldKey.data === 'customer_email' || fieldKey.data === 'customer_email_address') {
+            keyValue = (customer.email) ? customer.email[0].email : customer.customer_email[0].email
+          } else if (fieldKey.data === 'customer_name') {
+            keyValue = (customer.name) ? customer.name : customer.customer_name
+          }
+
+          let templateData = await businessRepository.getLastByTemplateAndKeySortedReverse(companyToken, templateId, [keyColumn], keyValue)
+
+          if (templateData.length) {
+            templateData = normalizeArraySubfields(templateData, template)
+            templateFinal.lote_data_list = templateData
+          }
+        }
+      }
+      
+
+      if (customer) {
+        customer.schema_list = [templateFinal]
+        delete customer.business_list
+        delete customer.business_template_list
+      }
+
+      return res.status(200).send(customer)
+    } catch (err) {
+      console.error(err)
+      return res.status(500).send({ error: err.message })
+    }
+  }
+
   async getByIdFormatted (req, res) {
     const companyToken = req.headers['token']
 
@@ -190,6 +259,75 @@ class CustomerController {
       return res.status(200).send(customer)
     } catch (err) {
       console.log(err)
+      return res.status(500).send({ error: err.message })
+    }
+  }
+
+  async getByIdAndTemplateIdFormatted (req, res) {
+    const companyToken = req.headers['token']
+    const customerId = req.params.id
+    const templateId = req.params.templateId
+    if (!customerId) return res.status(400).send({ error: 'Informe o ID do customer.' })
+    if (!templateId) return res.status(400).send({ error: 'Informe o ID do template.' })
+
+    try {
+      const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
+
+      const request = await getCustomerFormattedById(customerId, companyToken)
+
+      if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
+
+      const customer = request.data
+      const templateList = customer.business_template_list
+      if (!templateList || !Array.isArray(templateList)) {
+        return res.status(404).send({ error: 'Este customer não está vinculado a um mailing.' })
+      }
+      const hasTemplate = templateList.find(tl => tl === templateId)
+      if (!hasTemplate) {
+        return res.status(404).send({ error: 'Este customer não está vinculado a um mailing do template informado.' })
+      }
+      
+      let templateFinal = {}
+      const template = await templateRepository.getById(templateId, companyToken)
+      if (template) {
+        templateFinal = { _id: template._id, name: template.name }
+        const fieldKey = template.fields.find(f => f.key)
+        if (fieldKey) {
+          const keyColumn = fieldKey.column
+
+          let keyValue = ''
+          if (fieldKey.data === 'customer_cpfcnpj') {
+            keyValue = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
+          } else if (fieldKey.data === 'customer_phone' || fieldKey.data === 'customer_phone_number') {
+            keyValue = (customer.phone) ? customer.phone[0].number : customer.customer_phome[0].number
+          } else if (fieldKey.data === 'customer_email' || fieldKey.data === 'customer_email_address') {
+            keyValue = (customer.email) ? customer.email[0].email : customer.customer_email[0].email
+          } else if (fieldKey.data === 'customer_name') {
+            keyValue = (customer.name) ? customer.name : customer.customer_name
+          }
+
+          let templateData = await businessRepository.getLastByTemplateAndKeySortedReverse(companyToken, templateId, [keyColumn], keyValue)
+
+          if (templateData.length) {
+            templateData = normalizeArraySubfields(templateData, template)
+            templateFinal.lote_data_list = templateData
+          }
+        }
+      }
+      
+
+      if (customer) {
+        customer.schema_list = [templateFinal]
+        delete customer.business_list
+        delete customer.business_template_list
+      }
+
+      return res.status(200).send(customer)
+    } catch (err) {
+      console.error(err)
       return res.status(500).send({ error: err.message })
     }
   }
