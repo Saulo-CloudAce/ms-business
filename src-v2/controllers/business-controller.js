@@ -594,6 +594,8 @@ class BusinessController {
     const businessId = req.params.businessId
     if (!businessId) return res.status(400).send({ error: 'Informar o ID do lote que deseja alterar.' })
 
+    const dataUpdate = req.body
+
     try {
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
       const newBusiness = this._getInstanceBusiness(req.app)
@@ -620,8 +622,12 @@ class BusinessController {
       business.data.forEach(d => {
         if (d._id.toString() === String(registerId)) {
           fieldEditableList.forEach(f => {
-            if (req.body[f.column] && String(req.body[f.column]).length > 0) {
-              d[f.column] = req.body[f.column]
+            if (dataUpdate[f.column] && String(dataUpdate[f.column]).length > 0) {
+              if ((f.type === 'array' || f.type === 'options') && !Array.isArray(dataUpdate[f.column])) {
+                d[f.column] = [dataUpdate[f.column]]
+              } else {
+                d[f.column] = dataUpdate[f.column]
+              }
             }
           })
           register = d
