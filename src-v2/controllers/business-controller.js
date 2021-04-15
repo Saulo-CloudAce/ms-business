@@ -618,7 +618,6 @@ class BusinessController {
       const business = businessList.find(bl => bl.data
         .filter(bld => bld._id.toString() === String(registerId)).length > 0)
 
-        console.log("BUSINESS ----->", business)
       if (!business) return res.status(400).send({ error: 'Registro não encontrado.' })
 
       business.data.forEach(d => {
