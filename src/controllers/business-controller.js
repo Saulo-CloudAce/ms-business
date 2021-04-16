@@ -10,12 +10,12 @@ const crmService = require('../services/crm-service')
 const { mongoIdIsValid } = require('../helpers/validators')
 
 class BusinessController {
-  constructor (businessService) {
+  constructor(businessService) {
     this.businessService = businessService
     this.uploader = new Uploader(process.env.BUCKET)
   }
 
-  _getInstanceRepositories (app) {
+  _getInstanceRepositories(app) {
     const businessRepository = new BusinessRepository(app.locals.db)
     const companyRepository = new CompanyRepository(app.locals.db)
     const templateRepository = new TemplateRepository(app.locals.db)
@@ -23,12 +23,12 @@ class BusinessController {
     return { businessRepository, companyRepository, templateRepository }
   }
 
-  _getInstanceBusiness (app) {
+  _getInstanceBusiness(app) {
     var { businessRepository } = this._getInstanceRepositories(app)
     return new Business(businessRepository, this.uploader, new Validator(), crmService)
   }
 
-  async createFromUrlFile (req, res) {
+  async createFromUrlFile(req, res) {
     req.assert('name', 'Nome é obrigatório').notEmpty()
     req.assert('file', 'O arquivo é obrigatório').notEmpty()
     req.assert('templateId', 'O ID do template é obrigatório').notEmpty()
@@ -83,7 +83,7 @@ class BusinessController {
     }
   }
 
-  async create (req, res) {
+  async create(req, res) {
     req.assert('name', 'Nome é obrigatório')
     req.assert('file', 'O arquivo é obrigatório')
     req.assert('templateId', 'O ID do template é obrigatório')
@@ -135,7 +135,7 @@ class BusinessController {
     }
   }
 
-  async createFromJson (req, res) {
+  async createFromJson(req, res) {
     req.assert('name', 'Nome é obrigatório').notEmpty()
     req.assert('templateId', 'O ID do template é obrigatório').notEmpty()
     req.assert('data', 'Os dados são obrigatórios.').notEmpty()
@@ -180,7 +180,7 @@ class BusinessController {
     }
   }
 
-  async createSingleRegisterBusiness (req, res) {
+  async createSingleRegisterBusiness(req, res) {
     req.assert('templateId', 'O ID do template é obrigatório').notEmpty()
     req.assert('data', 'Os dados são obrigatórios.').notEmpty()
 
@@ -227,7 +227,7 @@ class BusinessController {
     }
   }
 
-  async getPoolData (req, res) {
+  async getPoolData(req, res) {
     const companyToken = req.headers['token']
 
     try {
@@ -271,7 +271,7 @@ class BusinessController {
     }
   }
 
-  async getAll (req, res) {
+  async getAll(req, res) {
     const companyToken = req.headers['token']
 
     try {
@@ -301,7 +301,7 @@ class BusinessController {
     }
   }
 
-  async updateCustomerStorageStatus (req, res) {
+  async updateCustomerStorageStatus(req, res) {
     const companyToken = req.headers['token']
 
     const { businessId, status } = req.body
@@ -326,7 +326,7 @@ class BusinessController {
     }
   }
 
-  async markBusinessFlowPassed (req, res) {
+  async markBusinessFlowPassed(req, res) {
     const companyToken = req.headers['token']
 
     const businessId = req.params.id
@@ -349,7 +349,7 @@ class BusinessController {
     }
   }
 
-  async unmarkBusinessFlowPassed (req, res) {
+  async unmarkBusinessFlowPassed(req, res) {
     const companyToken = req.headers['token']
 
     const businessId = req.params.id
@@ -372,7 +372,7 @@ class BusinessController {
     }
   }
 
-  async activateBusiness (req, res) {
+  async activateBusiness(req, res) {
     req.assert('active_until', 'O active until deve ser informado').notEmpty()
 
     if (req.validationErrors()) return res.status(400).send({ errors: req.validationErrors() })
@@ -399,7 +399,7 @@ class BusinessController {
     }
   }
 
-  async deactivateBusiness (req, res) {
+  async deactivateBusiness(req, res) {
     const companyToken = req.headers['token']
 
     const businessId = req.params.id
@@ -422,7 +422,7 @@ class BusinessController {
     }
   }
 
-  async searchDataInBusiness (req, res) {
+  async searchDataInBusiness(req, res) {
     const companyToken = req.headers['token']
 
     try {
@@ -451,7 +451,7 @@ class BusinessController {
     }
   }
 
-  async getByIdWithData (req, res) {
+  async getByIdWithData(req, res) {
     const companyToken = req.headers['token']
 
     try {
@@ -469,7 +469,7 @@ class BusinessController {
     }
   }
 
-  async getByIdWithDataPaginated (req, res) {
+  async getByIdWithDataPaginated(req, res) {
     const companyToken = req.headers['token']
     let page = 0
     let limit = 10
@@ -495,7 +495,7 @@ class BusinessController {
     }
   }
 
-  async getAllPaginated (req, res) {
+  async getAllPaginated(req, res) {
     const companyToken = req.headers['token']
     let page = 0
     let limit = 10
@@ -532,7 +532,7 @@ class BusinessController {
     }
   }
 
-  async deactivateExpiredBusiness () {
+  async deactivateExpiredBusiness() {
     console.log('deactivateExpiredBusinessV1')
     const app = { locals: { db: null } }
     const { connect } = require('../../config/mongodb')
@@ -555,7 +555,7 @@ class BusinessController {
     }
   }
 
-  async updateBusinessRegisterById (req, res) {
+  async updateBusinessRegisterById(req, res) {
     const companyToken = req.headers['token']
     const templateId = req.headers['templateid']
     const registerId = req.params.registerId
@@ -591,6 +591,9 @@ class BusinessController {
       })
 
       await newBusiness.updateDataBusiness(businessId, business.data)
+      const searchCustomerCRM = await crmService.getByCpfCnpj(register.customer_cpfcnpj, companyToken)
+      if (!searchCustomerCRM.data) return res.status(500).send({ error: 'Os dados não foram atualizados corretamente.' })
+      await crmService.updateCustomer(searchCustomerCRM.data.id, register, companyToken)
 
       return res.status(200).send(register)
     } catch (err) {
@@ -599,7 +602,7 @@ class BusinessController {
     }
   }
 
-  async getBusinessRegisterById (req, res) {
+  async getBusinessRegisterById(req, res) {
     const companyToken = req.headers['token']
     const templateId = req.headers['templateid']
 
@@ -629,7 +632,7 @@ class BusinessController {
     }
   }
 
-  async getBusinessAndRegisterIdByCpf (req, res) {
+  async getBusinessAndRegisterIdByCpf(req, res) {
     const companyToken = req.headers['token']
     const templateId = req.headers['templateid']
 

@@ -154,7 +154,6 @@ class Validator {
               const lineWithRulesFields = self._mapLineDataToLineDataWithRules(jsonData, rulesByColumn)
               const lineNumberAtFile = lineno - 1
               const { valid, lineErrors } = self.validate(lineWithRulesFields, lineNumberAtFile, listBatches, fields)
-
               if (valid) {
                 const dataFormatted = self.format(jsonData, rulesByColumn)
                 lineValids.push(dataFormatted)
@@ -167,10 +166,11 @@ class Validator {
           }
         })
         .on('close', function () {
+          console.log('End Processing File', filePath)
           return resolve({ invalids: lineInvalids, valids: lineValids, validsCustomer: lineValidsCustomer })
         })
         .on('error', function (err) {
-          console.error('READ_FILE_UPLOAD', err)
+          console.error('Error on read file', filePath, err)
           throw new Error(err)
         })
     })
@@ -223,7 +223,7 @@ class Validator {
 
   async validateAndFormatFromUrlFile (filePath, fields, jumpFirstLine = false, dataSeparator = ';', listBatches = []) {
     const rulesByColumn = this._indexTemplateFieldsByColumn(fields)
-    
+
     const filePathParts = filePath.split('/')
     const fileName = filePathParts[filePathParts.length - 1]
     const dirFile = filePathParts[filePathParts.length - 2]
@@ -356,7 +356,7 @@ class Validator {
   _validateFieldDate (rules, fieldData, errors) {
     if (fieldData) {
       const date = fieldData.trim()
-      if (!moment(date, rules.mask).isValid()) errors.push({ column: rules.column, error: 'O valor informado não é uma data válida', current_value: date })
+      if (!moment(date, rules.mask, true).isValid()) errors.push({ column: rules.column, error: 'O valor informado não é uma data válida', current_value: date })
     } else {
       errors.push({ column: rules.column, error: 'O valor informado para data está vazio', current_value: fieldData })
     }
@@ -476,12 +476,14 @@ class Validator {
     const lineErrors = { line: lineNumberOnFile, errors: [] }
 
     const fieldsWithoutRules = Object.keys(data).filter(k => typeof data[k].rules !== 'object')
-    
+
     if (fieldsWithoutRules.length) {
       const listFieldsRequired = fields.filter(f => fieldsWithoutRules[f.data]).map(f => f.column)
       lineErrors.errors.push({ error: 'Tem campos diferentes do que os definidos no template', fields_list_unkown: listFieldsRequired })
       return { valid: false, lineErrors }
     }
+
+    const keysData = Object.keys(data)
 
     Object.keys(data).forEach(k => {
       const el = data[k].value

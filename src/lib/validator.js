@@ -172,7 +172,7 @@ class Validator {
     valids = this._joinDataBatch(valids, fields)
 
     console.log('data ab: ', valids.length)
-    
+
     return {
       invalids,
       valids,
@@ -348,7 +348,7 @@ class Validator {
 
   _validateFieldDate (rules, fieldData, errors) {
     const date = fieldData.trim()
-    if (!moment(date, rules.mask).isValid()) errors.push({ column: rules.column, error: 'O valor informado não é uma data válida', current_value: date })
+    if (!moment(date, rules.mask, true).isValid()) errors.push({ column: rules.column, error: 'O valor informado não é uma data válida', current_value: date })
     return errors
   }
 

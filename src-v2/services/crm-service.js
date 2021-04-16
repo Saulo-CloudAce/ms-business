@@ -69,6 +69,14 @@ async function searchCustomer (search, companyToken, prefixIndexElastic) {
   }
 }
 
+async function searchCustomerFormatted (search, companyToken, prefixIndexElastic, page = 0, limit = 10) {
+  try {
+    return await getAxiosInstanceByCompanyElastic(companyToken, prefixIndexElastic).get(`${process.env.CRM_URL}/customers/search/formatted?search=${search}&page=${page}&limit=${limit}`)
+  } catch (err) {
+    return err
+  }
+}
+
 async function getAllCustomersByCompany (companyToken) {
   try {
     return await getAxiosInstance(companyToken).get(`${process.env.CRM_URL}/customers/all`)
@@ -77,8 +85,9 @@ async function getAllCustomersByCompany (companyToken) {
   }
 }
 
-async function getAllCustomersByCompanyPaginated (companyToken, page = 0, limit = 0) {
+async function getAllCustomersByCompanyPaginated (companyToken, page = 0, limit = 0, templateId = '') {
   try {
+    if (templateId && templateId.length) return await getAxiosInstanceByCompanyTemplateID(companyToken, templateId).get(`${process.env.CRM_URL}/customers/all?page=${page}&limit=${limit}`)
     return await getAxiosInstance(companyToken).get(`${process.env.CRM_URL}/customers/all?page=${page}&limit=${limit}`)
   } catch (err) {
     return err
@@ -105,6 +114,16 @@ function getAxiosInstanceByCompanyElastic (companyToken, prefixIndexElastic) {
   })
 }
 
+function getAxiosInstanceByCompanyTemplateID (companyToken, templateId) {
+  return axios.create({
+    baseURL: process.env.CRM_URL,
+    headers: { token: `${companyToken}`, templateid: `${templateId}` },
+    maxContentLength: Infinity,
+    maxBodyLength: Infinity,
+    timeout: 0
+  })
+}
+
 module.exports = {
   sendData,
   createSingleCustomer,
@@ -112,6 +131,7 @@ module.exports = {
   getAllCustomersByCompany,
   updateCustomer,
   searchCustomer,
+  searchCustomerFormatted,
   getCustomerById,
   getCustomerFormattedById,
   getAllCustomersByCompanyPaginated
