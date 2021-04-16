@@ -52,7 +52,7 @@ class Business {
 
     if (hasCustomerFields(fields)) {
       const listFieldKey = fields.filter(f => f.key).map(f => f.data)
-
+console.log('valids', valids.length)
       await this.crmService.sendData(valids, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic)
     }
 

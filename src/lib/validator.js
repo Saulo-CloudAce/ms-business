@@ -215,17 +215,31 @@ class Validator {
   }
 
   async validateAndFormatFromUrlFile (filePath, fields, jumpFirstLine = false, dataSeparator = ';', listBatches = []) {
+    const pathTempfile = '/tmp/mailing'
     const rulesByColumn = this._indexTemplateFieldsByColumn(fields)
-    const readStream = await new Promise((resolve, reject) => {
-      fetch(filePath)
+    const readStream = await new Promise(async (resolve, reject) => {
+      await fetch(filePath)
         .then(res => {
-          const dest = fs.createWriteStream('/tmp/teste')
+          const dest = fs.createWriteStream(pathTempfile)
           res.body.pipe(dest)
-          resolve(fs.createReadStream('/tmp/teste'))
+          res.body.on("end", () => {
+            console.log('DOWNLOAD_FILE_FINISHED', filePath)
+            resolve(fs.createReadStream(pathTempfile))
+          })
+          dest.on("error", () => {
+            console.error('ERROR_ON_PROCESS_BUFFER_FILE')
+            reject()
+          })          
+        })
+        .catch(err => {
+          console.error('ERROR_ON_DOWNLOAD_FILE', err)
+          reject(err)
         })
     })
     var reader = readline.createInterface({
-      input: readStream
+      input: readStream,
+      crlfDelay: Infinity,
+      console: true
     })
 
     const firstLine = 1
@@ -239,6 +253,7 @@ class Validator {
       const lineValids = []
       const lineValidsCustomer = []
       let fileColumnsName = []
+      console.log('START_PROCESS_FILE', filePath)
       reader
         .on('line', function (line, lineno = lineCounter()) {
           if (String(line).length) {
@@ -277,6 +292,7 @@ class Validator {
           }
         })
         .on('close', function () {
+          console.log('READ_FILE_CLOSED', filePath)
           return resolve({ invalids: lineInvalids, valids: lineValids, validsCustomer: lineValidsCustomer })
         })
         .on('error', function (err) {

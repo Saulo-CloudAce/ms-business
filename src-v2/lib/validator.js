@@ -228,11 +228,12 @@ class Validator {
     const fileName = filePathParts[filePathParts.length - 1]
     const dirFile = filePathParts[filePathParts.length - 2]
     const bucket = filePathParts[filePathParts.length - 3]
-
-    const readStream = await new Promise((resolve, reject) => {
+    
+    const readStream = await new Promise(async (resolve, reject) => {
       const tmpFilename = `/tmp/${md5(new Date())}`
-      storageService.downloadFile(`${dirFile}/${fileName}`, bucket, tmpFilename)
+      await storageService.downloadFile(`${dirFile}/${fileName}`, bucket, tmpFilename)
         .then(() => {
+          console.log('DOWNLOAD_FILE_FINISHED', filePath)
           resolve(fs.createReadStream(tmpFilename))
         })
         .catch(err => {
@@ -256,6 +257,7 @@ class Validator {
       const lineValids = []
       const lineValidsCustomer = []
       let fileColumnsName = []
+      console.log('START_PROCESS_FILE', filePath)
       reader
         .on('line', function (line, lineno = lineCounter()) {
           if (String(line).length) {
@@ -294,6 +296,7 @@ class Validator {
           }
         })
         .on('close', function () {
+          console.log('READ_FILE_CLOSED', filePath)
           return resolve({ invalids: lineInvalids, valids: lineValids, validsCustomer: lineValidsCustomer })
         })
         .on('error', function (err) {
