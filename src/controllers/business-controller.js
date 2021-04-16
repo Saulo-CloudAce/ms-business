@@ -591,7 +591,8 @@ class BusinessController {
       })
 
       await newBusiness.updateDataBusiness(businessId, business.data)
-      var searchCustomerCRM = await crmService.getByCpfCnpj(register.customer_cpfcnpj, companyToken)
+      const searchCustomerCRM = await crmService.getByCpfCnpj(register.customer_cpfcnpj, companyToken)
+      if (!searchCustomerCRM.data) return res.status(500).send({ error: 'Os dados não foram atualizados corretamente.' })
       await crmService.updateCustomer(searchCustomerCRM.data.id, register, companyToken)
 
       return res.status(200).send(register)
