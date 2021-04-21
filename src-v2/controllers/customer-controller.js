@@ -332,6 +332,35 @@ class CustomerController {
     }
   }
 
+  async getCustomerInfoByCpfCnpj (req, res) {
+    const companyToken = req.headers['token']
+
+    try {
+      const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
+
+      let cpfcnpj = req.query.cpfcnpj
+      let request = null
+      if (cpfcnpj) {
+        cpfcnpj = clearCPFCNPJ(cpfcnpj)
+        request = await getByCpfCnpj(cpfcnpj, companyToken)
+      } else {
+        request = await getAllCustomersByCompany(companyToken)
+      }
+
+      if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
+
+      const customer = (request.data) ? request.data : {}
+      if (customer) return res.status(200).send(customer)
+      return res.status(404).send()
+    } catch (err) {
+      console.error(err)
+      return res.status(500).send({ error: err.message })
+    }
+  }
+
   async getByCpfCnpj (req, res) {
     const companyToken = req.headers['token']
 
