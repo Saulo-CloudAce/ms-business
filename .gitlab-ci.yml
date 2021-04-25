@@ -50,7 +50,7 @@ deploy_homol:
         npm install
         echo " "
 
-        npm run migrate:latest
+        #npm run migrate:latest
         echo " "
 
         aws ec2 describe-instances --region $AWS_DEFAULT_REGION --filters "Name=tag:Name,Values=ms-server*" --query 'Reservations[*].Instances[*].{Name:Tags[?Key==`Name`]|[0].Value,PrivateIP:PrivateIpAddress}' | jq '.[] | .[] | .Name' > nameserver.txt
