@@ -91,7 +91,7 @@ deploy_homol:
           ssh ubuntu@$s "cd /srv/$CI_PROJECT_NAME/; git checkout ."
           echo " "
 
-          ssh ubuntu@$s "export PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin; cd /srv/$CI_PROJECT_NAME; pm2 start -f src/index.js --name $CI_PROJECT_NAME --log-date-format='DD-MM-YYYY HH:mm Z' --log-type json"
+          ssh ubuntu@$s "export PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin; cd /srv/$CI_PROJECT_NAME; pm2 start -f index.js --name $CI_PROJECT_NAME --log-date-format='DD-MM-YYYY HH:mm Z' --log-type json"
           ssh ubuntu@$s "sudo env PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin /usr/local/nvm/versions/node/v10.14.1/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu"
 
           ssh ubuntu@$s "sudo systemctl enable pm2-ubuntu"
@@ -431,7 +431,7 @@ deploy_prod:
           ssh ubuntu@$s "export PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin; cd /srv/$CI_PROJECT_NAME; npm run migrate:latest"
           echo " "
 
-          ssh ubuntu@$s "export PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin; cd /srv/$CI_PROJECT_NAME; pm2 start -f src/index.js --name $CI_PROJECT_NAME --log-date-format='DD-MM-YYYY HH:mm Z' --log-type json"
+          ssh ubuntu@$s "export PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin; cd /srv/$CI_PROJECT_NAME; pm2 start -f index.js --name $CI_PROJECT_NAME --log-date-format='DD-MM-YYYY HH:mm Z' --log-type json"
           ssh ubuntu@$s "sudo env PATH=$PATH:/usr/local/nvm/versions/node/v10.14.1/bin /usr/local/nvm/versions/node/v10.14.1/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu"
 
           ssh ubuntu@$s "sudo systemctl enable pm2-ubuntu"
