@@ -477,13 +477,18 @@ class BusinessRepository {
             'data._id': { $in: listItemIdQuery }
           },
           {
-            data: { $elemMatch: { _id: { $in: listItemIdQuery } } },
             ...resultFields
           }
         )
         .toArray()
-
-      return business
+      const businessFiltered = []
+      business.forEach(b => {
+        const businessDataFiltered = b.data.filter(d => listItemIdQuery.indexOf(d._id) >= 0)
+        b.data = businessDataFiltered
+        if (businessDataFiltered.length >= 1) businessFiltered.push(b)
+      })
+      
+      return businessFiltered
     } catch (err) {
       throw new Error(err)
     }
