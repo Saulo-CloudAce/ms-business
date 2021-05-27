@@ -8,7 +8,8 @@ const {
   updateCustomer,
   getCustomerById,
   getCustomerFormattedById,
-  getAllCustomersByCompanyPaginated } = require('../services/crm-service')
+  getAllCustomersByCompanyPaginated,
+  getListCustomersByCpfCnpj } = require('../services/crm-service')
 const { clearCPFCNPJ } = require('../helpers/formatters')
 const { normalizeArraySubfields } = require('../lib/data-transform')
 const CompanyRepository = require('../repository/company-repository')
@@ -354,6 +355,33 @@ class CustomerController {
 
       const customer = (request.data) ? request.data : {}
       if (customer) return res.status(200).send(customer)
+      return res.status(404).send()
+    } catch (err) {
+      console.error(err)
+      return res.status(500).send({ error: err.message })
+    }
+  }
+
+  async getCustomerPoolInfoByCpfCnpj (req, res) {
+    const companyToken = req.headers['token']
+
+    try {
+      const { companyRepository } = this._getInstanceRepositories(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
+
+      let cpfcnpjList = req.body.cpfcnpj_list
+      
+      cpfcnpjList = cpfcnpjList.map(cpfcnpj => {
+        return clearCPFCNPJ(cpfcnpj)
+      })
+      const request = await getListCustomersByCpfCnpj(cpfcnpjList, companyToken)
+
+      if (request.response && request.response.status && request.response.status !== 200) return res.status(request.response.status).send(request.response.data)
+
+      const customers = (request.data) ? request.data : []
+      if (customers) return res.status(200).send(customers)
       return res.status(404).send()
     } catch (err) {
       console.error(err)

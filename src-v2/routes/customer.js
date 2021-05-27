@@ -6,6 +6,7 @@ const customerRoute = (app) => {
   app.post('/api/v2/customers', (req, res) => customerController.create(req, res))
   app.get('/api/v2/customers', (req, res) => customerController.getByCpfCnpj(req, res))
   app.get('/api/v2/customers/info', (req, res) => customerController.getCustomerInfoByCpfCnpj(req, res))
+  app.post('/api/v2/customers/pool_info', (req, res) => customerController.getCustomerPoolInfoByCpfCnpj(req, res))
   app.get('/api/v2/customers/paginated', (req, res) => customerController.getAllByCompanyPaginated(req, res))
   app.get('/api/v2/customers/search', (req, res) => customerController.search(req, res))
   app.get('/api/v2/customers/search/paginated', (req, res) => customerController.searchPaginated(req, res))
