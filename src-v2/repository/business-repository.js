@@ -453,8 +453,9 @@ class BusinessRepository {
 
     for (const i in searchData) {
       const data = searchData[i]
-      listBusinessIdQuery.push(new ObjectID(data.lote_id))
-      listParentBusinessIdQuery.push(data.lote_id)
+      const businessId = new ObjectID(data.lote_id)
+      listBusinessIdQuery.push(businessId)
+      listParentBusinessIdQuery.push(businessId)
       listTemplateIdQuery.push(data.schama)
       listItemIdQuery.push(data.item_id)
     }
@@ -487,7 +488,6 @@ class BusinessRepository {
         b.data = businessDataFiltered
         if (businessDataFiltered.length >= 1) businessFiltered.push(b)
       })
-      
       return businessFiltered
     } catch (err) {
       throw new Error(err)

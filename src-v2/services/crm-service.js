@@ -45,6 +45,14 @@ async function getByCpfCnpj (cpfcnpj, companyToken) {
   }
 }
 
+async function getListCustomersByCpfCnpj (cpfcnpjList = [], companyToken = '') {
+  try {
+    return await getAxiosInstance(companyToken).post(`${process.env.CRM_URL}/pool_customers`, { cpfcnpj_list: cpfcnpjList })
+  } catch (err) {
+    return err
+  }
+}
+
 async function getCustomerById (id, companyToken) {
   try {
     return await getAxiosInstance(companyToken).get(`${process.env.CRM_URL}/customers/${id}`)
@@ -134,5 +142,6 @@ module.exports = {
   searchCustomerFormatted,
   getCustomerById,
   getCustomerFormattedById,
-  getAllCustomersByCompanyPaginated
+  getAllCustomersByCompanyPaginated,
+  getListCustomersByCpfCnpj
 }
