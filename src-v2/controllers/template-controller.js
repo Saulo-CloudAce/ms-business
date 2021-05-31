@@ -196,6 +196,10 @@ class TemplateController {
         field.visible = updateField.visible
         field.has_tab = updateField.has_tab
         field.operator_can_view = updateField.operator_can_view
+        if (!field.key) {
+          field.required = updateField.required
+          field.editable = updateField.editable
+        }
         if (updateField.mask) field.mask = updateField.mask
         if (isTypeArray(field) && isArrayObject(field.fields)) {
           field.fields.forEach(subfield => {
@@ -204,6 +208,8 @@ class TemplateController {
             subfield.visible = updateSubfield.visible
             subfield.has_tab = updateSubfield.has_tab
             subfield.operator_can_view = updateSubfield.operator_can_view
+            subfield.required = updateSubfield.required
+            subfield.editable = updateSubfield.editable
             if (updateSubfield.mask) subfield.mask = updateSubfield.mask
           })
         }
