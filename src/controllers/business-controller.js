@@ -290,13 +290,14 @@ class BusinessController {
           active: b.active,
           createdAt: b.createdAt,
           updatedAt: b.updatedAt,
-          dataAmount: b.data.length,
+          dataAmount: b.dataAmount,
           templateId: b.templateId
         }
       })
 
       return res.status(200).send(business)
     } catch (e) {
+      console.error(e)
       return res.status(500).send({ error: e.message })
     }
   }
