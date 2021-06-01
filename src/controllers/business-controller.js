@@ -283,7 +283,6 @@ class BusinessController {
 
       const businessList = await newBusiness.getAllBatches(companyToken)
       var business = businessList.map(b => {
-        console.log(b)
         return {
           _id: b._id,
           name: b.name,
