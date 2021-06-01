@@ -283,6 +283,7 @@ class BusinessController {
 
       const businessList = await newBusiness.getAllBatches(companyToken)
       var business = businessList.map(b => {
+        console.log(b)
         return {
           _id: b._id,
           name: b.name,
@@ -290,13 +291,14 @@ class BusinessController {
           active: b.active,
           createdAt: b.createdAt,
           updatedAt: b.updatedAt,
-          dataAmount: b.data.length,
+          dataAmount: b.dataAmount,
           templateId: b.templateId
         }
       })
 
       return res.status(200).send(business)
     } catch (e) {
+      console.error(e)
       return res.status(500).send({ error: e.message })
     }
   }
