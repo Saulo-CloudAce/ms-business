@@ -41,7 +41,6 @@ deploy_homol:
     - chmod +x deploy_ms_node.sh
     - sed -i '/migrate:latest/d' deploy_ms_node.sh
     - sed -i '/index.js/s/src\///g' deploy_ms_node.sh
-    - cat deploy_ms_node.sh
     - ./deploy_ms_node.sh
 
   only:
