@@ -305,4 +305,4 @@ check_bs:
   only:
     - tags
   allow_failure: false
-  needs: ["deploy_prod"]
+  needs: ["deploy_bs"]
