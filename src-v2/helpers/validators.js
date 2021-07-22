@@ -5,6 +5,7 @@ function mongoIdIsValid (id = null) {
 }
 
 function validateEmail (email) {
+  if (!email) return false
   const emailParts = email.split('.')
   if ((email.match(/@/g) || []).length > 1) return false
   if (emailParts[emailParts.length - 1].length > 3) return false
