@@ -318,7 +318,8 @@ class Validator {
   }
 
   _isRequiredOrFill (rules, fieldData) {
-    return isRequired(rules) || String(fieldData).length > 0
+    const dataClean = encodeURI(String(fieldData)).replace(new RegExp("s/\x00//g"),"").replace('%00', '')
+    return isRequired(rules) || dataClean.length > 0
   }
 
   _validateFieldRequired (rules, fieldData, errors) {
