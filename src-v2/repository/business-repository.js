@@ -199,6 +199,7 @@ class BusinessRepository {
         { multi: true }
       );
     } catch (err) {
+      console.error(err)
       throw new Error(err);
     }
   }
@@ -872,7 +873,7 @@ class BusinessRepository {
     try {
       const businessList = await this.db
         .collection("business")
-        .find({ activeUntil: date, active: true }, ["_id"])
+        .find({ activeUntil: date, active: true }, ["_id", "companyToken"])
         .toArray();
 
       return businessList;
