@@ -572,9 +572,19 @@ class BusinessController {
       const { businessRepository } = this._getInstanceRepositories(app)
       const currentDate = moment().format('YYYY-MM-DD')
       const businessList = await businessRepository.getExpiredBusiness(currentDate)
+      
       businessList.forEach(async b => {
-        await businessRepository.deactivate(b._id)
+        const businessId = b._id
+        const companyToken = b.companyToken
+        businessRepository.deactivate(companyToken, businessId)
+          .then(() => {
+            console.log('Mailing', businessId, 'on company', companyToken, 'disabled by expiration')
+          })
+          .catch(err => {
+            console.error('Error on disable mailing by expiration. Mailing', businessId, 'on company', companyToken)
+          }) 
       })
+
       return true
     } catch (err) {
       console.error(err)
