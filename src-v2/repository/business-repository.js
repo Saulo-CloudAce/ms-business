@@ -338,7 +338,6 @@ class BusinessRepository {
             "quantityRows",
           ]
         )
-        .limit(10)
         .sort({ createdAt: -1 })
         .toArray();
 
