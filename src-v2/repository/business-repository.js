@@ -321,6 +321,33 @@ class BusinessRepository {
     }
   }
 
+  async getActivatedBatchesBasic(companyToken) {
+    try {
+      const businessList = await this.db
+        .collection("business")
+        .find(
+          { companyToken: companyToken, parentBatchId: { $exists: false }, active: true },
+          [
+            "_id",
+            "name",
+            "templateId",
+            "activeUntil",
+            "active",
+            "createdAt",
+            "updatedAt",
+            "quantityRows",
+          ]
+        )
+        .limit(10)
+        .sort({ createdAt: -1 })
+        .toArray();
+
+      return businessList;
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
+
   async getAllBatchesBasicPaginated(companyToken, page = 0, limit = 10) {
     const skipDocs = page * limit;
     try {
@@ -349,6 +376,96 @@ class BusinessRepository {
         .collection("business")
         .find(
           { companyToken: companyToken, parentBatchId: { $exists: false } },
+          ["_id"]
+        )
+        .count();
+
+      const pagination = {
+        numRows: parseInt(businessListCount),
+        page,
+        firstPage: 0,
+        lastPage: Math.ceil(parseInt(businessListCount) / limit) - 1,
+      };
+
+      return { businessList, pagination };
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
+
+  async getActivatedBatchesBasicPaginated(companyToken, page = 0, limit = 10) {
+    const skipDocs = page * limit;
+    try {
+      console.time("select");
+      const businessList = await this.db
+        .collection("business")
+        .find(
+          { companyToken: companyToken, parentBatchId: { $exists: false }, active: true },
+          [
+            "_id",
+            "name",
+            "templateId",
+            "activeUntil",
+            "active",
+            "createdAt",
+            "updatedAt",
+            "quantityRows",
+          ]
+        )
+        .skip(skipDocs)
+        .limit(limit)
+        .sort({ createdAt: -1 })
+        .toArray();
+
+      const businessListCount = await this.db
+        .collection("business")
+        .find(
+          { companyToken: companyToken, parentBatchId: { $exists: false }, active: true },
+          ["_id"]
+        )
+        .count();
+
+      const pagination = {
+        numRows: parseInt(businessListCount),
+        page,
+        firstPage: 0,
+        lastPage: Math.ceil(parseInt(businessListCount) / limit) - 1,
+      };
+
+      return { businessList, pagination };
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
+
+  async getInactivatedBatchesBasicPaginated(companyToken, page = 0, limit = 10) {
+    const skipDocs = page * limit;
+    try {
+      console.time("select");
+      const businessList = await this.db
+        .collection("business")
+        .find(
+          { companyToken: companyToken, parentBatchId: { $exists: false }, active: false },
+          [
+            "_id",
+            "name",
+            "templateId",
+            "activeUntil",
+            "active",
+            "createdAt",
+            "updatedAt",
+            "quantityRows",
+          ]
+        )
+        .skip(skipDocs)
+        .limit(limit)
+        .sort({ createdAt: -1 })
+        .toArray();
+
+      const businessListCount = await this.db
+        .collection("business")
+        .find(
+          { companyToken: companyToken, parentBatchId: { $exists: false }, active: false },
           ["_id"]
         )
         .count();

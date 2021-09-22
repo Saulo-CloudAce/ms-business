@@ -333,6 +333,36 @@ class BusinessController {
     }
   }
 
+  async getAllActivated(req, res) {
+    const companyToken = req.headers['token']
+
+    try {
+      const { companyRepository } = this._getInstanceRepositories(req.app)
+      const newBusiness = this._getInstanceBusiness(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
+
+      const businessList = await newBusiness.getActivatedBatchesBasic(companyToken)
+      const business = businessList.map(b => {
+        return {
+          _id: b._id,
+          name: b.name,
+          activeUntil: b.activeUntil,
+          active: b.active,
+          createdAt: b.createdAt,
+          updatedAt: b.updatedAt,
+          dataAmount: b.quantityRows,
+          templateId: b.templateId
+        }
+      })
+
+      return res.status(200).send(business)
+    } catch (e) {
+      return res.status(500).send({ error: e.message })
+    }
+  }
+
   async getAllPaginated(req, res) {
     const companyToken = req.headers['token']
     let page = 0
@@ -349,6 +379,80 @@ class BusinessController {
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       const { businessList, pagination } = await newBusiness.getAllBatchesBasicPaginated(companyToken, page, limit)
+      const business = { data: [], pagination }
+      business.data = businessList.map(b => {
+        return {
+          _id: b._id,
+          name: b.name,
+          activeUntil: b.activeUntil,
+          active: b.active,
+          createdAt: b.createdAt,
+          updatedAt: b.updatedAt,
+          dataAmount: b.quantityRows,
+          templateId: b.templateId
+        }
+      })
+
+      return res.status(200).send(business)
+    } catch (e) {
+      console.error(e)
+      return res.status(500).send({ error: e.message })
+    }
+  }
+
+  async getAllActivatedPaginated(req, res) {
+    const companyToken = req.headers['token']
+    let page = 0
+    let limit = 10
+
+    if (req.query.page && parseInt(req.query.page) >= 0) page = parseInt(req.query.page)
+    if (req.query.limit && parseInt(req.query.limit) >= 0) limit = parseInt(req.query.limit)
+
+    try {
+      const { companyRepository } = this._getInstanceRepositories(req.app)
+      const newBusiness = this._getInstanceBusiness(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
+
+      const { businessList, pagination } = await newBusiness.getActivatedBatchesBasicPaginated(companyToken, page, limit)
+      const business = { data: [], pagination }
+      business.data = businessList.map(b => {
+        return {
+          _id: b._id,
+          name: b.name,
+          activeUntil: b.activeUntil,
+          active: b.active,
+          createdAt: b.createdAt,
+          updatedAt: b.updatedAt,
+          dataAmount: b.quantityRows,
+          templateId: b.templateId
+        }
+      })
+
+      return res.status(200).send(business)
+    } catch (e) {
+      console.error(e)
+      return res.status(500).send({ error: e.message })
+    }
+  }
+
+  async getAllInactivatedPaginated(req, res) {
+    const companyToken = req.headers['token']
+    let page = 0
+    let limit = 10
+
+    if (req.query.page && parseInt(req.query.page) >= 0) page = parseInt(req.query.page)
+    if (req.query.limit && parseInt(req.query.limit) >= 0) limit = parseInt(req.query.limit)
+
+    try {
+      const { companyRepository } = this._getInstanceRepositories(req.app)
+      const newBusiness = this._getInstanceBusiness(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
+
+      const { businessList, pagination } = await newBusiness.getInactivatedBatchesBasicPaginated(companyToken, page, limit)
       const business = { data: [], pagination }
       business.data = businessList.map(b => {
         return {
@@ -572,7 +676,7 @@ class BusinessController {
       const { businessRepository } = this._getInstanceRepositories(app)
       const currentDate = moment().format('YYYY-MM-DD')
       const businessList = await businessRepository.getExpiredBusiness(currentDate)
-      
+
       businessList.forEach(async b => {
         const businessId = b._id
         const companyToken = b.companyToken
@@ -582,7 +686,7 @@ class BusinessController {
           })
           .catch(err => {
             console.error('Error on disable mailing by expiration. Mailing', businessId, 'on company', companyToken)
-          }) 
+          })
       })
 
       return true

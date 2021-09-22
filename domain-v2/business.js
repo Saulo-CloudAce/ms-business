@@ -177,9 +177,33 @@ class Business {
     }
   }
 
+  async getActivatedBatchesBasic (companyToken) {
+    try {
+      return this.repository.getActivatedBatchesBasic(companyToken)
+    } catch (err) {
+      return err
+    }
+  }
+
   async getAllBatchesBasicPaginated (companyToken, page = 0, limit = 10) {
     try {
       return this.repository.getAllBatchesBasicPaginated(companyToken, page, limit)
+    } catch (err) {
+      return err
+    }
+  }
+
+  async getActivatedBatchesBasicPaginated (companyToken, page = 0, limit = 10) {
+    try {
+      return this.repository.getActivatedBatchesBasicPaginated(companyToken, page, limit)
+    } catch (err) {
+      return err
+    }
+  }
+
+  async getInactivatedBatchesBasicPaginated (companyToken, page = 0, limit = 10) {
+    try {
+      return this.repository.getInactivatedBatchesBasicPaginated(companyToken, page, limit)
     } catch (err) {
       return err
     }
