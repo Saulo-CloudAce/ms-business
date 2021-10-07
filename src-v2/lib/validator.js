@@ -425,6 +425,8 @@ class Validator {
         errors.push({ column: rules.column, error: 'O valor informado não é um número de telefone', current_value: fieldData })
       } else if (!(elText.length >= 10)) {
         errors.push({ column: rules.column, error: 'O telefone informado não tem a quantidade mínima de 10 números', current_value: fieldData })
+      } else if (parseInt(elText) === 0) {
+        errors.push({ column: rules.column, error: 'O telefone informado não é válido, tem todos números zerados.', current_value: fieldData })
       }
     } else {
       errors.push({ column: rules.column, error: 'O valor informado não é uma string com número de telefone', current_value: fieldData })
@@ -483,8 +485,6 @@ class Validator {
       lineErrors.errors.push({ error: 'Tem campos diferentes do que os definidos no template', fields_list_unkown: listFieldsRequired })
       return { valid: false, lineErrors }
     }
-
-    const keysData = Object.keys(data)
 
     Object.keys(data).forEach(k => {
       const el = data[k].value
@@ -554,6 +554,8 @@ class Validator {
     elText = elText.replace(' ', '')
 
     if (elText.length <= 8) return ''
+    
+    console.log('tel', elText)
 
     return elText
   }
@@ -586,13 +588,28 @@ class Validator {
       }
     } else {
       if (Array.isArray(fieldData)) {
+        const isArrayPhone = (fieldRules.fields.filter(f => f.type === 'phone_number').length > 0)
         fieldData.filter(fd => Object.keys(fd).filter(fdk => String(fd[fdk]).length > 0).length > 0)
           .forEach(element => {
             const item = {}
-            fieldRules.fields.forEach(field => {
-              item[field.column] = element[field.column]
-            })
-            arrData.push(item)
+            const itemData = {}
+            if (isArrayPhone) {
+              fieldRules.fields.forEach(field => {
+                item[field.column] = element[field.column]
+                itemData[field.data] = element[field.column]
+              })
+
+              if (itemData['customer_phone_number'] && parseInt(itemData['customer_phone_number']) === 0) return
+              else if (itemData['customer_phone'] && parseInt(itemData['customer_phone']) === 0) return
+              
+              arrData.push(item)
+            } else {
+              fieldRules.fields.forEach(field => {
+                item[field.column] = element[field.column]
+              })
+
+              arrData.push(item)
+            }
           })
       }
     }
@@ -600,7 +617,7 @@ class Validator {
     return arrData
   }
 
-  _formatFieldOptions(fieldRules, fieldData) {
+  _formatFieldOptions (fieldRules, fieldData) {
     if (!Array.isArray(fieldData)) return [fieldData]
     return fieldData
   }
@@ -694,13 +711,26 @@ class Validator {
       }
     } else {
       if (Array.isArray(fieldData)) {
+        const isArrayPhone = (fieldRules.fields.filter(f => f.type === 'phone_number').length > 0)
         fieldData.filter(fd => Object.keys(fd).filter(fdk => String(fd[fdk]).length > 0).length > 0)
           .forEach(element => {
             const item = {}
-            fieldRules.fields.forEach(field => {
-              item[field.data] = element[field.column]
-            })
-            arrData.push(item)
+            if (isArrayPhone) {
+              fieldRules.fields.forEach(field => {
+                item[field.data] = element[field.column]
+              })
+
+              if (item['customer_phone_number'] && parseInt(item['customer_phone_number']) === 0) return
+              else if (item['customer_phone'] && parseInt(item['customer_phone']) === 0) return
+              
+              arrData.push(item)
+            } else {
+              fieldRules.fields.forEach(field => {
+                item[field.data] = element[field.column]
+              })
+              
+              arrData.push(item)
+            }
           })
       }
     }
