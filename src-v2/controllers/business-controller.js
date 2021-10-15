@@ -242,7 +242,7 @@ class BusinessController {
     }
   }
 
-  async getPoolData(req, res) {
+  async getPoolData (req, res) {
     const fields = ['_id']
 
     const companyToken = req.headers['token']
@@ -286,13 +286,7 @@ class BusinessController {
         fields.push(...req.body.fields)
       }
 
-      const businessData = []
-
-      const businessDataList = await businessRepository.getDataByListId(companyToken, searchData, fields)
-      for (const i in businessDataList) {
-        const business = businessDataList[i]
-        businessData.push(...business.data)
-      }
+      const businessData = await businessRepository.getDataByListId(companyToken, searchData, fields)
 
       return res.status(200).send(businessData)
     } catch (err) {
@@ -363,7 +357,7 @@ class BusinessController {
     }
   }
 
-  async getAllPaginated(req, res) {
+  async getAllPaginated (req, res) {
     const companyToken = req.headers['token']
     let page = 0
     let limit = 10
@@ -574,7 +568,7 @@ class BusinessController {
     }
   }
 
-  async searchDataInBusiness(req, res) {
+  async searchDataInBusiness (req, res) {
     const companyToken = req.headers['token']
 
     const templateId = req.body.template_id
@@ -618,8 +612,9 @@ class BusinessController {
     }
   }
 
-  async getByIdWithData(req, res) {
+  async getByIdWithData (req, res) {
     const companyToken = req.headers['token']
+    const businessId = req.params.id
 
     try {
       const { companyRepository } = this._getInstanceRepositories(req.app)
@@ -628,7 +623,7 @@ class BusinessController {
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      const business = await newBusiness.getDataById(companyToken, req.params.id)
+      const business = await newBusiness.getDataById(companyToken, businessId)
 
       delete business.childBatchesId
 
@@ -638,7 +633,7 @@ class BusinessController {
     }
   }
 
-  async getByIdWithDataPaginated(req, res) {
+  async getByIdWithDataPaginated (req, res) {
     const companyToken = req.headers['token']
     let page = 0
     let limit = 10
@@ -786,9 +781,11 @@ class BusinessController {
     }
   }
 
-  async getBusinessRegisterById(req, res) {
+  async getBusinessRegisterById (req, res) {
     const companyToken = req.headers['token']
     const templateId = req.headers['templateid']
+    const businessId = req.params.businessId
+    const registerId = req.params.registerId
 
     try {
       const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
@@ -800,33 +797,16 @@ class BusinessController {
       const template = await templateRepository.getById(templateId, companyToken)
       if (!template) return res.status(400).send({ error: 'Template não identificado' })
 
-      const business = await newBusiness.getDataById(companyToken, req.params.businessId)
-      if (!business) return res.status(400).send({ error: 'Business não identificado.' })
-      const dataIndex = business.data.findIndex(d => d._id === req.params.registerId)
-
-      business.data = [business.data[dataIndex]]
-
-      const respBusiness = {
-        _id: business._id,
-        name: business.name
-      }
-
-      if (dataIndex < 0) {
-        return res.status(400).send({ error: 'Registro não encontrado.' })
-      }
-
-      // const businessNormalized = normalizeArraySubfields([business], template)
-      // respBusiness.data = businessNormalized[0].data[dataIndex]
-      respBusiness.data = business.data[0]
-
-      return res.status(200).send(respBusiness)
+      const business = await newBusiness.getRegisterById(companyToken, businessId, registerId)
+      if (!business) return res.status(400).send({ error: 'Registro não encontrado.' })
+      return res.status(200).send(business)
     } catch (err) {
       console.error(err)
       return res.status(500).send({ error: err.message })
     }
   }
 
-  async getBusinessAndRegisterIdByCpf(req, res) {
+  async getBusinessAndRegisterIdByCpf (req, res) {
     const companyToken = req.headers['token']
     const templateId = req.headers['templateid']
 
@@ -834,8 +814,7 @@ class BusinessController {
 
     try {
       const querySearch = req.query.cpfcnpj
-      const response = []
-
+      
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
@@ -848,20 +827,9 @@ class BusinessController {
 
       const keyCPFCNPJ = fieldCPFCNPJ.column
 
-      const templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, [keyCPFCNPJ], querySearch)
+      const response = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, [keyCPFCNPJ], querySearch)
 
-      for (const i in templateData) {
-        const data = templateData[i]
-        const occurrency = {
-          _id: data._id,
-          name: data.name,
-          createdAt: data.createdAt,
-          data: data.data
-        }
-        response.push(occurrency)
-      }
-
-      if (response.length === 0) return res.status(404).send([])
+      if (!response || response.length === 0) return res.status(404).send([])
 
       return res.status(200).send(response)
     } catch (err) {

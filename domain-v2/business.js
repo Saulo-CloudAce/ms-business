@@ -217,6 +217,14 @@ class Business {
     }
   }
 
+  async getRegisterById (companyToken, businessId, registerId) {
+    try {
+      return this.repository.getRegisterById(companyToken, businessId, registerId)
+    } catch (err) {
+      return err
+    }
+  }
+
   async getDataByIdPaginated (companyToken, id, page = 0, limit = 10) {
     try {
       return this.repository.getDataByIdPaginated(companyToken, id, page, limit)
