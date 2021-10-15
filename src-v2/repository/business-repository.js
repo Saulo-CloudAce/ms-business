@@ -375,11 +375,11 @@ class BusinessRepository {
       const businessListCount = await this.db
         .collection("business")
         .find(
-          { companyToken: companyToken, parentBatchId: { $exists: false } },
+          { companyToken, parentBatchId: { $exists: false } },
           ["_id"]
         )
         .sort({ createdAt: -1 })
-        .count();
+        .count()
       
       const pagination = {
         numRows: parseInt(businessListCount),
@@ -667,7 +667,7 @@ class BusinessRepository {
     const matchParams = []
     for (const column of keyColumnList) {
       const param = {}
-      param[column] = keyValue // new RegExp(keyValue, 'i')
+      param[column] = new RegExp(keyValue, 'i')
       matchParams.push(param)
     }
     console.log(matchParams)
@@ -741,7 +741,7 @@ class BusinessRepository {
     }
   }
 
-  async getLastByTemplateAndKeySortedReverse(
+  async getLastByTemplateAndKeySortedReverse (
     companyToken,
     templateId,
     keyColumnList = [],
@@ -961,23 +961,23 @@ class BusinessRepository {
 
       const business = await this.db
         .collection("business")
-        .findOne({ _id: new ObjectID(businessId), companyToken: companyToken });
+        .findOne(
+          { _id: new ObjectID(businessId), companyToken },
+          { fields: { childBatchesId: 0, data: 0 } }
+        );
 
-      if (business.childBatchesId) {
-        const businessChildBatchesDataList = await this.getChildBatches([
-          new ObjectID(businessId),
-        ]);
-        for (const i in businessChildBatchesDataList) {
-          const businessChildBatchData = businessChildBatchesDataList[i];
-          business.data.push(...businessChildBatchData.data);
-        }
-      }
+      const businessData = await this.db.collection('business_data')
+        .find(
+          { companyToken, businessId: ObjectID(businessId) },
+          { fields: { companyToken: 0, businessId: 0, templateId: 0 } }
+        )
+        .skip(skipDocs)
+        .limit(limit)
+        .toArray()
 
-      business.data = business.data.slice(skipDocs, skipDocs + limit);
+      business.data = businessData
 
       if (business) {
-        delete business.childBatchesId;
-
         business.dataPagination = {
           numRows: business.quantityRows,
           page,
@@ -988,6 +988,7 @@ class BusinessRepository {
 
       return business;
     } catch (err) {
+      console.error(err)
       throw new Error(err);
     }
   }

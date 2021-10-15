@@ -595,20 +595,12 @@ class BusinessController {
         searchParamsValues = searchParams.map(sp => String(sp.value))
       }
 
-      const resultList = []
-
-      // for (const indexKey in keyColumnList) {
-      // const keyColumn = keyColumnList[indexKey]
-
       const templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyColumnList, searchParamsValues[0])
 
-      resultList.push(...templateData)
-      // }
-
-      return res.status(200).send(resultList)
+      return res.status(200).send(templateData)
     } catch (e) {
       console.error(e)
-      return res.status(500).send({ error: e.message })
+      return res.status(500).send({ error: 'Ocorreu um erro ao pesquisar os clientes.' })
     }
   }
 
@@ -654,7 +646,8 @@ class BusinessController {
 
       return res.status(200).send(business)
     } catch (e) {
-      return res.status(500).send({ error: e.message })
+      console.error(e)
+      return res.status(500).send({ error: 'Ocorreu erro ao listar os dados paginados' })
     }
   }
 
