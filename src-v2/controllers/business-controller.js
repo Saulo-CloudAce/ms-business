@@ -789,6 +789,8 @@ class BusinessController {
   async getBusinessRegisterById(req, res) {
     const companyToken = req.headers['token']
     const templateId = req.headers['templateid']
+    const businessId = req.params.businessId
+    const cacheKey = `${templateId}:${businessId}`
 
     try {
       const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
@@ -799,6 +801,13 @@ class BusinessController {
 
       const template = await templateRepository.getById(templateId, companyToken)
       if (!template) return res.status(400).send({ error: 'Template não identificado' })
+      
+      if (global.cache.business_data[cacheKey]) {
+        console.log('BUSINESS_REGISTER_CACHED')
+        return res.status(200).send(global.cache.business_data[cacheKey])
+      }
+
+      console.log('BUSINESS_REGISTER_STORED')
 
       const business = await newBusiness.getDataById(companyToken, req.params.businessId)
       if (!business) return res.status(400).send({ error: 'Business não identificado.' })
@@ -818,6 +827,8 @@ class BusinessController {
       // const businessNormalized = normalizeArraySubfields([business], template)
       // respBusiness.data = businessNormalized[0].data[dataIndex]
       respBusiness.data = business.data[0]
+
+      global.cache.business_data[cacheKey] = respBusiness
 
       return res.status(200).send(respBusiness)
     } catch (err) {

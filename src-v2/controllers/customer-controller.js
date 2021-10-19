@@ -75,6 +75,7 @@ class CustomerController {
 
   async getById (req, res) {
     const companyToken = req.headers['token']
+    const customerId = req.params.id
 
     try {
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
@@ -85,6 +86,11 @@ class CustomerController {
       const request = await getCustomerById(req.params.id, companyToken)
 
       if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
+
+      if (global.cache.customers[customerId]) {
+        console.log('CUSTOMER_CACHED')
+        return res.status(200).send(global.cache.customers[customerId])
+      }
 
       const customer = request.data
       const templateList = customer.business_template_list
@@ -126,6 +132,8 @@ class CustomerController {
         delete customer.business_list
         delete customer.business_template_list
       }
+
+      global.cache.customers[customerId] = customer
 
       return res.status(200).send(customer)
     } catch (err) {
@@ -205,6 +213,7 @@ class CustomerController {
 
   async getByIdFormatted (req, res) {
     const companyToken = req.headers['token']
+    const customerId = req.params.id
 
     try {
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
@@ -215,6 +224,11 @@ class CustomerController {
       const request = await getCustomerFormattedById(req.params.id, companyToken)
 
       if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
+
+      if (global.cache.customers_formatted[customerId]) {
+        console.log('CUSTOMER_FORMATTED_CACHED')
+        return res.status(200).send(global.cache.customers_formatted[customerId])
+      }
 
       const customer = request.data
       const templateList = customer.business_template_list
@@ -256,6 +270,8 @@ class CustomerController {
         delete customer.business_list
         delete customer.business_template_list
       }
+
+      global.cache.customers_formatted[customerId] = customer
 
       return res.status(200).send(customer)
     } catch (err) {

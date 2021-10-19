@@ -671,6 +671,17 @@ class BusinessRepository {
       matchParams.push(param);
     }
     try {
+      const hashPayload = JSON.stringify({ matchParams, companyToken, templateId })
+      const hash = Buffer.from(hashPayload).toString('base64')
+
+      if (global.cache.hashSearch[hash]) {
+        console.log('SEARCH_IN_DATA_CACHED')
+        const queryCached = global.cache.hashSearch[hash]
+        return queryCached
+      }
+
+      console.log('SEARCH_IN_DATA_STORED')
+
       let businessListStored = await this.db
         .collection("business")
         .aggregate([
@@ -713,6 +724,8 @@ class BusinessRepository {
           updatedAt: bData.updatedAt,
         });
       }
+
+      global.cache.hashSearch[hash] = businessList
 
       return businessList;
     } catch (err) {

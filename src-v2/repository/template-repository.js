@@ -1,6 +1,8 @@
 const moment = require('moment')
 const ObjectID = require('mongodb').ObjectID
 
+const { calcExpireTime } = require('../helpers/util')
+
 class TemplateRepository {
   constructor (db) {
     this.db = db
@@ -73,10 +75,21 @@ class TemplateRepository {
 
   async getById (id, companyToken) {
     try {
+      if (global.cache.templates[id]) {
+        console.log('TEMPLATE_CACHED')
+        const templateCached = global.cache.templates[id]
+        if (templateCached) return templateCached
+      }
+
+      console.log('TEMPLATE_STORED')
+
       const result = await this.db.collection('business_template').findOne({ _id: new ObjectID(id), companyToken }, ['_id', 'name', 'fields', 'active', 'createdAt', 'updatedAt'])
+
+      global.cache.templates[id] = result
 
       return result
     } catch (err) {
+      console.error(err)
       throw new Error(err)
     }
   }
