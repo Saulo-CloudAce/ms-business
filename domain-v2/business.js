@@ -240,6 +240,119 @@ class Business {
       return err
     }
   }
+
+  async listMailingByTemplateListAndKeySortedReverse (companyToken = '', customer = {}, templateRepository = {}) {
+    const mapTemplate = {}
+    const templateIdList = []
+    const matchParams = []
+
+    try {
+      if (!customer.business_template_list) return []
+
+      const templateList = customer.business_template_list
+      
+      if (templateList) {
+        for (const templateId of templateList) {
+          const template = await templateRepository.getById(templateId, companyToken)
+          if (template) {
+            const templateFinal = { _id: template._id, name: template.name, lote_data_list: [] }
+
+            mapTemplate[template._id] = templateFinal
+            templateIdList.push(String(template._id))
+
+            const fieldKey = template.fields.find(f => f.key)
+            if (fieldKey) {
+              const keyColumn = fieldKey.column
+
+              let keyValue = ''
+              if (fieldKey.data === 'customer_cpfcnpj') {
+                keyValue = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
+              } else if (fieldKey.data === 'customer_phone' || fieldKey.data === 'customer_phone_number') {
+                keyValue = (customer.phone) ? customer.phone[0].number : customer.customer_phone[0].customer_phone_number
+              } else if (fieldKey.data === 'customer_email' || fieldKey.data === 'customer_email_address') {
+                keyValue = (customer.email) ? customer.email[0].email : customer.customer_email[0].customer_email
+              } else if (fieldKey.data === 'customer_name') {
+                keyValue = (customer.name) ? customer.name : customer.customer_name
+              }
+
+              const matchp = {}
+              matchp[keyColumn] = String(keyValue)
+              matchParams.push(matchp)
+            }
+          }
+        }
+      }
+
+      if (templateIdList.length && matchParams.length) {
+        const customerMailings = await this.repository.listAllByTemplateListAndKeySortedReverse(companyToken, templateIdList, matchParams)
+        for (const mailing of customerMailings) {
+          if (mapTemplate[mailing.templateId]) {
+            mapTemplate[mailing.templateId].lote_data_list.push(mailing)
+          }
+        }
+      }
+
+      return Object.values(mapTemplate)
+    } catch (err) {
+      console.error(err)
+      throw Error('Ocorreu erro ao listar os mailings que tenha este cliente presente')
+    }
+  }
+
+  async getLastMailingByTemplateListAndKeySortedReverse (companyToken = '', customer = {}, templateRepository = {}) {
+    const mapTemplate = {}
+    const templateIdList = []
+    const matchParams = []
+
+    try {
+      if (!customer.business_template_list) return []
+
+      const templateList = customer.business_template_list
+      
+      if (templateList) {
+        for (const templateId of templateList) {
+          const template = await templateRepository.getById(templateId, companyToken)
+          if (template) {
+            const templateFinal = { _id: template._id, name: template.name, lote_data_list: [] }
+
+            mapTemplate[template._id] = templateFinal
+            templateIdList.push(String(template._id))
+
+            const fieldKey = template.fields.find(f => f.key)
+            if (fieldKey) {
+              const keyColumn = fieldKey.column
+
+              let keyValue = ''
+              if (fieldKey.data === 'customer_cpfcnpj') {
+                keyValue = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
+              } else if (fieldKey.data === 'customer_phone' || fieldKey.data === 'customer_phone_number') {
+                keyValue = (customer.phone) ? customer.phone[0].number : customer.customer_phone[0].customer_phone_number
+              } else if (fieldKey.data === 'customer_email' || fieldKey.data === 'customer_email_address') {
+                keyValue = (customer.email) ? customer.email[0].email : customer.customer_email[0].customer_email
+              } else if (fieldKey.data === 'customer_name') {
+                keyValue = (customer.name) ? customer.name : customer.customer_name
+              }
+
+              const matchp = {}
+              matchp[keyColumn] = String(keyValue)
+              matchParams.push(matchp)
+            }
+          }
+        }
+      }
+
+      if (templateIdList.length && matchParams.length) {
+        const customerMailings = await this.repository.listAllByTemplateListAndKeySortedReverse(companyToken, templateIdList, matchParams)
+        const lastMailing = customerMailings[0]
+        mapTemplate[lastMailing.templateId].lote_data_list.push(lastMailing)
+      }
+
+      return Object.values(mapTemplate)
+    } catch (err) {
+      console.error(err)
+      throw Error('Ocorreu erro ao listar os mailings que tenha este cliente presente')
+    }
+  }
 }
 
 module.exports = Business

@@ -394,7 +394,7 @@ class BusinessController {
     }
   }
 
-  async getAllActivatedPaginated(req, res) {
+  async getAllActivatedPaginated (req, res) {
     const companyToken = req.headers['token']
     let page = 0
     let limit = 10
@@ -431,7 +431,7 @@ class BusinessController {
     }
   }
 
-  async getAllInactivatedPaginated(req, res) {
+  async getAllInactivatedPaginated (req, res) {
     const companyToken = req.headers['token']
     let page = 0
     let limit = 10
