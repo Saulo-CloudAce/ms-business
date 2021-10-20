@@ -9,10 +9,12 @@ class Business {
   }
 
   async create (companyToken, name, file, fields, templateId, activeUntil, prefixIndexElastic, jumpFirstLine, dataSeparator) {
-    let listBatches = []
+    const listBatches = []
+    /* Funcionalidade desativada por prejudicar a performance da aplicação e não há clientes utilizando
     if (hasFieldUnique(fields)) {
       listBatches = await this.listAllByTemplateId(companyToken, templateId)
     }
+    */
 
     console.time('validate')
     const { invalids, valids, validsCustomer } = await this.validator.validateAndFormat(file.path, fields, jumpFirstLine, dataSeparator, listBatches)
@@ -43,10 +45,10 @@ class Business {
   }
 
   async createFromUrlFile (companyToken, name, filepath, fields, templateId, activeUntil, prefixIndexElastic, jumpFirstLine, dataSeparator) {
-    let listBatches = []
-    if (hasFieldUnique(fields)) {
-      listBatches = await this.listAllByTemplateId(companyToken, templateId)
-    }
+    const listBatches = []
+    // if (hasFieldUnique(fields)) {
+    //   listBatches = await this.listAllByTemplateId(companyToken, templateId)
+    // }
 
     const { invalids, valids, validsCustomer } = await this.validator.validateAndFormatFromUrlFile(filepath, fields, jumpFirstLine, dataSeparator, listBatches)
 
@@ -69,10 +71,10 @@ class Business {
   }
 
   async createFromJson (companyToken, name, fields, templateId, data, activeUntil, prefixIndexElastic, requestBody, isBatch = true) {
-    let listBatches = []
-    if (hasFieldUnique(fields)) {
-      listBatches = await this.listAllByTemplateId(companyToken, templateId)
-    }
+    const listBatches = []
+    // if (hasFieldUnique(fields)) {
+    //   listBatches = await this.listAllByTemplateId(companyToken, templateId)
+    // }
 
     const { invalids, valids, validsCustomer } = await this.validator.validateAndFormatFromJson(data, fields, listBatches)
 
@@ -100,11 +102,11 @@ class Business {
   }
 
   async createSingleFromJson (companyToken, name, fields, templateId, data, activeUntil, prefixIndexElastic, requestBody, isBatch = true) {
-    let listBatches = []
+    const listBatches = []
     let contactIdList = []
-    if (hasFieldUnique(fields)) {
-      listBatches = await this.listAllByTemplateId(companyToken, templateId)
-    }
+    // if (hasFieldUnique(fields)) {
+    //   listBatches = await this.listAllByTemplateId(companyToken, templateId)
+    // }
 
     const { invalids, valids, validsCustomer } = await this.validator.validateAndFormatFromJson(data, fields, listBatches)
 

@@ -9,66 +9,6 @@ class BusinessRepository {
     this.db = db;
   }
 
-  _createNewInstance(data = {}) {
-    return {
-      _id: new ObjectID(),
-      companyToken: data.companyToken,
-      name: data.name,
-      filePath: data.filePath,
-      templateId: data.templateId,
-      jumpFirstLine: data.jumpFirstLine,
-      customerStorage: "running",
-      dataSeparator: data.dataSeparator,
-      isBatch: data.isBatch,
-      childBatchesId: [],
-      quantityRows: 0,
-      data: [],
-      activeUntil: data.activeUntil,
-      invalids: data.invalids,
-      flow_passed: false,
-      active: true,
-      createdAt: moment().format(),
-      updatedAt: moment().format(),
-    };
-  }
-
-  _calculateSizeBatch(batch) {
-    const sizeBytes = Buffer.byteLength(JSON.stringify(batch), "utf-8");
-    const sizeMegaBytes = sizeBytes / BYTES_ON_MEGA;
-    return sizeMegaBytes;
-  }
-
-  _splitDataBatch(data, sizeDataMegaBytes) {
-    const batches = [];
-    const quantityParts = Math.ceil(
-      sizeDataMegaBytes / LIMIT_SIZE_DOC_BSON_MEGABYTES
-    );
-    const quantityRows = data.data.length;
-    const quantityRowsByPart = Math.ceil(quantityRows / quantityParts);
-
-    const firstBatch = this._createNewInstance(data);
-    firstBatch.data = data.data.splice(0, quantityRowsByPart);
-    firstBatch.quantityBatchRows = firstBatch.data.length;
-    firstBatch.quantityRows = quantityRows;
-    batches.push(firstBatch);
-
-    for (let i = 0; i < quantityParts - 1; i++) {
-      const indexInit = i * quantityRowsByPart;
-      const indexEnd = indexInit + quantityRowsByPart;
-      const batch = this._createNewInstance(data);
-      const batchData = data.data.slice(indexInit, indexEnd);
-      batch.data = batchData;
-      batch.quantityRows = batch.data.length;
-      batch.quantityBatchRows = batch.data.length;
-      batch.parentBatchId = firstBatch._id;
-
-      batches[0].childBatchesId.push(batch._id);
-      batches.push(batch);
-    }
-
-    return batches;
-  }
-
   async save(
     companyToken,
     name,
@@ -82,7 +22,7 @@ class BusinessRepository {
     isBatch = true,
     invalids = []
   ) {
-    const data = {
+    const business = {
       _id: new ObjectID(),
       companyToken,
       name,
@@ -93,7 +33,6 @@ class BusinessRepository {
       dataSeparator,
       isBatch,
       quantityRows,
-      data: fieldsData,
       activeUntil,
       invalids,
       flow_passed: false,
@@ -101,19 +40,27 @@ class BusinessRepository {
       createdAt: moment().format(),
       updatedAt: moment().format(),
     };
-    let batches = [data];
+    const batches = [business];
 
-    const sizeDataMegaBytes = this._calculateSizeBatch(data);
+    const businessData = fieldsData.map(f => {
+      f.businessId = business._id
+      f.templateId = business.templateId
+      f.companyToken = business.companyToken
+      f.businessCreatedAt = business.createdAt
+      f.businessUpdatedAt = business.updatedAt
 
-    if (sizeDataMegaBytes > LIMIT_SIZE_DOC_BSON_MEGABYTES) {
-      batches = this._splitDataBatch(data, sizeDataMegaBytes);
-    }
+      return f
+    })
+    
 
     try {
+      
       await this.db.collection("business").insertMany(batches);
-      const id = batches[0]._id;
-      return id;
+      await this.db.collection("business_data").insertMany(businessData)
+
+      return business._id;
     } catch (err) {
+      console.error(err)
       throw new Error(err);
     }
   }
@@ -151,6 +98,19 @@ class BusinessRepository {
       );
     } catch (err) {
       throw new Error(err);
+    }
+  }
+
+  async updateRegisterBusiness(registerId, data = {}) {
+    try {
+      await this.db.collection("business_data")
+        .update(
+          { _id: registerId },
+          { $set: data }
+        )
+    } catch (err) {
+      console.error(err)
+      throw new Error(err)
     }
   }
 
@@ -1018,6 +978,19 @@ class BusinessRepository {
 
       return business
     } catch (err) {
+      throw new Error(err)
+    }
+  }
+
+  async getRegisterByBusinessAndId (companyToken, businessId, registerId) {
+    try {
+      const register = await this.db.collection('business_data')
+        .findOne(
+          { companyToken: companyToken, businessId: new ObjectID(businessId), _id: registerId }
+        )
+      return register
+    } catch (err) {
+      console.error(err)
       throw new Error(err)
     }
   }
