@@ -41,7 +41,16 @@ class CompanyRepository {
 
   async getByToken (token) {
     try {
+      if (global.cache.companies[token]) {
+        console.log('COMPANY_CACHED')
+        const companyCached = global.cache.companies[token]
+        return companyCached.data
+      }
+
       const result = await this.db.collection('company').findOne({ token })
+
+      global.cache.companies[token] = { data: result }
+      console.log('COMPANY_STORED')
 
       return result
     } catch (err) {
