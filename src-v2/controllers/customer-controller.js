@@ -533,7 +533,7 @@ class CustomerController {
 
       const search = req.query.search
       console.time('searchCustomer')
-      const request = await searchCustomer(search, companyToken, company.prefix_index_elastic)
+      const request = await searchCustomer(search, companyToken, company.prefix_index_elastic, queryTemplateId)
       console.timeEnd('searchCustomer')
       
       if (request.response && request.response.status && request.response.status !== 200) return res.status(request.response.status).send(request.response.data)
@@ -628,7 +628,7 @@ class CustomerController {
 
       const search = req.query.search
       console.time('search customer on CRM')
-      const request = await searchCustomerFormatted(search, companyToken, company.prefix_index_elastic, page, limit)
+      const request = await searchCustomerFormatted(search, companyToken, company.prefix_index_elastic, queryTemplateId, page, limit)
       console.timeEnd('search customer on CRM')
       
       if (request.response && request.response.status && request.response.status !== 200) return res.status(request.response.status).send(request.response.data)

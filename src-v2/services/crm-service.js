@@ -69,17 +69,21 @@ async function getCustomerFormattedById (id, companyToken) {
   }
 }
 
-async function searchCustomer (search, companyToken, prefixIndexElastic) {
+async function searchCustomer (search, companyToken, prefixIndexElastic, templateId = '') {
   try {
-    return await getAxiosInstanceByCompanyElastic(companyToken, prefixIndexElastic).get(`${process.env.CRM_URL}/customers/search?search=${search}`)
+    let url = `${process.env.CRM_URL}/customers/search?search=${search}`
+    if (templateId) url = `${url}&template_id=${templateId}`
+    return await getAxiosInstanceByCompanyElastic(companyToken, prefixIndexElastic).get(url)
   } catch (err) {
     return err
   }
 }
 
-async function searchCustomerFormatted (search, companyToken, prefixIndexElastic, page = 0, limit = 10) {
+async function searchCustomerFormatted (search, companyToken, prefixIndexElastic, templateId = '', page = 0, limit = 10) {
   try {
-    return await getAxiosInstanceByCompanyElastic(companyToken, prefixIndexElastic).get(`${process.env.CRM_URL}/customers/search/formatted?search=${search}&page=${page}&limit=${limit}`)
+    let url = `${process.env.CRM_URL}/customers/search/formatted?search=${search}&page=${page}&limit=${limit}`
+    if (templateId) url = `${url}&template_id=${templateId}`
+    return await getAxiosInstanceByCompanyElastic(companyToken, prefixIndexElastic).get(url)
   } catch (err) {
     return err
   }
