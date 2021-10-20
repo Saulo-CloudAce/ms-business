@@ -12,6 +12,7 @@ const {
   getListCustomersByCpfCnpj } = require('../services/crm-service')
 const { clearCPFCNPJ } = require('../helpers/formatters')
 const { normalizeArraySubfields } = require('../lib/data-transform')
+const { calcExpireTime } = require('../helpers/util')
 const CompanyRepository = require('../repository/company-repository')
 const TemplateRepository = require('../repository/template-repository')
 const BusinessRepository = require('../repository/business-repository')
@@ -75,6 +76,7 @@ class CustomerController {
 
   async getById (req, res) {
     const companyToken = req.headers['token']
+    const customerId = req.params.id
 
     try {
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
@@ -85,6 +87,16 @@ class CustomerController {
       const request = await getCustomerById(req.params.id, companyToken)
 
       if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
+
+      if (global.cache.customers[customerId]) {
+        const customerCached = global.cache.customers[customerId]
+        if (customerCached && customerCached.expire && calcExpireTime(new Date(), customerCached.expire) < global.cache.default_expire) {
+          console.log('CUSTOMER_CACHED')
+          return res.status(200).send(customerCached.data)
+        } else {
+          global.cache.customers[customerId] = null
+        }
+      }
 
       const customer = request.data
       const templateList = customer.business_template_list
@@ -126,6 +138,9 @@ class CustomerController {
         delete customer.business_list
         delete customer.business_template_list
       }
+
+      console.log('CUSTOMER_STORED')
+      global.cache.customers[customerId] = { data: customer, expire: new Date() }
 
       return res.status(200).send(customer)
     } catch (err) {
@@ -205,6 +220,7 @@ class CustomerController {
 
   async getByIdFormatted (req, res) {
     const companyToken = req.headers['token']
+    const customerId = req.params.id
 
     try {
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
@@ -215,6 +231,16 @@ class CustomerController {
       const request = await getCustomerFormattedById(req.params.id, companyToken)
 
       if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
+
+      if (global.cache.customers_formatted[customerId]) {
+        const customerCached = global.cache.customers_formatted[customerId]
+        if (customerCached && customerCached.expire && calcExpireTime(new Date(), customerCached.expire) < global.cache.default_expire) {
+          console.log('CUSTOMER_FORMATTED_CACHED')
+          return res.status(200).send(customerCached.data)
+        } else {
+          global.cache.customers_formatted[customerId] = null
+        }
+      }
 
       const customer = request.data
       const templateList = customer.business_template_list
@@ -256,6 +282,9 @@ class CustomerController {
         delete customer.business_list
         delete customer.business_template_list
       }
+
+      console.log('CUSTOMER_FORMATTED_CACHED')
+      global.cache.customers_formatted[customerId] = { data: customer, expire: new Date() }
 
       return res.status(200).send(customer)
     } catch (err) {
@@ -546,6 +575,8 @@ class CustomerController {
               } else if (fieldKey.data === 'customer_name') {
                 keyValue = (customer.name) ? customer.name : customer.customer_name
               }
+
+              console.log(keyColumn, keyValue)
 
               let templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, [keyColumn], [keyValue])
 

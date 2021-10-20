@@ -1,6 +1,8 @@
 const ObjectID = require("mongodb").ObjectID;
 const moment = require("moment");
 
+const { calcExpireTime } = require('../helpers/util')
+
 const BYTES_ON_MEGA = 1048576;
 const LIMIT_SIZE_DOC_BSON_MEGABYTES = 14;
 
@@ -665,12 +667,29 @@ class BusinessRepository {
     const businessList = [];
 
     const matchParams = [];
+    const matchParamsCache = []
     for (const column of keyColumnList) {
       const param = {};
+      const paramCache = {}
       param["data." + column] = { $in: [new RegExp(keyValue, "i")] };
+      paramCache["data." + column] = { $in: [keyValue] };
       matchParams.push(param);
+      matchParamsCache.push(paramCache)
     }
     try {
+      const hashPayload = JSON.stringify({ matchParamsCache, companyToken, templateId })
+      const hash = Buffer.from(hashPayload).toString('base64')
+      
+      if (global.cache.hashSearch[hash]) {
+        const queryCached = global.cache.hashSearch[hash]
+        if (queryCached && queryCached.expire && calcExpireTime(new Date(), queryCached.expire) < global.cache.default_expire) {
+          console.log('SEARCH_IN_DATA_CACHED')
+          return queryCached.data
+        } else {
+          global.cache.hashSearch[hash] = null
+        }
+      }
+
       let businessListStored = await this.db
         .collection("business")
         .aggregate([
@@ -713,6 +732,9 @@ class BusinessRepository {
           updatedAt: bData.updatedAt,
         });
       }
+
+      console.log('SEARCH_IN_DATA_STORED')
+      global.cache.hashSearch[hash] = { data: businessList, expire: new Date() }
 
       return businessList;
     } catch (err) {

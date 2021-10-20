@@ -55,4 +55,13 @@ if (process.env.NODE_ENV !== 'test') {
   })
 }
 
+global.cache = {
+  templates: {},
+  customers: {},
+  customers_formatted: {},
+  hashSearch: {},
+  business_data: {},
+  default_expire: (process.env.EXPIRE_CACHE_IN_SECONDS) ? parseInt(process.env.EXPIRE_CACHE_IN_SECONDS) : 3600
+}
+
 module.exports = app
