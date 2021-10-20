@@ -76,16 +76,21 @@ class TemplateRepository {
   async getById (id, companyToken) {
     try {
       if (global.cache.templates[id]) {
-        console.log('TEMPLATE_CACHED')
         const templateCached = global.cache.templates[id]
-        if (templateCached) return templateCached
+        if (templateCached && templateCached.expire && calcExpireTime(new Date(), templateCached.expire) < global.cache.default_expire) {
+          console.log('TEMPLATE_CACHED')
+        
+          return templateCached.data
+        } else {
+          global.cache.templates[id] = null
+        }
       }
 
       console.log('TEMPLATE_STORED')
 
       const result = await this.db.collection('business_template').findOne({ _id: new ObjectID(id), companyToken }, ['_id', 'name', 'fields', 'active', 'createdAt', 'updatedAt'])
 
-      global.cache.templates[id] = result
+      global.cache.templates[id] = { data: result, expire: new Date() }
 
       return result
     } catch (err) {

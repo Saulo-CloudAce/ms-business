@@ -9,6 +9,7 @@ const Validator = require('../lib/validator')
 const crmService = require('../services/crm-service')
 const { mongoIdIsValid } = require('../helpers/validators')
 const { normalizeArraySubfields } = require('../lib/data-transform')
+const { calcExpireTime } = require('../helpers/util')
 
 class BusinessController {
   constructor(businessService) {
@@ -790,7 +791,8 @@ class BusinessController {
     const companyToken = req.headers['token']
     const templateId = req.headers['templateid']
     const businessId = req.params.businessId
-    const cacheKey = `${templateId}:${businessId}`
+    const registerId = req.params.registerId
+    const cacheKey = `${templateId}:${businessId}:${registerId}`
 
     try {
       const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
@@ -803,15 +805,18 @@ class BusinessController {
       if (!template) return res.status(400).send({ error: 'Template não identificado' })
       
       if (global.cache.business_data[cacheKey]) {
-        console.log('BUSINESS_REGISTER_CACHED')
-        return res.status(200).send(global.cache.business_data[cacheKey])
+        const registerCached = global.cache.business_data[cacheKey]
+        if (registerCached && registerCached.expire && calcExpireTime(new Date(), registerCached.expire) < global.cache.default_expire) {
+          console.log('BUSINESS_REGISTER_CACHED')
+          return res.status(200).send(registerCached.data)
+        } else {
+          global.cache.business_data[cacheKey] = null
+        }
       }
 
-      console.log('BUSINESS_REGISTER_STORED')
-
-      const business = await newBusiness.getDataById(companyToken, req.params.businessId)
+      const business = await newBusiness.getDataById(companyToken, businessId)
       if (!business) return res.status(400).send({ error: 'Business não identificado.' })
-      const dataIndex = business.data.findIndex(d => d._id === req.params.registerId)
+      const dataIndex = business.data.findIndex(d => d._id === registerId)
 
       business.data = [business.data[dataIndex]]
 
@@ -828,7 +833,8 @@ class BusinessController {
       // respBusiness.data = businessNormalized[0].data[dataIndex]
       respBusiness.data = business.data[0]
 
-      global.cache.business_data[cacheKey] = respBusiness
+      console.log('BUSINESS_REGISTER_STORED')
+      global.cache.business_data[cacheKey] = { data: respBusiness, expire: new Date() }
 
       return res.status(200).send(respBusiness)
     } catch (err) {

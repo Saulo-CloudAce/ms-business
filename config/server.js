@@ -61,11 +61,7 @@ global.cache = {
   customers_formatted: {},
   hashSearch: {},
   business_data: {},
-  template_expire: null,
-  customers_expire: null,
-  customers_formatted_expire: null,
-  hash_search_expire: null,
-  default_expire: 60
+  default_expire: (process.env.EXPIRE_CACHE_IN_SECONDS) ? parseInt(process.env.EXPIRE_CACHE_IN_SECONDS) : 3600
 }
 
 module.exports = app
