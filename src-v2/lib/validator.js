@@ -175,8 +175,12 @@ class Validator {
         })
     })
 
-    const { invalids, valids, validsCustomer } = data
+    let { invalids, valids, validsCustomer } = data
 
+    valids = this._joinDataBatch(valids, fields)
+
+    validsCustomer = this._joinCustomerBatch(validsCustomer, fields)
+    
     return {
       invalids,
       valids,
@@ -187,9 +191,10 @@ class Validator {
   _mergeData (listLineData, columnsArray) {
     if (columnsArray.length) {
       const firstLineData = listLineData.shift()
+      console.log(firstLineData)
       listLineData.forEach(line => {
         columnsArray.forEach(col => {
-          const lineFilled = line[col.column].filter(l => Object.keys(l).filter(lk => String(l[lk]).length > 0).length > 0)
+          const lineFilled = line[col.column].filter(l => Object.keys(l).filter(lk => String(l[lk]).length > 0 && firstLineData[col.column][0][lk] !== l[lk]).length > 0)
           if (lineFilled.length) firstLineData[col.column] = firstLineData[col.column].concat(lineFilled)
         })
       })
@@ -221,6 +226,43 @@ class Validator {
     return dataIndexedByKeyColumn
   }
 
+  _mergeCustomer (listLineData, columnsArray) {
+    if (columnsArray.length) {
+      const firstLineData = listLineData.shift()
+      listLineData.forEach(line => {
+        columnsArray.forEach(col => {
+          const lineFilled = line[col.data].filter(l => Object.keys(l).filter(lk => String(l[lk]).length > 0 && firstLineData[col.data][0][lk] !== l[lk]).length > 0)
+          if (lineFilled.length) firstLineData[col.data] = firstLineData[col.data].concat(lineFilled)
+        })
+      })
+
+      return firstLineData
+    }
+    return listLineData
+  }
+
+  _joinCustomerBatch (customerBatch, rules) {
+    const fieldKey = rules.filter(r => r.key)
+    const columnKey = (fieldKey.length && Object.keys(fieldKey[0]).includes('data')) ? fieldKey[0].data : rules.find(r => r.unique).data
+    const columnsArray = rules.filter(r => isTypeArray(r))
+    let dataIndexedByKeyData = {}
+    customerBatch.forEach(data => {
+      const dataKeyValue = data[columnKey]
+      if (dataIndexedByKeyData[dataKeyValue]) {
+        dataIndexedByKeyData[dataKeyValue].push(data)
+      } else {
+        dataIndexedByKeyData[dataKeyValue] = []
+        dataIndexedByKeyData[dataKeyValue].push(data)
+      }
+    })
+    dataIndexedByKeyData = Object.keys(dataIndexedByKeyData).map(k => {
+      if (dataIndexedByKeyData[k].length > 1) return this._mergeCustomer(dataIndexedByKeyData[k], columnsArray)
+      return dataIndexedByKeyData[k][0]
+    })
+
+    return dataIndexedByKeyData
+  }
+
   async validateAndFormatFromUrlFile (filePath, fields, jumpFirstLine = false, dataSeparator = ';', listBatches = []) {
     const rulesByColumn = this._indexTemplateFieldsByColumn(fields)
 
@@ -229,16 +271,16 @@ class Validator {
     const dirFile = filePathParts[filePathParts.length - 2]
     const bucket = filePathParts[filePathParts.length - 3]
     
-    const readStream = await new Promise(async (resolve, reject) => {
+    const readStream = await new Promise((resolve, reject) => {
       const tmpFilename = `/tmp/${md5(new Date())}`
-      await storageService.downloadFile(`${dirFile}/${fileName}`, bucket, tmpFilename)
+      storageService.downloadFile(`${dirFile}/${fileName}`, bucket, tmpFilename)
         .then(() => {
           console.log('DOWNLOAD_FILE_FINISHED', filePath)
           resolve(fs.createReadStream(tmpFilename))
         })
         .catch(err => {
           console.error('S3: ', err)
-          reject()
+          reject(err)
         })
     })
 
@@ -308,7 +350,11 @@ class Validator {
         })
     })
 
-    const { invalids, valids, validsCustomer } = data
+    let { invalids, valids, validsCustomer } = data
+
+    valids = this._joinDataBatch(valids, fields)
+
+    validsCustomer = this._joinCustomerBatch(validsCustomer, fields)
 
     return {
       invalids,
