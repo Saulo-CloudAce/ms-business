@@ -208,6 +208,9 @@ class Validator {
     const fieldKey = rules.filter(r => r.key)
     const columnKey = (fieldKey.length && Object.keys(fieldKey[0]).includes('data')) ? fieldKey[0].column : rules.find(r => r.unique).column
     const columnsArray = rules.filter(r => isTypeArray(r))
+    if (columnsArray.length === 0) {
+      return dataBatch
+    }
     let dataIndexedByKeyColumn = {}
     dataBatch.forEach(data => {
       const dataKeyValue = data[columnKey]
