@@ -8,7 +8,7 @@ class Business {
     this.crmService = crmService
   }
 
-  async create (companyToken, name, file, fields, templateId, activeUntil, prefixIndexElastic, jumpFirstLine, dataSeparator) {
+  async create (companyToken, name, file, fields, templateId, activeUntil, prefixIndexElastic, jumpFirstLine, dataSeparator, createdBy = 0) {
     let listBatches = []
     if (hasFieldUnique(fields)) {
       listBatches = await this.listAllByTemplateId(companyToken, templateId)
@@ -25,7 +25,7 @@ class Business {
     // const filePath = await this.uploader.upload(file)
     const filePath = ''
     console.time('save mongodb')
-    const businessId = await this.repository.save(companyToken, name, filePath, templateId, valids.length, valids, activeUntil, jumpFirstLine, dataSeparator, false, invalids)
+    const businessId = await this.repository.save(companyToken, name, filePath, templateId, valids.length, valids, activeUntil, jumpFirstLine, dataSeparator, false, invalids, createdBy)
     console.timeEnd('save mongodb')
 
     console.time('send crm')
@@ -68,7 +68,7 @@ class Business {
     return { businessId, invalids }
   }
 
-  async createFromJson (companyToken, name, fields, templateId, data, activeUntil, prefixIndexElastic, requestBody, isBatch = true) {
+  async createFromJson (companyToken, name, fields, templateId, data, activeUntil, prefixIndexElastic, requestBody, isBatch = true, createdBy = 0) {
     let listBatches = []
     if (hasFieldUnique(fields)) {
       listBatches = await this.listAllByTemplateId(companyToken, templateId)
@@ -85,7 +85,7 @@ class Business {
 
     const filename = `${name}.json`
     const filePath = await this.uploader.uploadContent(companyToken, uploadContentRequestBody, filename)
-    const businessId = await this.repository.save(companyToken, name, filePath, templateId, valids.length, valids, activeUntil, false, '', isBatch, invalids)
+    const businessId = await this.repository.save(companyToken, name, filePath, templateId, valids.length, valids, activeUntil, false, '', isBatch, invalids, createdBy)
 
     if (hasCustomerFields(fields)) {
       const listFieldKey = fields.filter(f => f.key).map(f => f.data)
@@ -99,7 +99,7 @@ class Business {
     return { businessId, invalids, valids }
   }
 
-  async createSingleFromJson (companyToken, name, fields, templateId, data, activeUntil, prefixIndexElastic, requestBody, isBatch = true) {
+  async createSingleFromJson (companyToken, name, fields, templateId, data, activeUntil, prefixIndexElastic, requestBody, isBatch = true, createdBy = 0) {
     let listBatches = []
     let contactIdList = []
     if (hasFieldUnique(fields)) {
@@ -117,7 +117,7 @@ class Business {
 
     const filename = `${name}.json`
     const filePath = await this.uploader.uploadContent(companyToken, uploadContentRequestBody, filename)
-    const businessId = await this.repository.save(companyToken, name, filePath, templateId, valids.length, valids, activeUntil, false, '', isBatch, invalids)
+    const businessId = await this.repository.save(companyToken, name, filePath, templateId, valids.length, valids, activeUntil, false, '', isBatch, invalids, createdBy)
 
     if (hasCustomerFields(fields)) {
       const listFieldKey = fields.filter(f => f.key).map(f => f.data)
@@ -225,9 +225,9 @@ class Business {
     }
   }
 
-  async updateDataBusiness (businessId, data) {
+  async updateDataBusiness (businessId, data, updatedBy = 0) {
     try {
-      return this.repository.updateDataBusiness(businessId, data)
+      return this.repository.updateDataBusiness(businessId, data, updatedBy)
     } catch (err) {
       return err
     }

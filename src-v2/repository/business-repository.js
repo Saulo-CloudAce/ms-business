@@ -82,7 +82,8 @@ class BusinessRepository {
     jumpFirstLine = false,
     dataSeparator = "",
     isBatch = true,
-    invalids = []
+    invalids = [],
+    createdBy = 0
   ) {
     const data = {
       _id: new ObjectID(),
@@ -102,6 +103,8 @@ class BusinessRepository {
       active: true,
       createdAt: moment().format(),
       updatedAt: moment().format(),
+      createdBy,
+      updatedBy: createdBy
     };
     let batches = [data];
 
@@ -120,8 +123,9 @@ class BusinessRepository {
     }
   }
 
-  async markFlowPassed(companyToken, businessId) {
+  async markFlowPassed(companyToken, businessId, updatedBy = 0) {
     try {
+      const businessUpdated = { flow_passed: true, updatedAt: moment().format(), updatedBy }
       await this.db.collection("business").update(
         {
           $or: [
@@ -130,7 +134,7 @@ class BusinessRepository {
           ],
           companyToken,
         },
-        { $set: { flow_passed: true, updatedAt: moment().format() } },
+        { $set: businessUpdated },
         { multi: true }
       );
     } catch (err) {
@@ -138,8 +142,9 @@ class BusinessRepository {
     }
   }
 
-  async unmarkFlowPassed(companyToken, businessId) {
+  async unmarkFlowPassed(companyToken, businessId, updatedBy = 0) {
     try {
+      const businessUpdated = { flow_passed: false, updatedAt: moment().format(), updatedBy }
       await this.db.collection("business").update(
         {
           $or: [
@@ -148,7 +153,7 @@ class BusinessRepository {
           ],
           companyToken,
         },
-        { $set: { flow_passed: false, updatedAt: moment().format() } },
+        { $set: businessUpdated },
         { multi: true }
       );
     } catch (err) {
@@ -156,21 +161,23 @@ class BusinessRepository {
     }
   }
 
-  async updateDataBusiness(businessId, data) {
+  async updateDataBusiness(businessId, data, updatedBy = 0) {
     try {
+      const businessUpdated = { data, updatedAt: moment().format(), updatedBy }
       await this.db
         .collection("business")
         .update(
           { _id: new ObjectID(businessId) },
-          { $set: { data, updatedAt: moment().format() } }
+          { $set: businessUpdated }
         );
     } catch (err) {
       throw new Error(err);
     }
   }
 
-  async activate(companyToken, businessId, activeUntil) {
+  async activate(companyToken, businessId, activeUntil, updatedBy = 0) {
     try {
+      const businessUpdated = { active: true, activeUntil, updatedAt: moment().format(), updatedBy }
       await this.db.collection("business").update(
         {
           $or: [
@@ -179,7 +186,7 @@ class BusinessRepository {
           ],
           companyToken,
         },
-        { $set: { active: true, activeUntil, updatedAt: moment().format() } },
+        { $set: businessUpdated },
         { multi: true }
       );
     } catch (err) {
@@ -187,8 +194,9 @@ class BusinessRepository {
     }
   }
 
-  async deactivate(companyToken, businessId) {
+  async deactivate(companyToken, businessId, updatedBy = 0) {
     try {
+      const businessUpdated = { active: false, updatedAt: moment().format(), updatedBy }
       await this.db.collection("business").update(
         {
           $or: [
@@ -197,7 +205,7 @@ class BusinessRepository {
           ],
           companyToken,
         },
-        { $set: { active: false, updatedAt: moment().format() } },
+        { $set: businessUpdated },
         { multi: true }
       );
     } catch (err) {
@@ -224,6 +232,8 @@ class BusinessRepository {
             "active",
             "createdAt",
             "updatedAt",
+            "createdBy",
+            "updatedBy"
           ]
         )
         .toArray();
@@ -252,6 +262,8 @@ class BusinessRepository {
             "active",
             "createdAt",
             "updatedAt",
+            "createdBy",
+            "updatedBy",
             "data",
           ]
         )
@@ -281,6 +293,8 @@ class BusinessRepository {
             "active",
             "createdAt",
             "updatedAt",
+            "createdBy",
+            "updatedBy",
             "data",
           ]
         )
@@ -310,6 +324,8 @@ class BusinessRepository {
             "active",
             "createdAt",
             "updatedAt",
+            "createdBy",
+            "updatedBy",
             "quantityRows",
           ]
         )
@@ -337,6 +353,8 @@ class BusinessRepository {
             "active",
             "createdAt",
             "updatedAt",
+            "createdBy",
+            "updatedBy",
             "quantityRows",
           ]
         )
@@ -365,6 +383,8 @@ class BusinessRepository {
             "active",
             "createdAt",
             "updatedAt",
+            "createdBy",
+            "updatedBy",
             "quantityRows",
           ]
         )
@@ -410,6 +430,8 @@ class BusinessRepository {
             "active",
             "createdAt",
             "updatedAt",
+            "createdBy",
+            "updatedBy",
             "quantityRows",
           ]
         )
@@ -455,6 +477,8 @@ class BusinessRepository {
             "active",
             "createdAt",
             "updatedAt",
+            "createdBy",
+            "updatedBy",
             "quantityRows",
           ]
         )
@@ -496,6 +520,8 @@ class BusinessRepository {
           "active",
           "createdAt",
           "updatedAt",
+          "createdBy",
+          "updatedBy",
           "flow_passed",
           "activeUntil",
           "active",
@@ -521,6 +547,8 @@ class BusinessRepository {
           "active",
           "createdAt",
           "updatedAt",
+          "createdBy",
+          "updatedBy",
           "flow_passed",
           "activeUntil",
           "active",
@@ -573,6 +601,8 @@ class BusinessRepository {
           "active",
           "createdAt",
           "updatedAt",
+          "createdBy",
+          "updatedBy",
           "flow_passed",
           "activeUntil",
           "active",
@@ -615,6 +645,8 @@ class BusinessRepository {
           "active",
           "createdAt",
           "updatedAt",
+          "createdBy",
+          "updatedBy",
           "flow_passed",
           "activeUntil",
           "active",
@@ -643,6 +675,8 @@ class BusinessRepository {
           "active",
           "createdAt",
           "updatedAt",
+          "createdBy",
+          "updatedBy",
           "flow_passed",
           "activeUntil",
           "active",
@@ -824,6 +858,9 @@ class BusinessRepository {
           "activeUntil",
           "active",
           "createdAt",
+          "updatedAt",
+          "createdBy",
+          "updatedBy"
         ])
         .toArray();
 
@@ -845,6 +882,8 @@ class BusinessRepository {
           "active",
           "createdAt",
           "updatedAt",
+          "createdBy",
+          "updatedBy"
         ]);
 
       return business;

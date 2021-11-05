@@ -46,6 +46,10 @@ class BusinessController {
     const activeUntil = req.body.active_until
     const name = req.body.name
     const urlFile = req.body.file
+    let createdBy = 0
+    if (req.body.created_by && !isNaN(req.body.created_by)) {
+      createdBy = parseInt(req.body.created_by)
+    }
 
     try {
       if (!mongoIdIsValid(templateId)) return res.status(400).send({ error: 'O ID do template é inválido' })
@@ -74,7 +78,7 @@ class BusinessController {
         else dataSeparator = req.body.data_separator
       }
 
-      const { businessId, invalids } = await newBusiness.createFromUrlFile(companyToken, name, urlFile, template.fields, templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine, dataSeparator)
+      const { businessId, invalids } = await newBusiness.createFromUrlFile(companyToken, name, urlFile, template.fields, templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine, dataSeparator, createdBy)
       if (businessId === null) return res.status(400).send({ error: invalids })
 
       if (invalids.length) return res.status(400).send({ businessId, invalids })
@@ -99,6 +103,11 @@ class BusinessController {
     const companyToken = req.headers['token']
     const templateId = req.body.templateId
     const activeUntil = req.body.active_until
+
+    let createdBy = 0
+    if (req.body.created_by && !isNaN(req.body.created_by)) {
+      createdBy = parseInt(req.body.created_by)
+    }
 
     try {
       if (!mongoIdIsValid(templateId)) return res.status(400).send({ error: 'O ID do template é inválido' })
@@ -127,7 +136,7 @@ class BusinessController {
         else dataSeparator = req.body.data_separator
       }
 
-      const { businessId, invalids } = await newBusiness.create(companyToken, req.body.name, req.files.file, template.fields, templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine, dataSeparator)
+      const { businessId, invalids } = await newBusiness.create(companyToken, req.body.name, req.files.file, template.fields, templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine, dataSeparator, createdBy)
       if (businessId === null) return res.status(400).send({ error: invalids })
 
       if (invalids.length) return res.status(400).send({ businessId, invalids })
@@ -155,6 +164,11 @@ class BusinessController {
       const { name, templateId, data } = req.body
       const activeUntil = req.body.active_until
 
+      let createdBy = 0
+      if (req.body.created_by && !isNaN(req.body.created_by)) {
+        createdBy = parseInt(req.body.created_by)
+      }
+
       if (moment(activeUntil, 'YYYY-MM-DD').format('YYYY-MM-DD') !== activeUntil) return res.status(400).send({ error: 'A data active_until está com formato inválido. O formato válido é YYYY-MM-DD' })
       if (moment(activeUntil, 'YYYY-MM-DD').diff(moment().format('YYYY-MM-DD')) < 0) return res.status(400).send({ error: 'A data active_until não pode ser anterior a data de hoje, somente igual ou posterior' })
 
@@ -173,7 +187,7 @@ class BusinessController {
       const businessList = await newBusiness.getByNameAndTemplateId(companyToken, req.body.name, templateId)
       if (businessList.length) return res.status(400).send({ error: `${req.body.name} já foi cadastrado` })
 
-      const { businessId, invalids } = await newBusiness.createFromJson(companyToken, name, template.fields, templateId, data, activeUntil, company.prefix_index_elastic, req.body)
+      const { businessId, invalids } = await newBusiness.createFromJson(companyToken, name, template.fields, templateId, data, activeUntil, company.prefix_index_elastic, req.body, true, createdBy)
       if (businessId === null) return res.status(400).send({ error: invalids })
 
       if (invalids.length) return res.status(400).send({ businessId, invalids })
@@ -199,6 +213,11 @@ class BusinessController {
 
     const companyToken = req.headers['token']
 
+    let createdBy = 0
+    if (req.body.created_by && !isNaN(req.body.created_by)) {
+      createdBy = parseInt(req.body.created_by)
+    }
+
     try {
       const activeUntil = (req.body.active_until) ? req.body.active_until : moment().add(1, 'days').format('YYYY-MM-DD')
 
@@ -222,7 +241,7 @@ class BusinessController {
 
       const isBatch = false
 
-      const { businessId, invalids, contactIds, valids } = await newBusiness.createSingleFromJson(companyToken, businessName, template.fields, templateId, data, activeUntil, company.prefix_index_elastic, req.body, isBatch)
+      const { businessId, invalids, contactIds, valids } = await newBusiness.createSingleFromJson(companyToken, businessName, template.fields, templateId, data, activeUntil, company.prefix_index_elastic, req.body, isBatch, createdBy)
 
       let dataInvalids = []
       if (invalids.length) dataInvalids = invalids[0].errors
@@ -323,6 +342,8 @@ class BusinessController {
           active: b.active,
           createdAt: b.createdAt,
           updatedAt: b.updatedAt,
+          createdBy: (b.createdBy) ? b.createdBy : 0,
+          updatedBy: (b.updatedBy) ? b.updatedBy : 0,
           dataAmount: b.quantityRows,
           templateId: b.templateId
         }
@@ -353,6 +374,8 @@ class BusinessController {
           active: b.active,
           createdAt: b.createdAt,
           updatedAt: b.updatedAt,
+          createdBy: (b.createdBy) ? b.createdBy : 0,
+          updatedBy: (b.updatedBy) ? b.updatedBy : 0,
           dataAmount: b.quantityRows,
           templateId: b.templateId
         }
@@ -389,6 +412,8 @@ class BusinessController {
           active: b.active,
           createdAt: b.createdAt,
           updatedAt: b.updatedAt,
+          createdBy: (b.createdBy) ? b.createdBy : 0,
+          updatedBy: (b.updatedBy) ? b.updatedBy : 0,
           dataAmount: b.quantityRows,
           templateId: b.templateId
         }
@@ -426,6 +451,8 @@ class BusinessController {
           active: b.active,
           createdAt: b.createdAt,
           updatedAt: b.updatedAt,
+          createdBy: (b.createdBy) ? b.createdBy : 0,
+          updatedBy: (b.updatedBy) ? b.updatedBy : 0,
           dataAmount: b.quantityRows,
           templateId: b.templateId
         }
@@ -463,6 +490,8 @@ class BusinessController {
           active: b.active,
           createdAt: b.createdAt,
           updatedAt: b.updatedAt,
+          createdBy: (b.createdBy) ? b.createdBy : 0,
+          updatedBy: (b.updatedBy) ? b.updatedBy : 0,
           dataAmount: b.quantityRows,
           templateId: b.templateId
         }
@@ -481,6 +510,11 @@ class BusinessController {
     const businessId = req.params.id
     if (!mongoIdIsValid(businessId)) return res.status(500).send({ error: 'Código do lote inválido' })
 
+    let updatedBy = 0
+    if (req.body.updated_by && !isNaN(req.body.updated_by)) {
+      updatedBy = parseInt(req.body.updated_by)
+    }
+
     try {
       const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
@@ -490,7 +524,7 @@ class BusinessController {
       const business = await businessRepository.getById(companyToken, businessId)
       if (!business) return res.status(400).send({ error: 'Business não identificado' })
 
-      await businessRepository.markFlowPassed(companyToken, businessId)
+      await businessRepository.markFlowPassed(companyToken, businessId, updatedBy)
 
       return res.sendStatus(200)
     } catch (e) {
@@ -504,6 +538,11 @@ class BusinessController {
     const businessId = req.params.id
     if (!mongoIdIsValid(businessId)) return res.status(500).send({ error: 'Código do lote inválido' })
 
+    let updatedBy = 0
+    if (req.body.updated_by && !isNaN(req.body.updated_by)) {
+      updatedBy = parseInt(req.body.updated_by)
+    }
+
     try {
       const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
@@ -513,7 +552,7 @@ class BusinessController {
       const business = await businessRepository.getById(companyToken, businessId)
       if (!business) return res.status(400).send({ error: 'Business não identificado' })
 
-      await businessRepository.unmarkFlowPassed(companyToken, businessId)
+      await businessRepository.unmarkFlowPassed(companyToken, businessId, updatedBy)
 
       return res.sendStatus(200)
     } catch (e) {
@@ -533,6 +572,10 @@ class BusinessController {
 
     try {
       const activeUntil = req.body.active_until
+      let updatedBy = 0
+      if (req.body.updated_by && !isNaN(req.body.updated_by)) {
+        updatedBy = parseInt(req.body.updated_by)
+      }
       const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
@@ -544,7 +587,7 @@ class BusinessController {
       const business = await businessRepository.getById(companyToken, businessId)
       if (!business) return res.status(400).send({ error: 'Business não identificado' })
 
-      await businessRepository.activate(companyToken, businessId, activeUntil)
+      await businessRepository.activate(companyToken, businessId, activeUntil, updatedBy)
 
       return res.sendStatus(200)
     } catch (e) {
@@ -558,6 +601,11 @@ class BusinessController {
     const businessId = req.params.id
     if (!mongoIdIsValid(businessId)) return res.status(500).send({ error: 'Código do lote inválido' })
 
+    let updatedBy = 0
+    if (req.body.updated_by && !isNaN(req.body.updated_by)) {
+      updatedBy = parseInt(req.body.updated_by)
+    }
+
     try {
       const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
@@ -567,7 +615,7 @@ class BusinessController {
       const business = await businessRepository.getById(companyToken, businessId)
       if (!business) return res.status(400).send({ error: 'Business não identificado' })
 
-      await businessRepository.deactivate(companyToken, businessId)
+      await businessRepository.deactivate(companyToken, businessId, updatedBy)
 
       return res.sendStatus(200)
     } catch (e) {
@@ -711,6 +759,11 @@ class BusinessController {
 
     const dataUpdate = req.body
 
+    let updatedBy = 0
+    if (req.body.updated_by && !isNaN(req.body.updated_by)) {
+      updatedBy = parseInt(req.body.updated_by)
+    }
+
     try {
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
       const newBusiness = this._getInstanceBusiness(req.app)
@@ -773,7 +826,7 @@ class BusinessController {
 
       })
 
-      await newBusiness.updateDataBusiness(business._id, business.data)
+      await newBusiness.updateDataBusiness(business._id, business.data, updatedBy)
       const searchCustomerCRM = await crmService.getCustomerById(dataUpdate.idCrm, companyToken)
       //const searchCustomerCRM = await crmService.getByCpfCnpj(objCRM.customer_cpfcnpj, companyToken)
       if (!searchCustomerCRM.data) return res.status(500).send({ error: 'Os dados não foram atualizados corretamente.' })
