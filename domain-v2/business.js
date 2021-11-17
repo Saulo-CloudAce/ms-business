@@ -327,9 +327,9 @@ class Business {
               let keyValue = ''
               if (fieldKey.data === 'customer_cpfcnpj') {
                 keyValue = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
-              } else if (fieldKey.data === 'customer_phone' || fieldKey.data === 'customer_phone_number') {
+              } else if ((fieldKey.data === 'customer_phone' && customer.phone) || (fieldKey.data === 'customer_phone_number' && customer.customer_phone)) {
                 keyValue = (customer.phone) ? customer.phone[0].number : customer.customer_phone[0].customer_phone_number
-              } else if (fieldKey.data === 'customer_email' || fieldKey.data === 'customer_email_address') {
+              } else if ((fieldKey.data === 'customer_email' && customer.email) || (fieldKey.data === 'customer_email_address' && customer.customer_email)) {
                 keyValue = (customer.email) ? customer.email[0].email : customer.customer_email[0].customer_email
               } else if (fieldKey.data === 'customer_name') {
                 keyValue = (customer.name) ? customer.name : customer.customer_name
@@ -345,8 +345,10 @@ class Business {
 
       if (templateIdList.length && matchParams.length) {
         const customerMailings = await this.repository.listAllByTemplateListAndKeySortedReverse(companyToken, templateIdList, matchParams)
-        const lastMailing = customerMailings[0]
-        mapTemplate[lastMailing.templateId].lote_data_list.push(lastMailing)
+        if (customerMailings && customerMailings.length && customerMailings[0].templateId) {
+          const lastMailing = customerMailings[0]
+          mapTemplate[lastMailing.templateId].lote_data_list.push(lastMailing)
+        }
       }
 
       return Object.values(mapTemplate)
