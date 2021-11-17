@@ -103,6 +103,7 @@ class BusinessController {
     const companyToken = req.headers['token']
     const templateId = req.body.templateId
     const activeUntil = req.body.active_until
+    const businessName = req.body.name
 
     let createdBy = 0
     if (req.body.created_by && !isNaN(req.body.created_by)) {
@@ -125,8 +126,8 @@ class BusinessController {
       if (!template) return res.status(400).send({ error: 'Template não identificado' })
       if (!template.active) return res.status(400).send({ error: 'Este template foi desativado e não recebe mais dados.' })
 
-      const businessList = await newBusiness.getByNameAndTemplateId(companyToken, req.body.name, templateId)
-      if (businessList.length) return res.status(400).send({ error: `${req.body.name} já foi cadastrado` })
+      const businessList = await newBusiness.getByNameAndTemplateId(companyToken, businessName, templateId)
+      if (businessList.length) return res.status(400).send({ error: `${businessName} já foi cadastrado` })
 
       const jumpFirstLine = (req.body.jump_first_line) ? (req.body.jump_first_line.toLowerCase() === 'true') : false
 
@@ -262,7 +263,7 @@ class BusinessController {
     }
   }
 
-  async getPoolData(req, res) {
+  async getPoolData (req, res) {
     const fields = ['_id']
 
     const companyToken = req.headers['token']
@@ -306,13 +307,7 @@ class BusinessController {
         fields.push(...req.body.fields)
       }
 
-      const businessData = []
-
-      const businessDataList = await businessRepository.getDataByListId(companyToken, searchData, fields)
-      for (const i in businessDataList) {
-        const business = businessDataList[i]
-        businessData.push(...business.data)
-      }
+      const businessData = await businessRepository.getDataByListId(companyToken, searchData, fields)
 
       return res.status(200).send(businessData)
     } catch (err) {
@@ -387,7 +382,7 @@ class BusinessController {
     }
   }
 
-  async getAllPaginated(req, res) {
+  async getAllPaginated (req, res) {
     const companyToken = req.headers['token']
     let page = 0
     let limit = 10
@@ -426,7 +421,7 @@ class BusinessController {
     }
   }
 
-  async getAllActivatedPaginated(req, res) {
+  async getAllActivatedPaginated (req, res) {
     const companyToken = req.headers['token']
     let page = 0
     let limit = 10
@@ -465,7 +460,7 @@ class BusinessController {
     }
   }
 
-  async getAllInactivatedPaginated(req, res) {
+  async getAllInactivatedPaginated (req, res) {
     const companyToken = req.headers['token']
     let page = 0
     let limit = 10
@@ -623,7 +618,7 @@ class BusinessController {
     }
   }
 
-  async searchDataInBusiness(req, res) {
+  async searchDataInBusiness (req, res) {
     const companyToken = req.headers['token']
 
     const templateId = req.body.template_id
@@ -650,25 +645,18 @@ class BusinessController {
         searchParamsValues = searchParams.map(sp => String(sp.value))
       }
 
-      const resultList = []
-
-      // for (const indexKey in keyColumnList) {
-      // const keyColumn = keyColumnList[indexKey]
-
       const templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyColumnList, searchParamsValues[0])
 
-      resultList.push(...templateData)
-      // }
-
-      return res.status(200).send(resultList)
+      return res.status(200).send(templateData)
     } catch (e) {
       console.error(e)
-      return res.status(500).send({ error: e.message })
+      return res.status(500).send({ error: 'Ocorreu um erro ao pesquisar os clientes.' })
     }
   }
 
-  async getByIdWithData(req, res) {
+  async getByIdWithData (req, res) {
     const companyToken = req.headers['token']
+    const businessId = req.params.id
 
     try {
       const { companyRepository } = this._getInstanceRepositories(req.app)
@@ -677,7 +665,7 @@ class BusinessController {
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      const business = await newBusiness.getDataById(companyToken, req.params.id)
+      const business = await newBusiness.getDataById(companyToken, businessId)
 
       delete business.childBatchesId
 
@@ -687,7 +675,7 @@ class BusinessController {
     }
   }
 
-  async getByIdWithDataPaginated(req, res) {
+  async getByIdWithDataPaginated (req, res) {
     const companyToken = req.headers['token']
     let page = 0
     let limit = 10
@@ -708,7 +696,8 @@ class BusinessController {
 
       return res.status(200).send(business)
     } catch (e) {
-      return res.status(500).send({ error: e.message })
+      console.error(e)
+      return res.status(500).send({ error: 'Ocorreu erro ao listar os dados paginados' })
     }
   }
 
@@ -766,8 +755,7 @@ class BusinessController {
 
     try {
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
-      const newBusiness = this._getInstanceBusiness(req.app)
-
+      
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
@@ -777,35 +765,30 @@ class BusinessController {
       let fieldEditableList = template.fields.filter(f => f.editable)
       if (!Array.isArray(fieldEditableList)) fieldEditableList = []
 
+      if (fieldEditableList.length === 0) return res.status(400).send({ error: 'Este template não possui campos editáveis' })
+
       const businessList = await businessRepository.getDataByIdAndChildReference(companyToken, businessId)
       if (!businessList) return res.status(400).send({ error: 'Business não identificado.' })
 
-      let register = null
-      let objCRM = {}
+      const register = await businessRepository.getRegisterByBusinessAndId(companyToken, businessId, registerId)
+      if (!register) return res.status(404).send({ error: 'Registro não encontrado' })
+      
+      fieldEditableList.forEach(f => {
+        if (dataUpdate[f.column] && String(dataUpdate[f.column]).length > 0) {
+          if ((f.type === 'array' || f.type === 'options') && !Array.isArray(dataUpdate[f.column])) {
+            register[f.column] = [dataUpdate[f.column]]
+          } else {
+            register[f.column] = dataUpdate[f.column]
+          }
 
-      const business = businessList.find(bl => bl.data
-        .filter(bld => bld._id.toString() === String(registerId)).length > 0)
-
-      if (!business) return res.status(400).send({ error: 'Registro não encontrado.' })
-
-      business.data.forEach(d => {
-        if (d._id.toString() === String(registerId)) {
-          fieldEditableList.forEach(f => {
-            if (dataUpdate[f.column] && String(dataUpdate[f.column]).length > 0) {
-              if ((f.type === 'array' || f.type === 'options') && !Array.isArray(dataUpdate[f.column])) {
-                d[f.column] = [dataUpdate[f.column]]
-              } else {
-                d[f.column] = dataUpdate[f.column]
-              }
-            }
-          })
-          register = d
+          register.businessUpdatedAt = moment().format()
         }
       })
 
+      const objCRM = {}
       template.fields.forEach(data => {
         Object.keys(register).forEach(keysRegister => {
-          if (keysRegister == data.column)
+          if(keysRegister === data.column)
             objCRM[data.data] = JSON.parse(JSON.stringify(register[data.column]));
         })
         if (Array.isArray(data.fields)) {
@@ -813,7 +796,7 @@ class BusinessController {
             if (Array.isArray(objCRM[data.data])) {
               objCRM[data.data].forEach(dataObjCRM => {
                 Object.keys(dataObjCRM).forEach(keysDataObjCRM => {
-                  if (keysDataObjCRM == dataFields.column) {
+                  if (keysDataObjCRM === dataFields.column) {
                     dataObjCRM[dataFields.data] = dataObjCRM[dataFields.column]
                     delete dataObjCRM[dataFields.column]
                   }
@@ -828,19 +811,18 @@ class BusinessController {
 
       await newBusiness.updateDataBusiness(business._id, business.data, updatedBy)
       const searchCustomerCRM = await crmService.getCustomerById(dataUpdate.idCrm, companyToken)
-      //const searchCustomerCRM = await crmService.getByCpfCnpj(objCRM.customer_cpfcnpj, companyToken)
+      
       if (!searchCustomerCRM.data) return res.status(500).send({ error: 'Os dados não foram atualizados corretamente.' })
       await crmService.updateCustomer(searchCustomerCRM.data.id, objCRM, companyToken)
-
 
       return res.status(200).send(register)
     } catch (err) {
       console.error(err)
-      return res.status(500).send({ error: err.message })
+      return res.status(500).send({ error: 'Ocorreu erro ao atualizar o registro' })
     }
   }
 
-  async getBusinessRegisterById(req, res) {
+  async getBusinessRegisterById (req, res) {
     const companyToken = req.headers['token']
     const templateId = req.headers['templateid']
     const businessId = req.params.businessId
@@ -867,36 +849,20 @@ class BusinessController {
         }
       }
 
-      const business = await newBusiness.getDataById(companyToken, businessId)
-      if (!business) return res.status(400).send({ error: 'Business não identificado.' })
-      const dataIndex = business.data.findIndex(d => d._id === registerId)
-
-      business.data = [business.data[dataIndex]]
-
-      const respBusiness = {
-        _id: business._id,
-        name: business.name
-      }
-
-      if (dataIndex < 0) {
-        return res.status(400).send({ error: 'Registro não encontrado.' })
-      }
-
-      // const businessNormalized = normalizeArraySubfields([business], template)
-      // respBusiness.data = businessNormalized[0].data[dataIndex]
-      respBusiness.data = business.data[0]
+      const business = await newBusiness.getRegisterById(companyToken, businessId, registerId)
+      if (!business) return res.status(400).send({ error: 'Registro não encontrado.' })
 
       console.log('BUSINESS_REGISTER_STORED')
-      global.cache.business_data[cacheKey] = { data: respBusiness, expire: new Date() }
+      global.cache.business_data[cacheKey] = { data: business, expire: new Date() }
 
-      return res.status(200).send(respBusiness)
+      return res.status(200).send(business)
     } catch (err) {
       console.error(err)
       return res.status(500).send({ error: err.message })
     }
   }
 
-  async getBusinessAndRegisterIdByCpf(req, res) {
+  async getBusinessAndRegisterIdByCpf (req, res) {
     const companyToken = req.headers['token']
     const templateId = req.headers['templateid']
 
@@ -904,8 +870,7 @@ class BusinessController {
 
     try {
       const querySearch = req.query.cpfcnpj
-      const response = []
-
+      
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
@@ -918,20 +883,9 @@ class BusinessController {
 
       const keyCPFCNPJ = fieldCPFCNPJ.column
 
-      const templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, [keyCPFCNPJ], querySearch)
+      const response = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, [keyCPFCNPJ], querySearch)
 
-      for (const i in templateData) {
-        const data = templateData[i]
-        const occurrency = {
-          _id: data._id,
-          name: data.name,
-          createdAt: data.createdAt,
-          data: data.data
-        }
-        response.push(occurrency)
-      }
-
-      if (response.length === 0) return res.status(404).send([])
+      if (!response || response.length === 0) return res.status(404).send([])
 
       return res.status(200).send(response)
     } catch (err) {

@@ -16,6 +16,7 @@ const { calcExpireTime } = require('../helpers/util')
 const CompanyRepository = require('../repository/company-repository')
 const TemplateRepository = require('../repository/template-repository')
 const BusinessRepository = require('../repository/business-repository')
+const Business = require('../../domain-v2/business')
 
 class CustomerController {
   _getInstanceRepositories (app) {
@@ -81,6 +82,8 @@ class CustomerController {
     try {
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
+      const businessDomain = new Business(businessRepository)
+
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
@@ -99,42 +102,11 @@ class CustomerController {
       }
 
       const customer = request.data
-      const templateList = customer.business_template_list
-      let templates = []
-      if (templateList && templateList.length > 0) {
-        templates = await Promise.all(templateList.map(async templateId => {
-          const template = await templateRepository.getById(templateId, companyToken)
-          if (template) {
-            const templateFinal = { _id: template._id, name: template.name }
-            const fieldKey = template.fields.find(f => f.key)
-            if (fieldKey) {
-              const keyColumn = fieldKey.column
-
-              let keyValue = ''
-              if (fieldKey.data === 'customer_cpfcnpj') {
-                keyValue = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
-              } else if (fieldKey.data === 'customer_phone' || fieldKey.data === 'customer_phone_number') {
-                keyValue = (customer.phone) ? customer.phone[0].number : customer.customer_phome[0].number
-              } else if (fieldKey.data === 'customer_email' || fieldKey.data === 'customer_email_address') {
-                keyValue = (customer.email) ? customer.email[0].email : customer.customer_email[0].email
-              } else if (fieldKey.data === 'customer_name') {
-                keyValue = (customer.name) ? customer.name : customer.customer_name
-              }
-
-              let templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, [keyColumn], keyValue)
-
-              if (templateData.length) {
-                templateData = normalizeArraySubfields(templateData, template)
-                templateFinal.lote_data_list = templateData
-                return templateFinal
-              }
-            }
-          }
-        }))
-      }
-
+      
       if (customer) {
-        customer.schema_list = templates.filter(t => t)
+        const mailings = await businessDomain.listMailingByTemplateListAndKeySortedReverse(companyToken, customer, templateRepository)
+
+        customer.schema_list = mailings
         delete customer.business_list
         delete customer.business_template_list
       }
@@ -145,7 +117,7 @@ class CustomerController {
       return res.status(200).send(customer)
     } catch (err) {
       console.error(err)
-      return res.status(500).send({ error: err.message })
+      return res.status(500).send({ error: 'Ocorreu erro ao buscar o cliente' })
     }
   }
 
@@ -158,6 +130,8 @@ class CustomerController {
 
     try {
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
+
+      const businessDomain = new Business(businessRepository)
 
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
@@ -175,38 +149,13 @@ class CustomerController {
       if (!hasTemplate) {
         return res.status(404).send({ error: 'Este customer não está vinculado a um mailing do template informado.' })
       }
+
+      // Fixa o ID do template procurado, já que este cliente tem vínculo com este template
+      customer.business_template_list = [templateId]
       
-      let templateFinal = {}
-      const template = await templateRepository.getById(templateId, companyToken)
-      if (template) {
-        templateFinal = { _id: template._id, name: template.name }
-        const fieldKey = template.fields.find(f => f.key)
-        if (fieldKey) {
-          const keyColumn = fieldKey.column
-
-          let keyValue = ''
-          if (fieldKey.data === 'customer_cpfcnpj') {
-            keyValue = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
-          } else if (fieldKey.data === 'customer_phone' || fieldKey.data === 'customer_phone_number') {
-            keyValue = (customer.phone) ? customer.phone[0].number : customer.customer_phome[0].number
-          } else if (fieldKey.data === 'customer_email' || fieldKey.data === 'customer_email_address') {
-            keyValue = (customer.email) ? customer.email[0].email : customer.customer_email[0].email
-          } else if (fieldKey.data === 'customer_name') {
-            keyValue = (customer.name) ? customer.name : customer.customer_name
-          }
-
-          let templateData = await businessRepository.getLastByTemplateAndKeySortedReverse(companyToken, templateId, [keyColumn], keyValue)
-
-          if (templateData.length) {
-            templateData = normalizeArraySubfields(templateData, template)
-            templateFinal.lote_data_list = templateData
-          }
-        }
-      }
-      
-
       if (customer) {
-        customer.schema_list = [templateFinal]
+        const mailings = await businessDomain.getLastMailingByTemplateListAndKeySortedReverse(companyToken, customer, templateRepository)
+        customer.schema_list = mailings
         delete customer.business_list
         delete customer.business_template_list
       }
@@ -214,7 +163,7 @@ class CustomerController {
       return res.status(200).send(customer)
     } catch (err) {
       console.error(err)
-      return res.status(500).send({ error: err.message })
+      return res.status(500).send({ error: 'Erro ao buscar o ' })
     }
   }
 
@@ -224,6 +173,8 @@ class CustomerController {
 
     try {
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
+
+      const businessDomain = new Business(businessRepository)
 
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
@@ -243,42 +194,10 @@ class CustomerController {
       }
 
       const customer = request.data
-      const templateList = customer.business_template_list
-      let templates = []
-      if (templateList && templateList.length > 0) {
-        templates = await Promise.all(templateList.map(async templateId => {
-          const template = await templateRepository.getById(templateId, companyToken)
-          if (template) {
-            const templateFinal = { _id: template._id, name: template.name }
-            const fieldKey = template.fields.find(f => f.key)
-            if (fieldKey) {
-              const keyColumn = fieldKey.column
-
-              let keyValue = ''
-              if (fieldKey.data === 'customer_cpfcnpj') {
-                keyValue = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
-              } else if (fieldKey.data === 'customer_phone' || fieldKey.data === 'customer_phone_number') {
-                keyValue = (customer.phone) ? customer.phone[0].number : customer.customer_phone[0].customer_phone_number
-              } else if (fieldKey.data === 'customer_email' || fieldKey.data === 'customer_email_address') {
-                keyValue = (customer.email) ? customer.email[0].email : customer.customer_email[0].customer_email
-              } else if (fieldKey.data === 'customer_name') {
-                keyValue = (customer.name) ? customer.name : customer.customer_name
-              }
-
-              let templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, [keyColumn], keyValue)
-
-              if (templateData.length) {
-                templateData = normalizeArraySubfields(templateData, template)
-                templateFinal.lote_data_list = templateData
-                return templateFinal
-              }
-            }
-          }
-        }))
-      }
-
       if (customer) {
-        customer.schema_list = templates.filter(t => t)
+        const mailings = await businessDomain.listMailingByTemplateListAndKeySortedReverse(companyToken, customer, templateRepository)
+
+        customer.schema_list = mailings
         delete customer.business_list
         delete customer.business_template_list
       }
@@ -288,8 +207,8 @@ class CustomerController {
 
       return res.status(200).send(customer)
     } catch (err) {
-      console.log(err)
-      return res.status(500).send({ error: err.message })
+      console.error(err)
+      return res.status(500).send({ error: 'Ocorreu erro ao buscar o cliente.' })
     }
   }
 
@@ -297,11 +216,14 @@ class CustomerController {
     const companyToken = req.headers['token']
     const customerId = req.params.id
     const templateId = req.params.templateId
+    
     if (!customerId) return res.status(400).send({ error: 'Informe o ID do customer.' })
     if (!templateId) return res.status(400).send({ error: 'Informe o ID do template.' })
 
     try {
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
+
+      const businessDomain = new Business(businessRepository)
 
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
@@ -319,38 +241,42 @@ class CustomerController {
       if (!hasTemplate) {
         return res.status(404).send({ error: 'Este customer não está vinculado a um mailing do template informado.' })
       }
+
+      customer.business_template_list = [templateId]
       
-      let templateFinal = {}
-      const template = await templateRepository.getById(templateId, companyToken)
-      if (template) {
-        templateFinal = { _id: template._id, name: template.name }
-        const fieldKey = template.fields.find(f => f.key)
-        if (fieldKey) {
-          const keyColumn = fieldKey.column
+      // let templateFinal = {}
+      // const template = await templateRepository.getById(templateId, companyToken)
+      // if (template) {
+      //   templateFinal = { _id: template._id, name: template.name }
+      //   const fieldKey = template.fields.find(f => f.key)
+      //   if (fieldKey) {
+      //     const keyColumn = fieldKey.column
 
-          let keyValue = ''
-          if (fieldKey.data === 'customer_cpfcnpj') {
-            keyValue = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
-          } else if (fieldKey.data === 'customer_phone' || fieldKey.data === 'customer_phone_number') {
-            keyValue = (customer.phone) ? customer.phone[0].number : customer.customer_phome[0].number
-          } else if (fieldKey.data === 'customer_email' || fieldKey.data === 'customer_email_address') {
-            keyValue = (customer.email) ? customer.email[0].email : customer.customer_email[0].email
-          } else if (fieldKey.data === 'customer_name') {
-            keyValue = (customer.name) ? customer.name : customer.customer_name
-          }
+      //     let keyValue = ''
+      //     if (fieldKey.data === 'customer_cpfcnpj') {
+      //       keyValue = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
+      //     } else if (fieldKey.data === 'customer_phone' || fieldKey.data === 'customer_phone_number') {
+      //       keyValue = (customer.phone) ? customer.phone[0].number : customer.customer_phome[0].number
+      //     } else if (fieldKey.data === 'customer_email' || fieldKey.data === 'customer_email_address') {
+      //       keyValue = (customer.email) ? customer.email[0].email : customer.customer_email[0].email
+      //     } else if (fieldKey.data === 'customer_name') {
+      //       keyValue = (customer.name) ? customer.name : customer.customer_name
+      //     }
 
-          let templateData = await businessRepository.getLastByTemplateAndKeySortedReverse(companyToken, templateId, [keyColumn], keyValue)
+      //     let templateData = await businessRepository.getLastByTemplateAndKeySortedReverse(companyToken, templateId, [keyColumn], keyValue)
 
-          if (templateData.length) {
-            templateData = normalizeArraySubfields(templateData, template)
-            templateFinal.lote_data_list = templateData
-          }
-        }
-      }
+      //     if (templateData.length) {
+      //       templateData = normalizeArraySubfields(templateData, template)
+      //       templateFinal.lote_data_list = templateData
+      //     }
+      //   }
+      // }
       
 
       if (customer) {
-        customer.schema_list = [templateFinal]
+        const mailings = await businessDomain.getLastMailingByTemplateListAndKeySortedReverse(companyToken, customer, templateRepository)
+
+        customer.schema_list = mailings
         delete customer.business_list
         delete customer.business_template_list
       }
@@ -358,7 +284,7 @@ class CustomerController {
       return res.status(200).send(customer)
     } catch (err) {
       console.error(err)
-      return res.status(500).send({ error: err.message })
+      return res.status(500).send({ error: 'Ocorreu erro ao buscar o cliente' })
     }
   }
 
@@ -456,6 +382,7 @@ class CustomerController {
               if (cpfcnpj) {
                 templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, [keyCpfCnpj], cpfcnpj)
               } else {
+                console.log('aaa')
                 data = await businessRepository.listAllAndChildsByTemplateSortedReverse(companyToken, templateId)
 
                 data = data.filter(d => d.data)
@@ -524,9 +451,12 @@ class CustomerController {
   async search (req, res) {
     const companyToken = req.headers['token']
     const queryTemplateId = req.headers['templateid']
+    const templateCache = {}
 
     try {
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
+
+      const businessDomain = new Business(businessRepository)
 
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
@@ -546,48 +476,8 @@ class CustomerController {
       let customerResultList = []
 
       console.time('searchMongo')
-      for (const i in customers) {
-        const customer = customers[i]
-        let templateList = customer.business_template_list
-        if (queryTemplateId && String(queryTemplateId).length > 0) {
-          templateList = [queryTemplateId]
-        }
-
-        const templates = []
-
-        for (const iTemplate in templateList) {
-          const templateId = templateList[iTemplate]
-
-          const template = await templateRepository.getById(templateId, companyToken)
-          if (template) {
-            const templateFinal = { _id: template._id, name: template.name }
-            const fieldKey = template.fields.find(f => f.key)
-            if (fieldKey) {
-              const keyColumn = fieldKey.column
-
-              let keyValue = ''
-              if (fieldKey.data === 'customer_cpfcnpj') {
-                keyValue = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
-              } else if (fieldKey.data === 'customer_phone' || fieldKey.data === 'customer_phone_number') {
-                keyValue = (customer.phone) ? customer.phone[0].number : customer.customer_phome[0].number
-              } else if (fieldKey.data === 'customer_email' || fieldKey.data === 'customer_email_address') {
-                keyValue = (customer.email) ? customer.email[0].email : customer.customer_email[0].email
-              } else if (fieldKey.data === 'customer_name') {
-                keyValue = (customer.name) ? customer.name : customer.customer_name
-              }
-
-              console.log(keyColumn, keyValue)
-
-              let templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, [keyColumn], [keyValue])
-
-              if (templateData.length) {
-                templateData = normalizeArraySubfields(templateData, template)
-                templateFinal.lote_data_list = templateData
-                templates.push(templateFinal)
-              }
-            }
-          }
-        }
+      for (const customer of customers) {
+        const mailings = await businessDomain.listMailingByTemplateListAndKeySortedReverse(companyToken, customer, templateRepository)
 
         const customerResult = {
           id: customer.id,
@@ -595,7 +485,7 @@ class CustomerController {
           customer_cpfcnpj: customer.customer_cpfcnpj,
           customer_phome: customer.customer_phome,
           customer_email: customer.customer_email,
-          schema_list: templates
+          schema_list: mailings
         }
 
         customerResultList.push(customerResult)
@@ -623,6 +513,8 @@ class CustomerController {
     try {
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
+      const businessDomain = new Business(businessRepository)
+
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
@@ -641,46 +533,8 @@ class CustomerController {
 
       let customerResultList = []
 
-      for (const i in customers) {
-        const customer = customers[i]
-        let templateList = customer.business_template_list
-        if (queryTemplateId && String(queryTemplateId).length > 0) {
-          templateList = [queryTemplateId]
-        }
-
-        const templates = []
-
-        for (const iTemplate in templateList) {
-          const templateId = templateList[iTemplate]
-
-          const template = await templateRepository.getById(templateId, companyToken)
-          if (template) {
-            const templateFinal = { _id: template._id, name: template.name }
-            const fieldKey = template.fields.find(f => f.key)
-            if (fieldKey) {
-              const keyColumn = fieldKey.column
-
-              let keyValue = ''
-              if (fieldKey.data === 'customer_cpfcnpj') {
-                keyValue = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
-              } else if (fieldKey.data === 'customer_phone' || fieldKey.data === 'customer_phone_number') {
-                keyValue = (customer.phone) ? customer.phone[0].number : customer.customer_phome[0].number
-              } else if (fieldKey.data === 'customer_email' || fieldKey.data === 'customer_email_address') {
-                keyValue = (customer.email) ? customer.email[0].email : customer.customer_email[0].email
-              } else if (fieldKey.data === 'customer_name') {
-                keyValue = (customer.name) ? customer.name : customer.customer_name
-              }
-
-              let templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, [keyColumn], [keyValue])
-
-              if (templateData.length) {
-                templateData = normalizeArraySubfields(templateData, template)
-                templateFinal.lote_data_list = templateData
-                templates.push(templateFinal)
-              }
-            }
-          }
-        }
+      for (const customer of customers) {
+        const mailings = await businessDomain.listMailingByTemplateListAndKeySortedReverse(companyToken, customer, templateRepository)
 
         const customerResult = {
           id: customer.id,
@@ -688,7 +542,7 @@ class CustomerController {
           cpfcnpj: customer.cpfcnpj,
           phone: customer.phone,
           email: customer.email,
-          schema_list: templates
+          schema_list: mailings
         }
 
         customerResultList.push(customerResult)
