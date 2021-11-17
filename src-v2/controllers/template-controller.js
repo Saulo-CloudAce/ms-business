@@ -32,11 +32,16 @@ class TemplateController {
 
     const companyToken = req.headers["token"];
 
+    let createdBy = 0
+
     try {
       const { companyRepository, templateRepository } =
         this._getInstanceRepositories(req.app);
 
       const { name, fields } = req.body;
+      if (req.body.created_by && !isNaN(req.body.created_by)) {
+        createdBy = parseInt(req.body.created_by)
+      }
 
       const company = await companyRepository.getByToken(companyToken);
       if (!company) {
@@ -70,7 +75,8 @@ class TemplateController {
         name,
         fieldsValidated.fields,
         companyToken,
-        true
+        true,
+        createdBy
       );
 
       return res.status(201).send(template);
@@ -84,6 +90,12 @@ class TemplateController {
     const companyToken = req.headers["token"];
     const templateId = req.params.id;
 
+    let updatedBy = 0
+
+    if (req.body.updated_by && !isNaN(req.body.updated_by)) {
+      updatedBy = req.body.updated_by
+    }
+
     try {
       const { companyRepository, templateRepository } =
         this._getInstanceRepositories(req.app);
@@ -105,7 +117,7 @@ class TemplateController {
         return res.status(400).send({ error: "Template não identificado" });
       }
 
-      await templateRepository.updateActive(templateId, true);
+      await templateRepository.updateActive(templateId, true, updatedBy);
 
       return res.status(200).send(template);
     } catch (err) {
@@ -118,6 +130,12 @@ class TemplateController {
     const companyToken = req.headers["token"];
     const templateId = req.params.id;
 
+    let updatedBy = 0
+
+    if (req.body.updated_by && !isNaN(req.body.updated_by)) {
+      updatedBy = req.body.updated_by
+    }
+
     try {
       const { companyRepository, templateRepository } =
         this._getInstanceRepositories(req.app);
@@ -139,7 +157,7 @@ class TemplateController {
         return res.status(400).send({ error: "Template não identificado" });
       }
 
-      await templateRepository.updateActive(templateId, false);
+      await templateRepository.updateActive(templateId, false, updatedBy);
 
       return res.status(200).send(template);
     } catch (err) {
@@ -333,6 +351,11 @@ class TemplateController {
 
     try {
       const { name, fields } = req.body;
+      let updatedBy = 0
+
+      if (req.body.updated_by && !isNaN(req.body.updated_by)) {
+        updatedBy = req.body.updated_by
+      }
       const { companyRepository, templateRepository } =
         this._getInstanceRepositories(req.app);
 
@@ -402,7 +425,8 @@ class TemplateController {
       const template = await templateRepository.update(
         templateId,
         companyToken,
-        templateSaved
+        templateSaved,
+        updatedBy
       );
 
       return res.status(200).send(template);

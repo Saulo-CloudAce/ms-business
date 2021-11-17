@@ -1,6 +1,8 @@
 const ObjectID = require("mongodb").ObjectID;
 const moment = require("moment");
 
+const { calcExpireTime } = require('../helpers/util')
+
 const BYTES_ON_MEGA = 1048576;
 const LIMIT_SIZE_DOC_BSON_MEGABYTES = 14;
 
@@ -20,7 +22,8 @@ class BusinessRepository {
     jumpFirstLine = false,
     dataSeparator = "",
     isBatch = true,
-    invalids = []
+    invalids = [],
+    createdBy = 0
   ) {
     const business = {
       _id: new ObjectID(),
@@ -39,6 +42,8 @@ class BusinessRepository {
       active: true,
       createdAt: moment().format(),
       updatedAt: moment().format(),
+      createdBy,
+      updatedBy: createdBy
     };
     const batches = [business];
 
@@ -65,8 +70,9 @@ class BusinessRepository {
     }
   }
 
-  async markFlowPassed(companyToken, businessId) {
+  async markFlowPassed(companyToken, businessId, updatedBy = 0) {
     try {
+      const businessUpdated = { flow_passed: true, updatedAt: moment().format(), updatedBy }
       await this.db.collection("business").update(
         {
           $or: [
@@ -75,7 +81,7 @@ class BusinessRepository {
           ],
           companyToken,
         },
-        { $set: { flow_passed: true, updatedAt: moment().format() } },
+        { $set: businessUpdated },
         { multi: true }
       );
     } catch (err) {
@@ -83,8 +89,9 @@ class BusinessRepository {
     }
   }
 
-  async unmarkFlowPassed(companyToken, businessId) {
+  async unmarkFlowPassed(companyToken, businessId, updatedBy = 0) {
     try {
+      const businessUpdated = { flow_passed: false, updatedAt: moment().format(), updatedBy }
       await this.db.collection("business").update(
         {
           $or: [
@@ -93,7 +100,7 @@ class BusinessRepository {
           ],
           companyToken,
         },
-        { $set: { flow_passed: false, updatedAt: moment().format() } },
+        { $set: businessUpdated },
         { multi: true }
       );
     } catch (err) {
@@ -114,21 +121,23 @@ class BusinessRepository {
     }
   }
 
-  async updateDataBusiness(businessId, data) {
+  async updateDataBusiness(businessId, data, updatedBy = 0) {
     try {
+      const businessUpdated = { data, updatedAt: moment().format(), updatedBy }
       await this.db
         .collection("business")
         .update(
           { _id: new ObjectID(businessId) },
-          { $set: { data, updatedAt: moment().format() } }
+          { $set: businessUpdated }
         );
     } catch (err) {
       throw new Error(err);
     }
   }
 
-  async activate(companyToken, businessId, activeUntil) {
+  async activate(companyToken, businessId, activeUntil, updatedBy = 0) {
     try {
+      const businessUpdated = { active: true, activeUntil, updatedAt: moment().format(), updatedBy }
       await this.db.collection("business").update(
         {
           $or: [
@@ -137,7 +146,7 @@ class BusinessRepository {
           ],
           companyToken,
         },
-        { $set: { active: true, activeUntil, updatedAt: moment().format() } },
+        { $set: businessUpdated },
         { multi: true }
       );
     } catch (err) {
@@ -145,8 +154,9 @@ class BusinessRepository {
     }
   }
 
-  async deactivate(companyToken, businessId) {
+  async deactivate(companyToken, businessId, updatedBy = 0) {
     try {
+      const businessUpdated = { active: false, updatedAt: moment().format(), updatedBy }
       await this.db.collection("business").update(
         {
           $or: [
@@ -155,7 +165,7 @@ class BusinessRepository {
           ],
           companyToken,
         },
-        { $set: { active: false, updatedAt: moment().format() } },
+        { $set: businessUpdated },
         { multi: true }
       );
     } catch (err) {
@@ -182,6 +192,8 @@ class BusinessRepository {
             "active",
             "createdAt",
             "updatedAt",
+            "createdBy",
+            "updatedBy"
           ]
         )
         .toArray();
@@ -210,6 +222,8 @@ class BusinessRepository {
             "active",
             "createdAt",
             "updatedAt",
+            "createdBy",
+            "updatedBy",
             "data",
           ]
         )
@@ -239,6 +253,8 @@ class BusinessRepository {
             "active",
             "createdAt",
             "updatedAt",
+            "createdBy",
+            "updatedBy",
             "data",
           ]
         )
@@ -268,6 +284,8 @@ class BusinessRepository {
             "active",
             "createdAt",
             "updatedAt",
+            "createdBy",
+            "updatedBy",
             "quantityRows",
           ]
         )
@@ -295,6 +313,8 @@ class BusinessRepository {
             "active",
             "createdAt",
             "updatedAt",
+            "createdBy",
+            "updatedBy",
             "quantityRows",
           ]
         )
@@ -323,6 +343,8 @@ class BusinessRepository {
             "active",
             "createdAt",
             "updatedAt",
+            "createdBy",
+            "updatedBy",
             "quantityRows",
           ]
         )
@@ -370,6 +392,8 @@ class BusinessRepository {
             "active",
             "createdAt",
             "updatedAt",
+            "createdBy",
+            "updatedBy",
             "quantityRows",
           ]
         )
@@ -415,6 +439,8 @@ class BusinessRepository {
             "active",
             "createdAt",
             "updatedAt",
+            "createdBy",
+            "updatedBy",
             "quantityRows",
           ]
         )
@@ -456,6 +482,8 @@ class BusinessRepository {
           "active",
           "createdAt",
           "updatedAt",
+          "createdBy",
+          "updatedBy",
           "flow_passed",
           "activeUntil",
           "active",
@@ -481,6 +509,8 @@ class BusinessRepository {
           "active",
           "createdAt",
           "updatedAt",
+          "createdBy",
+          "updatedBy",
           "flow_passed",
           "activeUntil",
           "active",
@@ -533,6 +563,8 @@ class BusinessRepository {
           "active",
           "createdAt",
           "updatedAt",
+          "createdBy",
+          "updatedBy",
           "flow_passed",
           "activeUntil",
           "active",
@@ -575,6 +607,8 @@ class BusinessRepository {
           "active",
           "createdAt",
           "updatedAt",
+          "createdBy",
+          "updatedBy",
           "flow_passed",
           "activeUntil",
           "active",
@@ -603,6 +637,8 @@ class BusinessRepository {
           "active",
           "createdAt",
           "updatedAt",
+          "createdBy",
+          "updatedBy",
           "flow_passed",
           "activeUntil",
           "active",
@@ -625,15 +661,32 @@ class BusinessRepository {
     keyValue = ''
   ) {
     const matchParams = []
+    const matchParamsCache = []
     for (const column of keyColumnList) {
       const param = {}
+      const paramCache = {}
       param[column] = new RegExp(keyValue, 'i')
+      paramCache[paramCache] = keyValue
       matchParams.push(param)
+      matchParamsCache.push(paramCache)
     }
-    console.log(matchParams, templateId)
+    
     try {
-      const businessDataList = await this.db
-        .collection('business_data')
+      const hashPayload = JSON.stringify({ matchParamsCache, companyToken, templateId })
+      const hash = Buffer.from(hashPayload).toString('base64')
+      
+      if (global.cache.hashSearch[hash]) {
+        const queryCached = global.cache.hashSearch[hash]
+        if (queryCached && queryCached.expire && calcExpireTime(new Date(), queryCached.expire) < global.cache.default_expire) {
+          console.log('SEARCH_IN_DATA_CACHED')
+          return queryCached.data
+        } else {
+          global.cache.hashSearch[hash] = null
+        }
+      }
+
+      let businessDataList = await this.db
+        .collection("business_data")
         .aggregate([
           {
             $match: {
@@ -694,7 +747,10 @@ class BusinessRepository {
         businessList[ind].data = businessDataMap[bus._id].data
       })
 
-      return businessList
+      console.log('SEARCH_IN_DATA_STORED')
+      global.cache.hashSearch[hash] = { data: businessList, expire: new Date() }
+
+      return businessList;
     } catch (err) {
       console.error(err)
       throw new Error(err)
@@ -872,6 +928,9 @@ class BusinessRepository {
           "activeUntil",
           "active",
           "createdAt",
+          "updatedAt",
+          "createdBy",
+          "updatedBy"
         ])
         .toArray();
 
@@ -893,6 +952,8 @@ class BusinessRepository {
           "active",
           "createdAt",
           "updatedAt",
+          "createdBy",
+          "updatedBy"
         ]);
 
       return business;

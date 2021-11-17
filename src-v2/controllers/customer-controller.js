@@ -12,6 +12,7 @@ const {
   getListCustomersByCpfCnpj } = require('../services/crm-service')
 const { clearCPFCNPJ } = require('../helpers/formatters')
 const { normalizeArraySubfields } = require('../lib/data-transform')
+const { calcExpireTime } = require('../helpers/util')
 const CompanyRepository = require('../repository/company-repository')
 const TemplateRepository = require('../repository/template-repository')
 const BusinessRepository = require('../repository/business-repository')
@@ -76,6 +77,7 @@ class CustomerController {
 
   async getById (req, res) {
     const companyToken = req.headers['token']
+    const customerId = req.params.id
 
     try {
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
@@ -89,6 +91,16 @@ class CustomerController {
 
       if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
 
+      if (global.cache.customers[customerId]) {
+        const customerCached = global.cache.customers[customerId]
+        if (customerCached && customerCached.expire && calcExpireTime(new Date(), customerCached.expire) < global.cache.default_expire) {
+          console.log('CUSTOMER_CACHED')
+          return res.status(200).send(customerCached.data)
+        } else {
+          global.cache.customers[customerId] = null
+        }
+      }
+
       const customer = request.data
       
       if (customer) {
@@ -98,6 +110,9 @@ class CustomerController {
         delete customer.business_list
         delete customer.business_template_list
       }
+
+      console.log('CUSTOMER_STORED')
+      global.cache.customers[customerId] = { data: customer, expire: new Date() }
 
       return res.status(200).send(customer)
     } catch (err) {
@@ -154,6 +169,7 @@ class CustomerController {
 
   async getByIdFormatted (req, res) {
     const companyToken = req.headers['token']
+    const customerId = req.params.id
 
     try {
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
@@ -167,6 +183,16 @@ class CustomerController {
 
       if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
 
+      if (global.cache.customers_formatted[customerId]) {
+        const customerCached = global.cache.customers_formatted[customerId]
+        if (customerCached && customerCached.expire && calcExpireTime(new Date(), customerCached.expire) < global.cache.default_expire) {
+          console.log('CUSTOMER_FORMATTED_CACHED')
+          return res.status(200).send(customerCached.data)
+        } else {
+          global.cache.customers_formatted[customerId] = null
+        }
+      }
+
       const customer = request.data
       if (customer) {
         const mailings = await businessDomain.listMailingByTemplateListAndKeySortedReverse(companyToken, customer, templateRepository)
@@ -175,6 +201,9 @@ class CustomerController {
         delete customer.business_list
         delete customer.business_template_list
       }
+
+      console.log('CUSTOMER_FORMATTED_CACHED')
+      global.cache.customers_formatted[customerId] = { data: customer, expire: new Date() }
 
       return res.status(200).send(customer)
     } catch (err) {
@@ -434,7 +463,7 @@ class CustomerController {
 
       const search = req.query.search
       console.time('searchCustomer')
-      const request = await searchCustomer(search, companyToken, company.prefix_index_elastic)
+      const request = await searchCustomer(search, companyToken, company.prefix_index_elastic, queryTemplateId)
       console.timeEnd('searchCustomer')
       
       if (request.response && request.response.status && request.response.status !== 200) return res.status(request.response.status).send(request.response.data)
@@ -491,7 +520,7 @@ class CustomerController {
 
       const search = req.query.search
       console.time('search customer on CRM')
-      const request = await searchCustomerFormatted(search, companyToken, company.prefix_index_elastic, page, limit)
+      const request = await searchCustomerFormatted(search, companyToken, company.prefix_index_elastic, queryTemplateId, page, limit)
       console.timeEnd('search customer on CRM')
       
       if (request.response && request.response.status && request.response.status !== 200) return res.status(request.response.status).send(request.response.data)
