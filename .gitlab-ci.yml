@@ -1,9 +1,24 @@
 stages:
+  - test
   - homol
   - check_homol
   - release
   - prod
   - check_prod
+
+integration:
+  stage: test
+  image: node:10.16.0
+  services:
+    - mongo:latest
+  script:
+   - mv .env.test .env
+   - CI=true npm install
+   - CI=true npm run clear_test
+   - CI=true npm run test
+  only:
+   - feat_add_test_stage
+
 
 deploy_homol:
   stage: homol
