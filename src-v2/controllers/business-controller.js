@@ -755,6 +755,7 @@ class BusinessController {
 
     try {
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
+      const newBusiness = this._getInstanceBusiness(req.app)
       
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
@@ -809,7 +810,7 @@ class BusinessController {
 
       })
 
-      await newBusiness.updateDataBusiness(business._id, business.data, updatedBy)
+      await newBusiness.updateDataBusiness(businessId, register, updatedBy)
       const searchCustomerCRM = await crmService.getCustomerById(dataUpdate.idCrm, companyToken)
       
       if (!searchCustomerCRM.data) return res.status(500).send({ error: 'Os dados não foram atualizados corretamente.' })

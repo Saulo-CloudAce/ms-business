@@ -233,9 +233,10 @@ class Business {
     }
   }
 
-  async updateDataBusiness (businessId, data, updatedBy = 0) {
+  async updateDataBusiness (businessId, register, updatedBy = 0) {
     try {
-      return this.repository.updateDataBusiness(businessId, data, updatedBy)
+      await this.repository.updateRegisterBusiness(register._id, register)
+      return this.repository.updateDataBusiness(businessId, updatedBy)
     } catch (err) {
       return err
     }

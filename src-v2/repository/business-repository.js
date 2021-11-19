@@ -121,9 +121,9 @@ class BusinessRepository {
     }
   }
 
-  async updateDataBusiness(businessId, data, updatedBy = 0) {
+  async updateDataBusiness(businessId, updatedBy = 0) {
     try {
-      const businessUpdated = { data, updatedAt: moment().format(), updatedBy }
+      const businessUpdated = { updatedAt: moment().format(), updatedBy }
       await this.db
         .collection("business")
         .update(
