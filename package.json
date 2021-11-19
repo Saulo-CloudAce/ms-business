@@ -3,20 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "jest": {
-    "testPathIgnorePatterns": [
-      "__tests__/utils"
-    ],
-    "collectCoverage": true,
-    "coverageReporters": [
-      "html"
-    ],
-    "testSequencer": "./__tests__/utils/custom-sequencer.js"
-  },
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon --max-old-space-size=4096 index.js",
-    "test": "cross-env NODE_ENV=test ./node_modules/.bin/run.env jest --testTimeout=10000 --detectOpenHandles --runInBand"
+    "test": "cross-env NODE_ENV=test ./node_modules/.bin/run.env jest --detectOpenHandles --forceExit",
+    "clear_test": "jest --clearCache"
   },
   "author": "Silas Silva <silas.ti2010@gmail.com>",
   "license": "ISC",

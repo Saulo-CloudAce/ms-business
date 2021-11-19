@@ -738,7 +738,7 @@ class BusinessRepository {
       const businessList = await this.db.collection('business')
         .find(
           { _id: { $in: businessIdList }, companyToken },
-          ['_id', 'name', 'createdAt']
+          ['_id', 'name', 'createdAt', 'updatedAt', 'activeUntil', 'flow_passed', 'active']
         )
         .sort({ createdAt: -1 })
         .toArray()
