@@ -17,7 +17,7 @@ integration:
    - CI=true npm run clear_test
    - CI=true npm run test
   only:
-   - feat_add_test_stage
+   - master
 
 
 deploy_homol:
