@@ -40,6 +40,7 @@ describe ('Customer functions', () => {
     await new Promise((resolve, reject) => {
       connect(app, async () => {
         await app.locals.db.collection('business').remove({})
+        await app.locals.db.collection('business_data').remove({})
 
         companyRepository = new CompanyRepository(app.locals.db)
         companyModel = new CompanyModel(companyRepository)

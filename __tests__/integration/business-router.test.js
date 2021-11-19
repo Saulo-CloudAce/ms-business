@@ -31,7 +31,7 @@ let businessCreated = ''
 
 const b = {
   name: 'lote 1',
-  active_until: '2020-12-31',
+  active_until: '2030-12-31',
   templateId: '',
   data: [
     { name: 'Pessoa 1', cpf_cnpj: '11122233344' },
@@ -63,7 +63,7 @@ async function createTemplate (companyToken = '') {
 }
 
 async function createBusiness (templateId = '', token = '') {
-  b.name = 'lote0002'
+  b.name = 'lote0003'
   b.templateId = templateId
 
   return businessModel.createFromJson(token, b.name, t.fields, templateId, b.data, b.active_until, c.prefix_index_elastic, b, true)
@@ -74,7 +74,8 @@ describe('CRUD business', () => {
     await new Promise((resolve, reject) => {
       connect(app, async () => {
         await app.locals.db.collection('business').remove({})
-
+        await app.locals.db.collection('business_data').remove({})
+        
         companyRepository = new CompanyRepository(app.locals.db)
         companyModel = new CompanyModel(companyRepository)
         templateRepository = new TemplateRepository(app.locals.db)
@@ -83,7 +84,7 @@ describe('CRUD business', () => {
 
         companyCreated = await createCompany()
         templateCreated = await createTemplate(companyCreated.token)
-        businessCreated = await createBusiness(templateCreated._id, companyCreated.token)
+        businessCreated = await createBusiness(`${templateCreated._id.toString()}`, companyCreated.token)
 
         resolve()
       })
@@ -92,13 +93,14 @@ describe('CRUD business', () => {
 
   it ('Create a business from JSON', async (done) => {
     b.templateId = templateCreated._id
+    b.name = 'lote0004'
 
-    nock('http://localhost:7000', {
+    nock('http://localhost:4000', {
       reqheaders: {
         token: companyCreated.token
       }
     })
-      .intercept('/api/v2/customers', 'OPTIONS')
+      .intercept('/api/v1/customers', 'OPTIONS')
       .reply(200)
       .post('/api/v1/customers')
       .reply(200, { contact_ids: 1 })
@@ -125,12 +127,12 @@ describe('CRUD business', () => {
     b1.name = 'Lote78912'
     b1.data = [b.data[0]]
 
-    nock('http://localhost:7000', {
+    nock('http://localhost:4000', {
       reqheaders: {
         token: companyCreated.token
       }
     })
-      .intercept('/api/v2/customers', 'OPTIONS')
+      .intercept('/api/v1/customers', 'OPTIONS')
       .reply(200)
       .post('/api/v1/customers')
       .reply(200, { contact_ids: 1 })
@@ -156,7 +158,7 @@ describe('CRUD business', () => {
 
   it ('List all business', async (done) => {
     request
-      .get('/api/v1/business')
+      .get('/api/v2/business')
       .set('token', companyCreated.token)
       .end((err, res) => {
         if (err) done(err)
@@ -311,17 +313,63 @@ describe('CRUD business', () => {
 
   it ('Update register on business by ID', async (done) => {
     const register = businessCreated.valids[0]
+    register.idCrm = 1
+
+    const cResult = {
+      id: 1,
+      cpfcnpj: '88010287334',
+      name: 'Pessoa',
+      person_type: null,
+      cpfcnpj_status: null,
+      birthdate: null,
+      gender: null,
+      mother_name: null,
+      deceased: null,
+      occupation: null,
+      income: null,
+      credit_risk: null,
+      email: [],
+      address: [],
+      phone: [],
+      business_partner: [],
+      vehicle: [],
+      schema_list: []
+    }
+
+    nock('http://localhost:4000', {
+      reqheaders: {
+        token: companyCreated.token
+      }
+    })
+      .intercept(`/api/v1/customers/${cResult.id}`, 'OPTIONS')
+      .reply(200)
+      .get(`/api/v1/customers/${cResult.id}`)
+      .reply(200, cResult)
+
+    nock('http://localhost:4000', {
+      reqheaders: {
+        token: companyCreated.token
+      }
+    })
+      .intercept('/api/v1/customers/1', 'OPTIONS')
+      .reply(200)
+      .put('/api/v1/customers/1')
+      .reply(200)
 
     request
       .put(`/api/v2/business/${businessCreated.businessId}/data/${register._id}`)
-      .send({ name: 'Pessoa X' })
+      .send({ name: 'Pessoa X', idCrm: 1 })
       .set('Accept', 'application/json')
       .set('token', companyCreated.token)
       .set('templateid', templateCreated._id)
       .end((err, res) => {
         if (err) done(err)
 
+        console.log(res.body)
+
         expect(res.statusCode).toBe(200)
+
+        
 
         expect(res.body.name).toBe('Pessoa X')
         expect(res.body.cpf_cnpj).toBe(register.cpf_cnpj)
@@ -341,6 +389,8 @@ describe('CRUD business', () => {
       fields: ['name']
     }
 
+    console.log(paramsRequest)
+
     request
       .post(`/api/v2/business/get_pool_data`)
       .send(paramsRequest)
@@ -351,14 +401,14 @@ describe('CRUD business', () => {
 
         expect(res.statusCode).toBe(200)
 
-        expect(Object.keys(res.body[0])).toEqual(['name', '_id'])
+        expect(Object.keys(res.body[0])).toEqual(['_id', 'name'])
 
         done()
       })
   })
 
   it ('Search data on business by template ID', async (done) => {
-    const register = businessCreated.valids[0]
+    const register = businessCreated.valids[1]
 
     const paramsRequest = {
       template_id: templateCreated._id,
