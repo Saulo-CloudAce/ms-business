@@ -192,7 +192,7 @@ class BusinessController {
       if (businessId === null) return res.status(400).send({ error: invalids })
 
       if (invalids.length) return res.status(400).send({ businessId, invalids })
-      return res.status(200).send({ businessId })
+      return res.status(201).send({ businessId })
     } catch (e) {
       console.error('CREATE BUSINESS FROM JSON ==> ', e)
       return res.status(500).send({ error: e.message })
