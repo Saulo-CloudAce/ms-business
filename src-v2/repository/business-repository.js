@@ -1,7 +1,8 @@
 const ObjectID = require("mongodb").ObjectID;
 const moment = require("moment");
 
-const { calcExpireTime } = require('../helpers/util')
+const { calcExpireTime } = require("../helpers/util");
+const { AggregateModeType } = require("../../domain-v2/aggregate-mode-enum");
 
 const BYTES_ON_MEGA = 1048576;
 const LIMIT_SIZE_DOC_BSON_MEGABYTES = 14;
@@ -23,7 +24,8 @@ class BusinessRepository {
     dataSeparator = "",
     isBatch = true,
     invalids = [],
-    createdBy = 0
+    createdBy = 0,
+    aggregateMode = AggregateModeType.INCREMENT
   ) {
     const business = {
       _id: new ObjectID(),
@@ -43,36 +45,39 @@ class BusinessRepository {
       createdAt: moment().format(),
       updatedAt: moment().format(),
       createdBy,
-      updatedBy: createdBy
+      updatedBy: createdBy,
+      aggregateMode,
     };
     const batches = [business];
 
-    const businessData = fieldsData.map(f => {
-      f.businessId = business._id
-      f.templateId = business.templateId
-      f.companyToken = business.companyToken
-      f.businessCreatedAt = business.createdAt
-      f.businessUpdatedAt = business.updatedAt
+    const businessData = fieldsData.map((f) => {
+      f.businessId = business._id;
+      f.templateId = business.templateId;
+      f.companyToken = business.companyToken;
+      f.businessCreatedAt = business.createdAt;
+      f.businessUpdatedAt = business.updatedAt;
 
-      return f
-    })
-    
+      return f;
+    });
 
     try {
-      
       await this.db.collection("business").insertMany(batches);
-      await this.db.collection("business_data").insertMany(businessData)
+      await this.db.collection("business_data").insertMany(businessData);
 
       return business._id;
     } catch (err) {
-      console.error(err)
+      console.error(err);
       throw new Error(err);
     }
   }
 
   async markFlowPassed(companyToken, businessId, updatedBy = 0) {
     try {
-      const businessUpdated = { flow_passed: true, updatedAt: moment().format(), updatedBy }
+      const businessUpdated = {
+        flow_passed: true,
+        updatedAt: moment().format(),
+        updatedBy,
+      };
       await this.db.collection("business").update(
         {
           $or: [
@@ -91,7 +96,11 @@ class BusinessRepository {
 
   async unmarkFlowPassed(companyToken, businessId, updatedBy = 0) {
     try {
-      const businessUpdated = { flow_passed: false, updatedAt: moment().format(), updatedBy }
+      const businessUpdated = {
+        flow_passed: false,
+        updatedAt: moment().format(),
+        updatedBy,
+      };
       await this.db.collection("business").update(
         {
           $or: [
@@ -110,26 +119,21 @@ class BusinessRepository {
 
   async updateRegisterBusiness(registerId, data = {}) {
     try {
-      await this.db.collection("business_data")
-        .update(
-          { _id: registerId },
-          { $set: data }
-        )
+      await this.db
+        .collection("business_data")
+        .update({ _id: registerId }, { $set: data });
     } catch (err) {
-      console.error(err)
-      throw new Error(err)
+      console.error(err);
+      throw new Error(err);
     }
   }
 
   async updateDataBusiness(businessId, updatedBy = 0) {
     try {
-      const businessUpdated = { updatedAt: moment().format(), updatedBy }
+      const businessUpdated = { updatedAt: moment().format(), updatedBy };
       await this.db
         .collection("business")
-        .update(
-          { _id: new ObjectID(businessId) },
-          { $set: businessUpdated }
-        );
+        .update({ _id: new ObjectID(businessId) }, { $set: businessUpdated });
     } catch (err) {
       throw new Error(err);
     }
@@ -137,7 +141,12 @@ class BusinessRepository {
 
   async activate(companyToken, businessId, activeUntil, updatedBy = 0) {
     try {
-      const businessUpdated = { active: true, activeUntil, updatedAt: moment().format(), updatedBy }
+      const businessUpdated = {
+        active: true,
+        activeUntil,
+        updatedAt: moment().format(),
+        updatedBy,
+      };
       await this.db.collection("business").update(
         {
           $or: [
@@ -156,7 +165,11 @@ class BusinessRepository {
 
   async deactivate(companyToken, businessId, updatedBy = 0) {
     try {
-      const businessUpdated = { active: false, updatedAt: moment().format(), updatedBy }
+      const businessUpdated = {
+        active: false,
+        updatedAt: moment().format(),
+        updatedBy,
+      };
       await this.db.collection("business").update(
         {
           $or: [
@@ -169,7 +182,7 @@ class BusinessRepository {
         { multi: true }
       );
     } catch (err) {
-      console.error(err)
+      console.error(err);
       throw new Error(err);
     }
   }
@@ -193,7 +206,7 @@ class BusinessRepository {
             "createdAt",
             "updatedAt",
             "createdBy",
-            "updatedBy"
+            "updatedBy",
           ]
         )
         .toArray();
@@ -304,7 +317,11 @@ class BusinessRepository {
       const businessList = await this.db
         .collection("business")
         .find(
-          { companyToken: companyToken, parentBatchId: { $exists: false }, active: true },
+          {
+            companyToken: companyToken,
+            parentBatchId: { $exists: false },
+            active: true,
+          },
           [
             "_id",
             "name",
@@ -352,17 +369,14 @@ class BusinessRepository {
         .limit(limit)
         .sort({ createdAt: -1 })
         .toArray();
-      console.timeEnd("select")
+      console.timeEnd("select");
 
       const businessListCount = await this.db
         .collection("business")
-        .find(
-          { companyToken, parentBatchId: { $exists: false } },
-          ["_id"]
-        )
+        .find({ companyToken, parentBatchId: { $exists: false } }, ["_id"])
         .sort({ createdAt: -1 })
-        .count()
-      
+        .count();
+
       const pagination = {
         numRows: parseInt(businessListCount),
         page,
@@ -376,14 +390,18 @@ class BusinessRepository {
     }
   }
 
-  async getActivatedBatchesBasicPaginated (companyToken, page = 0, limit = 10) {
+  async getActivatedBatchesBasicPaginated(companyToken, page = 0, limit = 10) {
     const skipDocs = page * limit;
     try {
       console.time("select");
       const businessList = await this.db
         .collection("business")
         .find(
-          { companyToken: companyToken, parentBatchId: { $exists: false }, active: true },
+          {
+            companyToken: companyToken,
+            parentBatchId: { $exists: false },
+            active: true,
+          },
           [
             "_id",
             "name",
@@ -405,7 +423,11 @@ class BusinessRepository {
       const businessListCount = await this.db
         .collection("business")
         .find(
-          { companyToken: companyToken, parentBatchId: { $exists: false }, active: true },
+          {
+            companyToken: companyToken,
+            parentBatchId: { $exists: false },
+            active: true,
+          },
           ["_id"]
         )
         .count();
@@ -423,14 +445,22 @@ class BusinessRepository {
     }
   }
 
-  async getInactivatedBatchesBasicPaginated (companyToken, page = 0, limit = 10) {
+  async getInactivatedBatchesBasicPaginated(
+    companyToken,
+    page = 0,
+    limit = 10
+  ) {
     const skipDocs = page * limit;
     try {
       console.time("select");
       const businessList = await this.db
         .collection("business")
         .find(
-          { companyToken: companyToken, parentBatchId: { $exists: false }, active: false },
+          {
+            companyToken: companyToken,
+            parentBatchId: { $exists: false },
+            active: false,
+          },
           [
             "_id",
             "name",
@@ -452,7 +482,11 @@ class BusinessRepository {
       const businessListCount = await this.db
         .collection("business")
         .find(
-          { companyToken: companyToken, parentBatchId: { $exists: false }, active: false },
+          {
+            companyToken: companyToken,
+            parentBatchId: { $exists: false },
+            active: false,
+          },
           ["_id"]
         )
         .count();
@@ -654,34 +688,43 @@ class BusinessRepository {
     }
   }
 
-  async listAllAndChildsByTemplateAndKeySortedReverse (
+  async listAllAndChildsByTemplateAndKeySortedReverse(
     companyToken,
     templateId,
     keyColumnList = [],
-    keyValue = ''
+    keyValue = ""
   ) {
-    const matchParams = []
-    const matchParamsCache = []
+    const matchParams = [];
+    const matchParamsCache = [];
     for (const column of keyColumnList) {
-      const param = {}
-      const paramCache = {}
-      param[column] = new RegExp(keyValue, 'i')
-      paramCache[paramCache] = keyValue
-      matchParams.push(param)
-      matchParamsCache.push(paramCache)
+      const param = {};
+      const paramCache = {};
+      param[column] = new RegExp(keyValue, "i");
+      paramCache[paramCache] = keyValue;
+      matchParams.push(param);
+      matchParamsCache.push(paramCache);
     }
-    
+
     try {
-      const hashPayload = JSON.stringify({ matchParamsCache, companyToken, templateId })
-      const hash = Buffer.from(hashPayload).toString('base64')
-      
+      const hashPayload = JSON.stringify({
+        matchParamsCache,
+        companyToken,
+        templateId,
+      });
+      const hash = Buffer.from(hashPayload).toString("base64");
+
       if (global.cache.hashSearch[hash]) {
-        const queryCached = global.cache.hashSearch[hash]
-        if (queryCached && queryCached.expire && calcExpireTime(new Date(), queryCached.expire) < global.cache.default_expire) {
-          console.log('SEARCH_IN_DATA_CACHED')
-          return queryCached.data
+        const queryCached = global.cache.hashSearch[hash];
+        if (
+          queryCached &&
+          queryCached.expire &&
+          calcExpireTime(new Date(), queryCached.expire) <
+            global.cache.default_expire
+        ) {
+          console.log("SEARCH_IN_DATA_CACHED");
+          return queryCached.data;
         } else {
-          global.cache.hashSearch[hash] = null
+          global.cache.hashSearch[hash] = null;
         }
       }
 
@@ -692,24 +735,24 @@ class BusinessRepository {
             $match: {
               $or: matchParams,
               companyToken: companyToken,
-              templateId: templateId
-            }
+              templateId: templateId,
+            },
           },
           {
             $group: {
-              _id: '$businessId',
-              data: { $push: '$$ROOT' }
-            }
+              _id: "$businessId",
+              data: { $push: "$$ROOT" },
+            },
           },
           {
             $project: {
-              'data.companyToken': 0,
-              'data.templateId': 0,
-              'data.businessId': 0
-            }
-          }
+              "data.companyToken": 0,
+              "data.templateId": 0,
+              "data.businessId": 0,
+            },
+          },
         ])
-        .toArray()
+        .toArray();
       // businessListStored = businessListStored.sort((a, b) =>
       //   a.createdAt > b.createdAt ? -1 : b.createdAt > a.createdAt ? 1 : 0
       // );
@@ -728,67 +771,76 @@ class BusinessRepository {
       //   });
       // }
 
-      const businessIdList = []
-      const businessDataMap = {}
-      businessDataList.forEach(bd => {
-        businessIdList.push(bd._id)
-        businessDataMap[bd._id] = bd
-      })
+      const businessIdList = [];
+      const businessDataMap = {};
+      businessDataList.forEach((bd) => {
+        businessIdList.push(bd._id);
+        businessDataMap[bd._id] = bd;
+      });
 
-      const businessList = await this.db.collection('business')
-        .find(
-          { _id: { $in: businessIdList }, companyToken },
-          ['_id', 'name', 'createdAt', 'updatedAt', 'activeUntil', 'flow_passed', 'active']
-        )
+      const businessList = await this.db
+        .collection("business")
+        .find({ _id: { $in: businessIdList }, companyToken }, [
+          "_id",
+          "name",
+          "createdAt",
+          "updatedAt",
+          "activeUntil",
+          "flow_passed",
+          "active",
+        ])
         .sort({ createdAt: -1 })
-        .toArray()
+        .toArray();
 
       businessList.forEach((bus, ind) => {
-        businessList[ind].data = businessDataMap[bus._id].data
-      })
+        businessList[ind].data = businessDataMap[bus._id].data;
+      });
 
-      console.log('SEARCH_IN_DATA_STORED')
-      global.cache.hashSearch[hash] = { data: businessList, expire: new Date() }
+      console.log("SEARCH_IN_DATA_STORED");
+      global.cache.hashSearch[hash] = {
+        data: businessList,
+        expire: new Date(),
+      };
 
       return businessList;
     } catch (err) {
-      console.error(err)
-      throw new Error(err)
+      console.error(err);
+      throw new Error(err);
     }
   }
 
-  async listAllByTemplateListAndKeySortedReverse (
+  async listAllByTemplateListAndKeySortedReverse(
     companyToken,
     templateIdList = [],
     matchParams = []
   ) {
-    console.log(matchParams, templateIdList)
+    console.log(matchParams, templateIdList);
     try {
       const businessDataList = await this.db
-        .collection('business_data')
+        .collection("business_data")
         .aggregate([
           {
             $match: {
               $or: matchParams,
               companyToken: companyToken,
-              templateId: { $in: templateIdList }
-            }
+              templateId: { $in: templateIdList },
+            },
           },
           {
             $group: {
-              _id: '$businessId',
-              data: { $push: '$$ROOT' }
-            }
+              _id: "$businessId",
+              data: { $push: "$$ROOT" },
+            },
           },
           {
             $project: {
-              'data.companyToken': 0,
-              'data.templateId': 0,
-              'data.businessId': 0
-            }
-          }
+              "data.companyToken": 0,
+              "data.templateId": 0,
+              "data.businessId": 0,
+            },
+          },
         ])
-        .toArray()
+        .toArray();
       // businessListStored = businessListStored.sort((a, b) =>
       //   a.createdAt > b.createdAt ? -1 : b.createdAt > a.createdAt ? 1 : 0
       // );
@@ -807,33 +859,36 @@ class BusinessRepository {
       //   });
       // }
 
-      const businessIdList = []
-      const businessDataMap = {}
-      businessDataList.forEach(bd => {
-        businessIdList.push(bd._id)
-        businessDataMap[bd._id] = bd
-      })
+      const businessIdList = [];
+      const businessDataMap = {};
+      businessDataList.forEach((bd) => {
+        businessIdList.push(bd._id);
+        businessDataMap[bd._id] = bd;
+      });
 
-      const businessList = await this.db.collection('business')
-        .find(
-          { _id: { $in: businessIdList }, companyToken },
-          ['_id', 'name', 'templateId', 'createdAt']
-        )
+      const businessList = await this.db
+        .collection("business")
+        .find({ _id: { $in: businessIdList }, companyToken }, [
+          "_id",
+          "name",
+          "templateId",
+          "createdAt",
+        ])
         .sort({ createdAt: -1 })
-        .toArray()
+        .toArray();
 
       businessList.forEach((bus, ind) => {
-        businessList[ind].data = businessDataMap[bus._id].data
-      })
+        businessList[ind].data = businessDataMap[bus._id].data;
+      });
 
-      return businessList
+      return businessList;
     } catch (err) {
-      console.error(err)
-      throw new Error(err)
+      console.error(err);
+      throw new Error(err);
     }
   }
 
-  async getLastByTemplateAndKeySortedReverse (
+  async getLastByTemplateAndKeySortedReverse(
     companyToken,
     templateId,
     keyColumnList = [],
@@ -853,7 +908,15 @@ class BusinessRepository {
         .collection("business")
         .find(
           { companyToken, templateId, active: true },
-          { _id: 1, name: 1, activeUntil: 1, flow_passed: 1, active: 1, createdAt: 1, updatedAt: 1 }
+          {
+            _id: 1,
+            name: 1,
+            activeUntil: 1,
+            flow_passed: 1,
+            active: 1,
+            createdAt: 1,
+            updatedAt: 1,
+          }
         )
         .sort({ createdAt: -1 })
         .toArray();
@@ -862,17 +925,23 @@ class BusinessRepository {
       //     a.createdAt > b.createdAt ? -1 : b.createdAt > a.createdAt ? 1 : 0
       //   )
       //   .map((b) => b._id);
-      const businessListIndexed = {}
-      const businessIdList = []
+      const businessListIndexed = {};
+      const businessIdList = [];
       businessList.forEach((b) => {
-        businessListIndexed[b._id] = b
-        businessIdList.push(b._id)
-      })
+        businessListIndexed[b._id] = b;
+        businessIdList.push(b._id);
+      });
 
       const businessListStored = await this.db
         .collection("business_data")
         .aggregate([
-          { $match: { $or: matchParams, businessId: { $in: businessIdList }, companyToken } },
+          {
+            $match: {
+              $or: matchParams,
+              businessId: { $in: businessIdList },
+              companyToken,
+            },
+          },
           {
             $group: {
               _id: "$businessId",
@@ -881,22 +950,22 @@ class BusinessRepository {
           },
           {
             $project: {
-              'data.companyToken': 0,
-              'data.templateId': 0,
-              'data.businessId': 0
-            }
-          }
+              "data.companyToken": 0,
+              "data.templateId": 0,
+              "data.businessId": 0,
+            },
+          },
         ])
         .limit(1)
-        .toArray()
+        .toArray();
 
       for (const i in businessListStored) {
         const bData = businessListStored[i];
 
-        const businessIndexed = businessListIndexed[bData._id]
+        const businessIndexed = businessListIndexed[bData._id];
         if (businessIndexed) {
-          businessIndexed.data = bData.data
-          businessListLast.push(businessIndexed)
+          businessIndexed.data = bData.data;
+          businessListLast.push(businessIndexed);
         }
 
         // businessList.push({
@@ -930,7 +999,7 @@ class BusinessRepository {
           "createdAt",
           "updatedAt",
           "createdBy",
-          "updatedBy"
+          "updatedBy",
         ])
         .toArray();
 
@@ -953,7 +1022,7 @@ class BusinessRepository {
           "createdAt",
           "updatedAt",
           "createdBy",
-          "updatedBy"
+          "updatedBy",
         ]);
 
       return business;
@@ -961,48 +1030,47 @@ class BusinessRepository {
       throw new Error(err);
     }
   }
-  
-  async getDataByListId (companyToken = '', searchData = [], searchFields = []) {
-    const listBusinessIdQuery = []
-    const listParentBusinessIdQuery = []
-    const listTemplateIdQuery = []
-    const listItemIdQuery = []
+
+  async getDataByListId(companyToken = "", searchData = [], searchFields = []) {
+    const listBusinessIdQuery = [];
+    const listParentBusinessIdQuery = [];
+    const listTemplateIdQuery = [];
+    const listItemIdQuery = [];
 
     for (const i in searchData) {
-      const data = searchData[i]
-      const businessId = new ObjectID(data.lote_id)
-      listBusinessIdQuery.push(businessId)
-      listParentBusinessIdQuery.push(businessId)
-      listTemplateIdQuery.push(data.schama)
-      listItemIdQuery.push(data.item_id)
+      const data = searchData[i];
+      const businessId = new ObjectID(data.lote_id);
+      listBusinessIdQuery.push(businessId);
+      listParentBusinessIdQuery.push(businessId);
+      listTemplateIdQuery.push(data.schama);
+      listItemIdQuery.push(data.item_id);
     }
 
-    const resultFields = {}
+    const resultFields = {};
     searchFields.forEach((sf) => {
-      resultFields[sf] = 1
-    })
+      resultFields[sf] = 1;
+    });
 
     try {
       const businessData = await this.db
-        .collection('business_data')
+        .collection("business_data")
         .find(
           {
             companyToken,
             templateId: { $in: listTemplateIdQuery },
             businessId: { $in: listBusinessIdQuery },
-            _id: { $in: listItemIdQuery }
+            _id: { $in: listItemIdQuery },
           },
           {
-            ...resultFields
+            ...resultFields,
           }
         )
-        .toArray()
-      return businessData
+        .toArray();
+      return businessData;
     } catch (err) {
-      throw new Error(err)
+      throw new Error(err);
     }
   }
-
 
   async getChildBatches(listParentBatchId = []) {
     try {
@@ -1021,61 +1089,81 @@ class BusinessRepository {
     }
   }
 
-  async getDataById (companyToken, id) {
+  async getDataById(companyToken, id) {
     try {
-      const business = await this.db.collection('business')
-        .findOne(
-          { _id: new ObjectID(id), companyToken: companyToken },
-          ['_id', 'name', 'templateId', 'filePath', 'jumpFirstLine', 'customerStorage', 'dataSeparator', 'quantityRows', 'activeUntil', 'invalids', 'flow_passed', 'active', 'createdAt', 'updatedAt']
-        )
+      const business = await this.db
+        .collection("business")
+        .findOne({ _id: new ObjectID(id), companyToken: companyToken }, [
+          "_id",
+          "name",
+          "templateId",
+          "filePath",
+          "jumpFirstLine",
+          "customerStorage",
+          "dataSeparator",
+          "quantityRows",
+          "activeUntil",
+          "invalids",
+          "flow_passed",
+          "active",
+          "createdAt",
+          "updatedAt",
+        ]);
 
-      const data = await this.db.collection('business_data')
+      const data = await this.db
+        .collection("business_data")
         .find(
-          { companyToken: companyToken, businessId: new ObjectID(id) }, { fields: { companyToken: 0, businessId: 0, templateId: 0 } }
-        )
-        .toArray()
-
-      business.data = data
-
-      return business
-    } catch (err) {
-      throw new Error(err)
-    }
-  }
-
-  async getRegisterByBusinessAndId (companyToken, businessId, registerId) {
-    try {
-      const register = await this.db.collection('business_data')
-        .findOne(
-          { companyToken: companyToken, businessId: new ObjectID(businessId), _id: registerId }
-        )
-      return register
-    } catch (err) {
-      console.error(err)
-      throw new Error(err)
-    }
-  }
-
-  async getRegisterById (companyToken, businessId, registerId) {
-    try {
-      const data = await this.db.collection('business_data')
-        .findOne(
-          { companyToken: companyToken, businessId: new ObjectID(businessId), _id: registerId },
+          { companyToken: companyToken, businessId: new ObjectID(id) },
           { fields: { companyToken: 0, businessId: 0, templateId: 0 } }
         )
-      if (!data) return data
+        .toArray();
 
-      const business = await this.db.collection('business')
+      business.data = data;
+
+      return business;
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
+
+  async getRegisterByBusinessAndId(companyToken, businessId, registerId) {
+    try {
+      const register = await this.db.collection("business_data").findOne({
+        companyToken: companyToken,
+        businessId: new ObjectID(businessId),
+        _id: registerId,
+      });
+      return register;
+    } catch (err) {
+      console.error(err);
+      throw new Error(err);
+    }
+  }
+
+  async getRegisterById(companyToken, businessId, registerId) {
+    try {
+      const data = await this.db.collection("business_data").findOne(
+        {
+          companyToken: companyToken,
+          businessId: new ObjectID(businessId),
+          _id: registerId,
+        },
+        { fields: { companyToken: 0, businessId: 0, templateId: 0 } }
+      );
+      if (!data) return data;
+
+      const business = await this.db
+        .collection("business")
         .findOne(
           { _id: new ObjectID(businessId), companyToken: companyToken },
-          ['_id', 'name']
-        )
+          ["_id", "name"]
+        );
 
-      business.data = data
+      business.data = data;
 
-      return business
+      return business;
     } catch (err) {
-      throw new Error(err)
+      throw new Error(err);
     }
   }
 
@@ -1090,16 +1178,17 @@ class BusinessRepository {
           { fields: { childBatchesId: 0, data: 0 } }
         );
 
-      const businessData = await this.db.collection('business_data')
+      const businessData = await this.db
+        .collection("business_data")
         .find(
           { companyToken, businessId: ObjectID(businessId) },
           { fields: { companyToken: 0, businessId: 0, templateId: 0 } }
         )
         .skip(skipDocs)
         .limit(limit)
-        .toArray()
+        .toArray();
 
-      business.data = businessData
+      business.data = businessData;
 
       if (business) {
         business.dataPagination = {
@@ -1112,7 +1201,7 @@ class BusinessRepository {
 
       return business;
     } catch (err) {
-      console.error(err)
+      console.error(err);
       throw new Error(err);
     }
   }
