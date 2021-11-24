@@ -1,52 +1,56 @@
-function isTypeOptions (field) {
+function isTypeOptions(field) {
   return field.type === 'options'
 }
 
-function isTypeInt (field) {
+function isTypeMultipleOptions(field) {
+  return field.type === 'multiple_options'
+}
+
+function isTypeInt(field) {
   return field.type === 'int'
 }
 
-function isTypeDate (field) {
+function isTypeDate(field) {
   return field.type === 'date'
 }
 
-function isTypeDecimal (field) {
+function isTypeDecimal(field) {
   return field.type === 'decimal'
 }
 
-function isTypeCep (field) {
+function isTypeCep(field) {
   return field.type === 'cep'
 }
 
-function isTypeBoolean (field) {
+function isTypeBoolean(field) {
   return field.type === 'boolean'
 }
 
-function isTypeEmail (field) {
+function isTypeEmail(field) {
   return field.type === 'email'
 }
 
-function isTypePhoneNumber (field) {
+function isTypePhoneNumber(field) {
   return field.type === 'phone_number' || field.data === 'customer_phone_number'
 }
 
-function isTypeArray (field) {
+function isTypeArray(field) {
   return field.type === 'array'
 }
 
-function isTypeCpfCnpj (field) {
+function isTypeCpfCnpj(field) {
   return field.data === 'customer_cpfcnpj' || field.type === 'cpfcnpj'
 }
 
-function isRequired (field) {
+function isRequired(field) {
   return field.required
 }
 
-function isKey (field) {
+function isKey(field) {
   return field.key
 }
 
-function isUnique (field) {
+function isUnique(field) {
   return field.unique
 }
 
@@ -63,5 +67,6 @@ module.exports = {
   isRequired,
   isKey,
   isTypeDate,
-  isUnique
+  isUnique,
+  isTypeMultipleOptions
 }
