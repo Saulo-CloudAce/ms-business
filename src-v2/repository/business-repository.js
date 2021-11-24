@@ -207,6 +207,7 @@ class BusinessRepository {
             "updatedAt",
             "createdBy",
             "updatedBy",
+            "aggregateMode",
           ]
         )
         .toArray();
@@ -237,6 +238,7 @@ class BusinessRepository {
             "updatedAt",
             "createdBy",
             "updatedBy",
+            "aggregateMode",
             "data",
           ]
         )
@@ -268,6 +270,7 @@ class BusinessRepository {
             "updatedAt",
             "createdBy",
             "updatedBy",
+            "aggregateMode",
             "data",
           ]
         )
@@ -299,6 +302,7 @@ class BusinessRepository {
             "updatedAt",
             "createdBy",
             "updatedBy",
+            "aggregateMode",
             "quantityRows",
           ]
         )
@@ -332,6 +336,7 @@ class BusinessRepository {
             "updatedAt",
             "createdBy",
             "updatedBy",
+            "aggregateMode",
             "quantityRows",
           ]
         )
@@ -362,6 +367,7 @@ class BusinessRepository {
             "updatedAt",
             "createdBy",
             "updatedBy",
+            "aggregateMode",
             "quantityRows",
           ]
         )
@@ -412,6 +418,7 @@ class BusinessRepository {
             "updatedAt",
             "createdBy",
             "updatedBy",
+            "aggregateMode",
             "quantityRows",
           ]
         )
@@ -471,6 +478,7 @@ class BusinessRepository {
             "updatedAt",
             "createdBy",
             "updatedBy",
+            "aggregateMode",
             "quantityRows",
           ]
         )
@@ -514,6 +522,7 @@ class BusinessRepository {
           "data",
           "activeUntil",
           "active",
+          "aggregateMode",
           "createdAt",
           "updatedAt",
           "createdBy",
@@ -541,6 +550,7 @@ class BusinessRepository {
           "data",
           "activeUntil",
           "active",
+          "aggregateMode",
           "createdAt",
           "updatedAt",
           "createdBy",
@@ -595,6 +605,7 @@ class BusinessRepository {
           "data",
           "activeUntil",
           "active",
+          "aggregateMode",
           "createdAt",
           "updatedAt",
           "createdBy",
@@ -639,6 +650,7 @@ class BusinessRepository {
           "data",
           "activeUntil",
           "active",
+          "aggregateMode",
           "createdAt",
           "updatedAt",
           "createdBy",
@@ -669,6 +681,7 @@ class BusinessRepository {
           "parentBatchId",
           "activeUntil",
           "active",
+          "aggregateMode",
           "createdAt",
           "updatedAt",
           "createdBy",
@@ -787,6 +800,7 @@ class BusinessRepository {
           "updatedAt",
           "activeUntil",
           "flow_passed",
+          "aggregateMode",
           "active",
         ])
         .sort({ createdAt: -1 })
@@ -999,6 +1013,7 @@ class BusinessRepository {
           "createdAt",
           "updatedAt",
           "createdBy",
+          "aggregateMode",
           "updatedBy",
         ])
         .toArray();
@@ -1023,6 +1038,7 @@ class BusinessRepository {
           "updatedAt",
           "createdBy",
           "updatedBy",
+          "aggregateMode",
         ]);
 
       return business;
@@ -1101,6 +1117,7 @@ class BusinessRepository {
           "jumpFirstLine",
           "customerStorage",
           "dataSeparator",
+          "aggregateMode",
           "quantityRows",
           "activeUntil",
           "invalids",

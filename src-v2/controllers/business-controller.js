@@ -599,6 +599,9 @@ class BusinessController {
           name: b.name,
           activeUntil: b.activeUntil,
           active: b.active,
+          aggregateMode: b.aggregateMode
+            ? b.aggregateMode
+            : AggregateModeType.INCREMENT,
           createdAt: b.createdAt,
           updatedAt: b.updatedAt,
           createdBy: b.createdBy ? b.createdBy : 0,
@@ -634,6 +637,9 @@ class BusinessController {
           name: b.name,
           activeUntil: b.activeUntil,
           active: b.active,
+          aggregateMode: b.aggregateMode
+            ? b.aggregateMode
+            : AggregateModeType.INCREMENT,
           createdAt: b.createdAt,
           updatedAt: b.updatedAt,
           createdBy: b.createdBy ? b.createdBy : 0,
@@ -680,6 +686,9 @@ class BusinessController {
           name: b.name,
           activeUntil: b.activeUntil,
           active: b.active,
+          aggregateMode: b.aggregateMode
+            ? b.aggregateMode
+            : AggregateModeType.INCREMENT,
           createdAt: b.createdAt,
           updatedAt: b.updatedAt,
           createdBy: b.createdBy ? b.createdBy : 0,
@@ -727,6 +736,9 @@ class BusinessController {
           name: b.name,
           activeUntil: b.activeUntil,
           active: b.active,
+          aggregateMode: b.aggregateMode
+            ? b.aggregateMode
+            : AggregateModeType.INCREMENT,
           createdAt: b.createdAt,
           updatedAt: b.updatedAt,
           createdBy: b.createdBy ? b.createdBy : 0,
@@ -774,6 +786,9 @@ class BusinessController {
           name: b.name,
           activeUntil: b.activeUntil,
           active: b.active,
+          aggregateMode: b.aggregateMode
+            ? b.aggregateMode
+            : AggregateModeType.INCREMENT,
           createdAt: b.createdAt,
           updatedAt: b.updatedAt,
           createdBy: b.createdBy ? b.createdBy : 0,
