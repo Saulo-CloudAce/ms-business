@@ -1,6 +1,6 @@
 const { clearString } = require('../helpers/formatters')
 const { isArrayElementSameTypes, isArrayOfObjects, isArrayWithEmptyElement } = require('../helpers/validators')
-const { isTypeOptions, isTypeDate } = require('../helpers/field-methods')
+const { isTypeOptions, isTypeDate, isTypeMultipleOptions } = require('../helpers/field-methods')
 
 const supportedTypes = [
   'text',
@@ -16,7 +16,8 @@ const supportedTypes = [
   'options',
   'date',
   'timestamp',
-  'table'
+  'table',
+  'multiple_options'
 ]
 const supportedKeys = ['customer_cpfcnpj', 'customer_name', 'customer_phone_number', 'customer_email', 'customer_email_address']
 
@@ -124,7 +125,7 @@ function validateFields(fields) {
                 field: arrayFieldItem.column,
                 error: 'Type não suportado'
               })
-            else if (isTypeOptions(arrayFieldItem)) {
+            else if (isTypeOptions(arrayFieldItem) || isTypeMultipleOptions(field)) {
               const error = validateFieldOptionsType(arrayFieldItem)
               if (Object.keys(error).length)
                 errorsField.errors.push({
@@ -150,7 +151,7 @@ function validateFields(fields) {
         })
       }
 
-      if (isTypeOptions(field)) {
+      if (isTypeOptions(field) || isTypeMultipleOptions(field)) {
         const error = validateFieldOptionsType(field)
         if (Object.keys(error).length) errorsField.errors.push(error)
         else {
