@@ -141,6 +141,7 @@ class Validator {
         .on('line', function (line, lineno = lineCounter()) {
           if (String(line).length) {
             if (lineno === firstLine) {
+              line = line.toLowerCase()
               fileColumnsName = line.split(dataSeparator)
               const columnsName = self._getColumnsRequiredName(fields)
               if (columnsName.length < fileColumnsName.length) {
@@ -338,6 +339,7 @@ class Validator {
         .on('line', function (line, lineno = lineCounter()) {
           if (String(line).length) {
             if (lineno === firstLine) {
+              line = line.toLowerCase()
               fileColumnsName = line.split(dataSeparator)
               const columnsName = self._getColumnsRequiredName(fields)
               if (columnsName.length < fileColumnsName.length) {
