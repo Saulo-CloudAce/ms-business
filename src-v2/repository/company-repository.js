@@ -2,12 +2,20 @@ const moment = require('moment')
 const ObjectID = require('mongodb').ObjectID
 
 class CompanyRepository {
-  constructor (db) {
+  constructor(db) {
     this.db = db
   }
 
-  async save (name, prefixIndexElastic, callback, token) {
-    const newCompany = { name, prefix_index_elastic: prefixIndexElastic, callback, token, activated: true, created_at: moment().format(), updated_at: moment().format() }
+  async save(name, prefixIndexElastic, callback, token) {
+    const newCompany = {
+      name,
+      prefix_index_elastic: prefixIndexElastic,
+      callback,
+      token,
+      activated: true,
+      created_at: moment().format(),
+      updated_at: moment().format()
+    }
 
     try {
       const r = await this.db.collection('company').insertOne(newCompany)
@@ -19,7 +27,7 @@ class CompanyRepository {
     }
   }
 
-  async getAll () {
+  async getAll() {
     try {
       const result = await this.db.collection('company').find({}).toArray()
 
@@ -29,7 +37,7 @@ class CompanyRepository {
     }
   }
 
-  async getById (id) {
+  async getById(id) {
     try {
       const result = await this.db.collection('company').findOne({ _id: new ObjectID(id) })
 
@@ -39,7 +47,7 @@ class CompanyRepository {
     }
   }
 
-  async getByToken (token) {
+  async getByToken(token) {
     try {
       if (global.cache.companies[token]) {
         console.log('COMPANY_CACHED')
@@ -58,9 +66,11 @@ class CompanyRepository {
     }
   }
 
-  async update (id, name, callback, activated) {
+  async update(id, name, callback, activated) {
     try {
-      const result = await this.db.collection('company').update({ _id: new ObjectID(id) }, { $set: { name, callback, activated, updated_at: moment().format() } })
+      const result = await this.db
+        .collection('company')
+        .update({ _id: new ObjectID(id) }, { $set: { name, callback, activated, updated_at: moment().format() } })
 
       return result.ops[0]
     } catch (err) {

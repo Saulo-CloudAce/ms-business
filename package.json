@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon --max-old-space-size=4096 index.js",
+    "dev": "NODE_ENV=development nodemon --max-old-space-size=4096 index.js",
     "test": "cross-env NODE_ENV=test ./node_modules/.bin/run.env jest --detectOpenHandles --forceExit",
     "clear_test": "jest --clearCache"
   },

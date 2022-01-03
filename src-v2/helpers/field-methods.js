@@ -1,3 +1,5 @@
+const moment = require('moment')
+
 function isTypeOptions(field) {
   return field.type === 'options'
 }
@@ -12,6 +14,10 @@ function isTypeInt(field) {
 
 function isTypeDate(field) {
   return field.type === 'date'
+}
+
+function isTypeDocument(field) {
+  return field.type === 'document'
 }
 
 function isTypeDecimal(field) {
@@ -54,6 +60,13 @@ function isUnique(field) {
   return field.unique
 }
 
+function isValidDate(date, mask) {
+  date = String(date).trim()
+  mask = String(mask).trim()
+
+  return moment(date, mask, true).isValid()
+}
+
 module.exports = {
   isTypeOptions,
   isTypeInt,
@@ -67,6 +80,8 @@ module.exports = {
   isRequired,
   isKey,
   isTypeDate,
+  isTypeDocument,
   isUnique,
-  isTypeMultipleOptions
+  isTypeMultipleOptions,
+  isValidDate
 }

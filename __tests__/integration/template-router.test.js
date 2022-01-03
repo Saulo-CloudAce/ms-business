@@ -15,7 +15,7 @@ const request = supertest(app)
 
 let companyCreated = ''
 
-async function createCompany () {
+async function createCompany() {
   const c = {
     name: 'company-test-t',
     prefix_index_elastic: 'company-test-t',
@@ -41,12 +41,32 @@ describe('CRUD template', () => {
     })
   })
 
-  it ('Create a simple template with customer fields', async (done) => {
+  it('Create a simple template with customer fields', async (done) => {
     const t = {
       name: 'template simples',
       fields: [
-        { type: 'string', column: 'name', data: 'customer_name', label: 'Nome', key: false, operator_can_view: true, required: true, editable: false, visible: true },
-        { type: 'cpfcnpj', column: 'cpf_cnpj', data: 'customer_cpfcnpj', label: 'CPF/CNPJ', key: true, operator_can_view: true, required: true, editable: false, visible: true }
+        {
+          type: 'string',
+          column: 'name',
+          data: 'customer_name',
+          label: 'Nome',
+          key: false,
+          operator_can_view: true,
+          required: true,
+          editable: false,
+          visible: true
+        },
+        {
+          type: 'cpfcnpj',
+          column: 'cpf_cnpj',
+          data: 'customer_cpfcnpj',
+          label: 'CPF/CNPJ',
+          key: true,
+          operator_can_view: true,
+          required: true,
+          editable: false,
+          visible: true
+        }
       ]
     }
     request
@@ -65,12 +85,32 @@ describe('CRUD template', () => {
       })
   })
 
-  it ('Create a simple template without customer fields', async (done) => {
+  it('Create a simple template without customer fields', async (done) => {
     const t = {
       name: 'template simples sem customer',
       fields: [
-        { type: 'string', column: 'name', data: 'name', label: 'Nome', key: false, operator_can_view: true, required: true, editable: false, visible: true },
-        { type: 'cpfcnpj', column: 'cpf_cnpj', data: 'cpfcnpj', label: 'CPF/CNPJ', key: false, operator_can_view: true, required: true, editable: false, visible: true }
+        {
+          type: 'string',
+          column: 'name',
+          data: 'name',
+          label: 'Nome',
+          key: false,
+          operator_can_view: true,
+          required: true,
+          editable: false,
+          visible: true
+        },
+        {
+          type: 'cpfcnpj',
+          column: 'cpf_cnpj',
+          data: 'cpfcnpj',
+          label: 'CPF/CNPJ',
+          key: false,
+          operator_can_view: true,
+          required: true,
+          editable: false,
+          visible: true
+        }
       ]
     }
     request
@@ -89,12 +129,32 @@ describe('CRUD template', () => {
       })
   })
 
-  it ('Create a complex template', async (done) => {
+  it('Create a complex template', async (done) => {
     const t = {
       name: 'template complex',
       fields: [
-        { type: 'string', column: 'name', data: 'customer_name', label: 'Nome', key: false, operator_can_view: true, required: true, editable: false, visible: true },
-        { type: 'cpfcnpj', column: 'cpf_cnpj', data: 'customer_cpfcnpj', label: 'CPF/CNPJ', key: true, operator_can_view: true, required: true, editable: false, visible: true },
+        {
+          type: 'string',
+          column: 'name',
+          data: 'customer_name',
+          label: 'Nome',
+          key: false,
+          operator_can_view: true,
+          required: true,
+          editable: false,
+          visible: true
+        },
+        {
+          type: 'cpfcnpj',
+          column: 'cpf_cnpj',
+          data: 'customer_cpfcnpj',
+          label: 'CPF/CNPJ',
+          key: true,
+          operator_can_view: true,
+          required: true,
+          editable: false,
+          visible: true
+        },
         {
           type: 'array',
           column: 'phones',
@@ -106,8 +166,28 @@ describe('CRUD template', () => {
           editable: true,
           visible: true,
           fields: [
-            { type: 'phone_number', column: 'phone_number1', data: 'customer_phone_number', label: 'Nº Telefone', key: false, operator_can_view: false, required: true, editable: true, visible: true },
-            { type: 'string', column: 'phone_type1', data: 'customer_phone_type', label: 'Tipo Telefone', key: false, operator_can_view: false, required: true, editable: true, visible: true }
+            {
+              type: 'phone_number',
+              column: 'phone_number1',
+              data: 'customer_phone_number',
+              label: 'Nº Telefone',
+              key: false,
+              operator_can_view: false,
+              required: true,
+              editable: true,
+              visible: true
+            },
+            {
+              type: 'string',
+              column: 'phone_type1',
+              data: 'customer_phone_type',
+              label: 'Tipo Telefone',
+              key: false,
+              operator_can_view: false,
+              required: true,
+              editable: true,
+              visible: true
+            }
           ]
         }
       ]
@@ -126,7 +206,7 @@ describe('CRUD template', () => {
       })
   })
 
-  it ('List all templates by company', async (done) => {
+  it('List all templates by company', async (done) => {
     request
       .get('/api/v2/templates')
       .set('token', companyCreated.token)
@@ -142,17 +222,36 @@ describe('CRUD template', () => {
         expect(firstResult).toHaveProperty('active')
         expect(firstResult).toHaveProperty('createdAt')
 
-
         done()
       })
   })
 
-  it ('Get a template', async (done) => {
+  it('Get a template', async (done) => {
     const t = {
       name: 'template simples - 1',
       fields: [
-        { type: 'string', column: 'name', data: 'customer_name', label: 'Nome', key: false, operator_can_view: true, required: true, editable: false, visible: true },
-        { type: 'cpfcnpj', column: 'cpf_cnpj', data: 'customer_cpfcnpj', label: 'CPF/CNPJ', key: true, operator_can_view: true, required: true, editable: false, visible: true }
+        {
+          type: 'string',
+          column: 'name',
+          data: 'customer_name',
+          label: 'Nome',
+          key: false,
+          operator_can_view: true,
+          required: true,
+          editable: false,
+          visible: true
+        },
+        {
+          type: 'cpfcnpj',
+          column: 'cpf_cnpj',
+          data: 'customer_cpfcnpj',
+          label: 'CPF/CNPJ',
+          key: true,
+          operator_can_view: true,
+          required: true,
+          editable: false,
+          visible: true
+        }
       ],
       active: true
     }
@@ -173,15 +272,34 @@ describe('CRUD template', () => {
 
         done()
       })
-
   })
 
-  it ('Active a template', async (done) => {
+  it('Active a template', async (done) => {
     const t = {
       name: 'template simples - 1',
       fields: [
-        { type: 'string', column: 'name', data: 'customer_name', label: 'Nome', key: false, operator_can_view: true, required: true, editable: false, visible: true },
-        { type: 'cpfcnpj', column: 'cpf_cnpj', data: 'customer_cpfcnpj', label: 'CPF/CNPJ', key: true, operator_can_view: true, required: true, editable: false, visible: true }
+        {
+          type: 'string',
+          column: 'name',
+          data: 'customer_name',
+          label: 'Nome',
+          key: false,
+          operator_can_view: true,
+          required: true,
+          editable: false,
+          visible: true
+        },
+        {
+          type: 'cpfcnpj',
+          column: 'cpf_cnpj',
+          data: 'customer_cpfcnpj',
+          label: 'CPF/CNPJ',
+          key: true,
+          operator_can_view: true,
+          required: true,
+          editable: false,
+          visible: true
+        }
       ],
       active: false
     }
@@ -200,12 +318,32 @@ describe('CRUD template', () => {
       })
   })
 
-  it ('Deactivate a template', async (done) => {
+  it('Deactivate a template', async (done) => {
     const t = {
       name: 'template simples - 2',
       fields: [
-        { type: 'string', column: 'name', data: 'customer_name', label: 'Nome', key: false, operator_can_view: true, required: true, editable: false, visible: true },
-        { type: 'cpfcnpj', column: 'cpf_cnpj', data: 'customer_cpfcnpj', label: 'CPF/CNPJ', key: true, operator_can_view: true, required: true, editable: false, visible: true }
+        {
+          type: 'string',
+          column: 'name',
+          data: 'customer_name',
+          label: 'Nome',
+          key: false,
+          operator_can_view: true,
+          required: true,
+          editable: false,
+          visible: true
+        },
+        {
+          type: 'cpfcnpj',
+          column: 'cpf_cnpj',
+          data: 'customer_cpfcnpj',
+          label: 'CPF/CNPJ',
+          key: true,
+          operator_can_view: true,
+          required: true,
+          editable: false,
+          visible: true
+        }
       ],
       active: false
     }
@@ -224,12 +362,32 @@ describe('CRUD template', () => {
       })
   })
 
-  it ('Update a template', async (done) => {
+  it('Update a template', async (done) => {
     const t = {
       name: 'template simples - 3',
       fields: [
-        { type: 'string', column: 'name', data: 'customer_name', label: 'Nome', key: false, operator_can_view: true, required: true, editable: false, visible: true },
-        { type: 'cpfcnpj', column: 'cpf_cnpj', data: 'customer_cpfcnpj', label: 'CPF/CNPJ', key: true, operator_can_view: true, required: true, editable: false, visible: true }
+        {
+          type: 'string',
+          column: 'name',
+          data: 'customer_name',
+          label: 'Nome',
+          key: false,
+          operator_can_view: true,
+          required: true,
+          editable: false,
+          visible: true
+        },
+        {
+          type: 'cpfcnpj',
+          column: 'cpf_cnpj',
+          data: 'customer_cpfcnpj',
+          label: 'CPF/CNPJ',
+          key: true,
+          operator_can_view: true,
+          required: true,
+          editable: false,
+          visible: true
+        }
       ],
       active: false
     }
@@ -260,12 +418,32 @@ describe('CRUD template', () => {
       })
   })
 
-  it ('Get data from template', async (done) => {
+  it('Get data from template', async (done) => {
     const t = {
       name: 'template simples - 4',
       fields: [
-        { type: 'string', column: 'name', data: 'customer_name', label: 'Nome', key: false, operator_can_view: true, required: true, editable: false, visible: true },
-        { type: 'cpfcnpj', column: 'cpf_cnpj', data: 'customer_cpfcnpj', label: 'CPF/CNPJ', key: true, operator_can_view: true, required: true, editable: false, visible: true }
+        {
+          type: 'string',
+          column: 'name',
+          data: 'customer_name',
+          label: 'Nome',
+          key: false,
+          operator_can_view: true,
+          required: true,
+          editable: false,
+          visible: true
+        },
+        {
+          type: 'cpfcnpj',
+          column: 'cpf_cnpj',
+          data: 'customer_cpfcnpj',
+          label: 'CPF/CNPJ',
+          key: true,
+          operator_can_view: true,
+          required: true,
+          editable: false,
+          visible: true
+        }
       ],
       active: false
     }
@@ -282,6 +460,62 @@ describe('CRUD template', () => {
         expect(res.body).toHaveProperty('_id')
         expect(res.body).toHaveProperty('name')
         expect(res.body).toHaveProperty('data')
+
+        done()
+      })
+  })
+
+  it('Should create with document fields', async (done) => {
+    const t = {
+      name: 'template documento 1',
+      fields: [
+        {
+          type: 'string',
+          column: 'name',
+          data: 'name',
+          label: 'Nome',
+          key: false,
+          operator_can_view: true,
+          required: true,
+          editable: false,
+          visible: true
+        },
+        {
+          type: 'cpfcnpj',
+          column: 'cpf_cnpj',
+          data: 'cpfcnpj',
+          label: 'CPF/CNPJ',
+          key: false,
+          operator_can_view: true,
+          required: true,
+          editable: false,
+          visible: true
+        },
+        {
+          type: 'document',
+          column: 'rg',
+          data: 'arquivo_rg',
+          label: 'RG',
+          key: false,
+          operator_can_view: true,
+          required: false,
+          editable: true,
+          visible: true,
+          has_expiration: true
+        }
+      ]
+    }
+    request
+      .post('/api/v2/templates')
+      .send(t)
+      .set('Accept', 'application/json')
+      .set('token', companyCreated.token)
+      .end((err, res) => {
+        if (err) done(err)
+
+        expect(res.statusCode).toBe(201)
+
+        expect(res.body).toHaveProperty('_id')
 
         done()
       })

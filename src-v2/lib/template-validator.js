@@ -1,6 +1,6 @@
 const { clearString } = require('../helpers/formatters')
 const { isArrayElementSameTypes, isArrayOfObjects, isArrayWithEmptyElement } = require('../helpers/validators')
-const { isTypeOptions, isTypeDate, isTypeMultipleOptions } = require('../helpers/field-methods')
+const { isTypeOptions, isTypeDate, isTypeMultipleOptions, isTypeArray, isTypeDocument } = require('../helpers/field-methods')
 
 const supportedTypes = [
   'text',
@@ -17,7 +17,8 @@ const supportedTypes = [
   'date',
   'timestamp',
   'table',
-  'multiple_options'
+  'multiple_options',
+  'document'
 ]
 const supportedKeys = ['customer_cpfcnpj', 'customer_name', 'customer_phone_number', 'customer_email', 'customer_email_address']
 
@@ -49,7 +50,7 @@ function formatFieldsOptions(fields) {
     f.label = f.label ? String(f.label) : String(f.column)
     f.column = clearString(f.column.toLowerCase())
 
-    if (f.type === 'array') {
+    if (isTypeArray(f)) {
       if (f.fields) {
         f.fields.map((ff) => {
           ff.key = String(ff.key) === 'true'
@@ -65,6 +66,8 @@ function formatFieldsOptions(fields) {
           ff.column = clearString(ff.column.toLowerCase())
         })
       }
+    } else if (isTypeDocument(f)) {
+      f.has_expiration = String(f.has_expiration) === 'true'
     }
 
     return f
@@ -103,6 +106,16 @@ function validateFieldOptionsType(field) {
     }
   } else if (isArrayWithEmptyElement(field.list_options)) {
     return { error: 'O list_options não pode ter elemento do array vazio' }
+  }
+
+  return {}
+}
+
+function validateFieldDocument(field) {
+  if (!Object.keys(field).includes('has_expiration')) {
+    return { error: 'O has_expiration é obrigatório' }
+  } else if (typeof field.has_expiration !== 'boolean') {
+    return { error: 'O has_expiration deve ser true/false' }
   }
 
   return {}
@@ -164,6 +177,11 @@ function validateFields(fields) {
 
       if (isTypeDate(field)) {
         const error = validateFieldDate(field)
+        if (Object.keys(error).length) errorsField.errors.push(error)
+      }
+
+      if (isTypeDocument(field)) {
+        const error = validateFieldDocument(field)
         if (Object.keys(error).length) errorsField.errors.push(error)
       }
     } else {
