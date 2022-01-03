@@ -19,7 +19,8 @@ const {
   isUnique,
   isTypeMultipleOptions,
   isValidDate,
-  isTypeDocument
+  isTypeDocument,
+  isTypeListDocument
 } = require('../helpers/field-methods')
 
 const StorageService = require('../services/storage-service')
@@ -727,6 +728,23 @@ class Validator {
     return errors
   }
 
+  _validateFieldListDocument(rules, fieldData, errors) {
+    if (!Array.isArray(fieldData)) {
+      errors.push({
+        column: rules.column,
+        error: 'O campo deve ser um array de objetos com os dados do documento'
+      })
+
+      return errors
+    }
+    for (let i in fieldData) {
+      const document = fieldData[i]
+      this._validateFieldDocument(rules, document, errors)
+    }
+
+    return errors
+  }
+
   validate(data, lineNumber, listBatches = [], fields = []) {
     const lineNumberOnFile = lineNumber + 1
     const lineErrors = { line: lineNumberOnFile, errors: [] }
@@ -793,6 +811,10 @@ class Validator {
       }
       if (isTypeDocument(rules) && this._isRequiredOrFill(rules, el)) {
         lineErrors.errors = this._validateFieldDocument(rules, el, lineErrors.errors)
+      }
+
+      if (isTypeListDocument(rules) && this._isRequiredOrFill(rules, el)) {
+        lineErrors.errors = this._validateFieldListDocument(rules, el, lineErrors.errors)
       }
     })
     return { valid: lineErrors.errors.length === 0, lineErrors }
@@ -892,7 +914,14 @@ class Validator {
     const document = { name: '', url: '', expiration_date: '4000-12-31' }
     document.url = fieldData.url
     document.name = fieldData.name
+    if (fieldRules.has_expiration && fieldData.expiration_date) {
+      document.expiration_date = fieldData.expiration_date
+    }
     return document
+  }
+
+  _formatFieldListDocument(fieldRules, fieldData) {
+    return fieldData.map((f) => this._formatFieldDocument(fieldRules, f))
   }
 
   format(data, rules) {
@@ -920,6 +949,8 @@ class Validator {
         elText = this._formatFieldOptions(fieldRules, elText)
       } else if (isTypeDocument(fieldRules)) {
         elText = this._formatFieldDocument(fieldRules, elText)
+      } else if (isTypeListDocument(fieldRules)) {
+        elText = this._formatFieldListDocument(fieldRules, elText)
       }
       formatted[fieldRules.column] = elText
     }

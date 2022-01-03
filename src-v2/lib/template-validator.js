@@ -1,6 +1,13 @@
 const { clearString } = require('../helpers/formatters')
 const { isArrayElementSameTypes, isArrayOfObjects, isArrayWithEmptyElement } = require('../helpers/validators')
-const { isTypeOptions, isTypeDate, isTypeMultipleOptions, isTypeArray, isTypeDocument } = require('../helpers/field-methods')
+const {
+  isTypeOptions,
+  isTypeDate,
+  isTypeMultipleOptions,
+  isTypeArray,
+  isTypeDocument,
+  isTypeListDocument
+} = require('../helpers/field-methods')
 
 const supportedTypes = [
   'text',
@@ -18,7 +25,8 @@ const supportedTypes = [
   'timestamp',
   'table',
   'multiple_options',
-  'document'
+  'document',
+  'list_document'
 ]
 const supportedKeys = ['customer_cpfcnpj', 'customer_name', 'customer_phone_number', 'customer_email', 'customer_email_address']
 
@@ -66,7 +74,7 @@ function formatFieldsOptions(fields) {
           ff.column = clearString(ff.column.toLowerCase())
         })
       }
-    } else if (isTypeDocument(f)) {
+    } else if (isTypeDocument(f) || isTypeListDocument(f)) {
       f.has_expiration = String(f.has_expiration) === 'true'
     }
 
@@ -182,7 +190,12 @@ function validateFields(fields) {
 
       if (isTypeDocument(field)) {
         const error = validateFieldDocument(field)
-        if (Object.keys(error).length) errorsField.errors.push(error)
+        if (error && Object.keys(error).length) errorsField.errors.push(error)
+      }
+
+      if (isTypeListDocument(field)) {
+        const error = validateFieldDocument(field)
+        if (error && Object.keys(error).length) errorsField.errors.push(error)
       }
     } else {
       errorsField.push({ error: 'O type é obrigatório' })

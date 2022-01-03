@@ -20,6 +20,10 @@ function isTypeDocument(field) {
   return field.type === 'document'
 }
 
+function isTypeListDocument(field) {
+  return field.type === 'list_document'
+}
+
 function isTypeDecimal(field) {
   return field.type === 'decimal'
 }
@@ -81,6 +85,7 @@ module.exports = {
   isKey,
   isTypeDate,
   isTypeDocument,
+  isTypeListDocument,
   isUnique,
   isTypeMultipleOptions,
   isValidDate
