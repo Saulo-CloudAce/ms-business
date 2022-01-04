@@ -718,10 +718,10 @@ class Validator {
           current_value: `${fieldData.expiration_date}`
         })
       }
-    } else if (!rules.has_expiration && !Object.keys(fieldData).includes('url', 'name')) {
+    } else if (!rules.has_expiration && !Object.keys(fieldData).includes('url', 'name', 'type')) {
       errors.push({
         column: rules.column,
-        error: 'O url e name são obrigatórios'
+        error: 'O url, name e type são obrigatórios'
       })
     }
 
@@ -911,9 +911,10 @@ class Validator {
   }
 
   _formatFieldDocument(fieldRules, fieldData) {
-    const document = { name: '', url: '', expiration_date: '4000-12-31' }
+    const document = { name: '', url: '', expiration_date: '4000-12-31', type: '' }
     document.url = fieldData.url
     document.name = fieldData.name
+    document.type = fieldData.type
     if (fieldRules.has_expiration && fieldData.expiration_date) {
       document.expiration_date = fieldData.expiration_date
     }
