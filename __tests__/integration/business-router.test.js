@@ -27,6 +27,7 @@ const request = supertest(app)
 
 let companyCreated = ''
 let templateCreated = ''
+let templateDocumentCreated = ''
 let businessCreated = ''
 
 const b = {
@@ -39,11 +40,90 @@ const b = {
   ]
 }
 
+const businessDocument = {
+  name: 'lote 1',
+  active_until: '2030-12-31',
+  templateId: '',
+  data: [
+    {
+      name: 'Pessoa 1',
+      cpf_cnpj: '11122233344',
+      rg: { name: 'arq_rg.png', url: 'http://radioimprensa.com.br/wp-content/uploads/2019/08/rg-novo.jpg' }
+    },
+    {
+      name: 'Pessoa 2',
+      cpf_cnpj: '21122233344',
+      rg: { name: 'arq_rg.png', url: 'http://radioimprensa.com.br/wp-content/uploads/2019/08/rg-novo.jpg' }
+    }
+  ]
+}
+
 const t = {
   name: 'template simples',
   fields: [
-    { type: 'string', column: 'name', data: 'customer_name', label: 'Nome', key: false, operator_can_view: true, required: true, editable: true, visible: true },
-    { type: 'cpfcnpj', column: 'cpf_cnpj', data: 'customer_cpfcnpj', label: 'CPF/CNPJ', key: true, operator_can_view: true, required: true, editable: false, visible: true }
+    {
+      type: 'string',
+      column: 'name',
+      data: 'customer_name',
+      label: 'Nome',
+      key: false,
+      operator_can_view: true,
+      required: true,
+      editable: true,
+      visible: true
+    },
+    {
+      type: 'cpfcnpj',
+      column: 'cpf_cnpj',
+      data: 'customer_cpfcnpj',
+      label: 'CPF/CNPJ',
+      key: true,
+      operator_can_view: true,
+      required: true,
+      editable: false,
+      visible: true
+    }
+  ],
+  active: true
+}
+
+const templateDocument = {
+  name: 'template document simples',
+  fields: [
+    {
+      type: 'string',
+      column: 'name',
+      data: 'customer_name',
+      label: 'Nome',
+      key: false,
+      operator_can_view: true,
+      required: true,
+      editable: true,
+      visible: true
+    },
+    {
+      type: 'cpfcnpj',
+      column: 'cpf_cnpj',
+      data: 'customer_cpfcnpj',
+      label: 'CPF/CNPJ',
+      key: true,
+      operator_can_view: true,
+      required: true,
+      editable: false,
+      visible: true
+    },
+    {
+      type: 'document',
+      column: 'rg',
+      data: 'arquivo_rg',
+      label: 'RG',
+      key: false,
+      operator_can_view: true,
+      required: true,
+      editable: false,
+      visible: true,
+      has_expiration: false
+    }
   ],
   active: true
 }
@@ -54,15 +134,15 @@ const c = {
   callback: 'http://localhost:5500/v1/crm-t'
 }
 
-async function createCompany () {
+async function createCompany() {
   return companyModel.create(c.name, c.prefix_index_elastic, c.callback)
 }
 
-async function createTemplate (companyToken = '') {
-  return templateRepository.save(t.name, t.fields, companyToken, t.active)
+async function createTemplate(companyToken = '', templateCreate = {}) {
+  return templateRepository.save(templateCreate.name, templateCreate.fields, companyToken, templateCreate.active)
 }
 
-async function createBusiness (templateId = '', token = '') {
+async function createBusiness(templateId = '', token = '') {
   b.name = 'lote0003'
   b.templateId = templateId
 
@@ -75,7 +155,7 @@ describe('CRUD business', () => {
       connect(app, async () => {
         await app.locals.db.collection('business').remove({})
         await app.locals.db.collection('business_data').remove({})
-        
+
         companyRepository = new CompanyRepository(app.locals.db)
         companyModel = new CompanyModel(companyRepository)
         templateRepository = new TemplateRepository(app.locals.db)
@@ -83,7 +163,9 @@ describe('CRUD business', () => {
         businessModel = new BusinessModel(businessRepository, new UploaderMock(), new Validator(), new CRMServiceMock())
 
         companyCreated = await createCompany()
-        templateCreated = await createTemplate(companyCreated.token)
+        templateCreated = await createTemplate(companyCreated.token, t)
+        templateDocumentCreated = await createTemplate(companyCreated.token, templateDocument)
+
         businessCreated = await createBusiness(`${templateCreated._id.toString()}`, companyCreated.token)
 
         resolve()
@@ -91,7 +173,7 @@ describe('CRUD business', () => {
     })
   })
 
-  it ('Create a business from JSON', async (done) => {
+  it('Create a business from JSON', async (done) => {
     b.templateId = templateCreated._id
     b.name = 'lote0004'
 
@@ -121,7 +203,7 @@ describe('CRUD business', () => {
       })
   })
 
-  it ('Create a single register', async (done) => {
+  it('Create a single register', async (done) => {
     const b1 = b
     b1.templateId = templateCreated._id
     b1.name = 'Lote78912'
@@ -156,7 +238,7 @@ describe('CRUD business', () => {
       })
   })
 
-  it ('List all business', async (done) => {
+  it('List all business', async (done) => {
     request
       .get('/api/v2/business')
       .set('token', companyCreated.token)
@@ -179,7 +261,7 @@ describe('CRUD business', () => {
       })
   })
 
-  it ('Get a business by ID', async (done) => {
+  it('Get a business by ID', async (done) => {
     request
       .get(`/api/v2/business/${businessCreated.businessId}`)
       .set('token', companyCreated.token)
@@ -208,7 +290,7 @@ describe('CRUD business', () => {
       })
   })
 
-  it ('Activate a business', async (done) => {
+  it('Activate a business', async (done) => {
     request
       .put(`/api/v2/business/${businessCreated.businessId}/activate`)
       .send({ active_until: '2050-01-02' })
@@ -223,7 +305,7 @@ describe('CRUD business', () => {
       })
   })
 
-  it ('Deactivate a business', async (done) => {
+  it('Deactivate a business', async (done) => {
     request
       .put(`/api/v2/business/${businessCreated.businessId}/deactivate`)
       .set('token', companyCreated.token)
@@ -236,7 +318,7 @@ describe('CRUD business', () => {
       })
   })
 
-  it ('Get a register on business by ID', async (done) => {
+  it('Get a register on business by ID', async (done) => {
     const register = businessCreated.valids[0]
 
     request
@@ -261,7 +343,7 @@ describe('CRUD business', () => {
       })
   })
 
-  it ('Search register on business by CPF/CNPJ', async (done) => {
+  it('Search register on business by CPF/CNPJ', async (done) => {
     request
       .get(`/api/v2/business/search?cpfcnpj=${b.data[0].cpf_cnpj}`)
       .set('token', companyCreated.token)
@@ -285,7 +367,7 @@ describe('CRUD business', () => {
       })
   })
 
-  it ('Mark flow passed on business', async (done) => {
+  it('Mark flow passed on business', async (done) => {
     request
       .put(`/api/v2/business/${businessCreated.businessId}/mark_flow_passed`)
       .set('token', companyCreated.token)
@@ -298,7 +380,7 @@ describe('CRUD business', () => {
       })
   })
 
-  it ('Unmark flow passed on business', async (done) => {
+  it('Unmark flow passed on business', async (done) => {
     request
       .put(`/api/v2/business/${businessCreated.businessId}/unmark_flow_passed`)
       .set('token', companyCreated.token)
@@ -311,7 +393,7 @@ describe('CRUD business', () => {
       })
   })
 
-  it ('Update register on business by ID', async (done) => {
+  it('Update register on business by ID', async (done) => {
     const register = businessCreated.valids[0]
     register.idCrm = 1
 
@@ -369,8 +451,6 @@ describe('CRUD business', () => {
 
         expect(res.statusCode).toBe(200)
 
-        
-
         expect(res.body.name).toBe('Pessoa X')
         expect(res.body.cpf_cnpj).toBe(register.cpf_cnpj)
         expect(res.body._id).toBe(register._id)
@@ -379,13 +459,11 @@ describe('CRUD business', () => {
       })
   })
 
-  it ('Get pool data with specific fields', async (done) => {
+  it('Get pool data with specific fields', async (done) => {
     const register = businessCreated.valids[0]
 
     const paramsRequest = {
-      data: [
-        { schama: `${templateCreated._id}`, lote_id: `${businessCreated.businessId}`, item_id: register._id }
-      ],
+      data: [{ schama: `${templateCreated._id}`, lote_id: `${businessCreated.businessId}`, item_id: register._id }],
       fields: ['name']
     }
 
@@ -407,7 +485,7 @@ describe('CRUD business', () => {
       })
   })
 
-  it ('Search data on business by template ID', async (done) => {
+  it('Search data on business by template ID', async (done) => {
     const register = businessCreated.valids[1]
 
     const paramsRequest = {
@@ -442,10 +520,9 @@ describe('CRUD business', () => {
 
         done()
       })
-
   })
 
-  it ('List all business paginated', async (done) => {
+  it('List all business paginated', async (done) => {
     request
       .get('/api/v2/business/paginated?page=0&limit=1')
       .set('token', companyCreated.token)
@@ -475,7 +552,7 @@ describe('CRUD business', () => {
       })
   })
 
-  it ('Get a business with data paginated', async (done) => {
+  it('Get a business with data paginated', async (done) => {
     request
       .get(`/api/v2/business/${businessCreated.businessId}/paginated/?page=0&limit=1`)
       .set('token', companyCreated.token)
@@ -505,6 +582,38 @@ describe('CRUD business', () => {
         expect(pagination).toHaveProperty('page')
         expect(pagination).toHaveProperty('firstPage')
         expect(pagination).toHaveProperty('lastPage')
+
+        done()
+      })
+  })
+
+  it('Should create a business from JSON with fields document', async (done) => {
+    businessDocument.templateId = templateDocumentCreated._id
+    businessDocument.name = 'lote0001'
+
+    nock('http://localhost:4000', {
+      reqheaders: {
+        token: companyCreated.token
+      }
+    })
+      .intercept('/api/v1/customers', 'OPTIONS')
+      .reply(200)
+      .post('/api/v1/customers')
+      .reply(200, { contact_ids: 1 })
+
+    nock('https://api-storage-dev.s3.amazonaws.com').post('/').reply(200, [])
+
+    request
+      .post('/api/v2/business_json')
+      .send(b)
+      .set('Accept', 'application/json')
+      .set('token', companyCreated.token)
+      .end((err, res) => {
+        if (err) done(err)
+
+        expect(res.statusCode).toBe(201)
+
+        expect(res.body).toHaveProperty('businessId')
 
         done()
       })

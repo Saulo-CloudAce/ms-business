@@ -17,7 +17,10 @@ const {
   isTypeCpfCnpj,
   isRequired,
   isUnique,
-  isTypeMultipleOptions
+  isTypeMultipleOptions,
+  isValidDate,
+  isTypeDocument,
+  isTypeListDocument
 } = require('../helpers/field-methods')
 
 const StorageService = require('../services/storage-service')
@@ -473,7 +476,7 @@ class Validator {
   _validateFieldDate(rules, fieldData, errors) {
     if (fieldData) {
       const date = fieldData.trim()
-      if (!moment(date, rules.mask, true).isValid())
+      if (!isValidDate(date, rules.mask))
         errors.push({
           column: rules.column,
           error: 'O valor informado não é uma data válida',
@@ -696,6 +699,65 @@ class Validator {
     return errors
   }
 
+  _validateFieldDocument(rules, fieldData, errors) {
+    if (typeof fieldData !== 'object') {
+      errors.push({
+        column: rules.column,
+        error: 'O campo deve ser um objeto com os dados do documento'
+      })
+    } else if (rules.has_expiration_date) {
+      if (!Object.keys(fieldData).includes('expiration_date')) {
+        errors.push({
+          column: rules.column,
+          error: 'O expiration_date é obrigatório'
+        })
+      } else if (!isValidDate(fieldData.expiration_date, 'YYYY-MM-DD')) {
+        errors.push({
+          column: rules.column,
+          error: 'Data do expiration_date é inválida',
+          current_value: `${fieldData.expiration_date}`
+        })
+      }
+    } else if (rules.has_issue_date) {
+      if (!Object.keys(fieldData).includes('issue_date')) {
+        errors.push({
+          column: rules.column,
+          error: 'O issue_date é obrigatório'
+        })
+      } else if (!isValidDate(fieldData.issue_date, 'YYYY-MM-DD')) {
+        errors.push({
+          column: rules.column,
+          error: 'Data do issue_date é inválida',
+          current_value: `${fieldData.issue_date}`
+        })
+      }
+    } else if (!rules.has_expiration_date && !rules.has_issue_date && !Object.keys(fieldData).includes('url', 'name', 'type')) {
+      errors.push({
+        column: rules.column,
+        error: 'O url, name e type são obrigatórios'
+      })
+    }
+
+    return errors
+  }
+
+  _validateFieldListDocument(rules, fieldData, errors) {
+    if (!Array.isArray(fieldData)) {
+      errors.push({
+        column: rules.column,
+        error: 'O campo deve ser um array de objetos com os dados do documento'
+      })
+
+      return errors
+    }
+    for (let i in fieldData) {
+      const document = fieldData[i]
+      this._validateFieldDocument(rules, document, errors)
+    }
+
+    return errors
+  }
+
   validate(data, lineNumber, listBatches = [], fields = []) {
     const lineNumberOnFile = lineNumber + 1
     const lineErrors = { line: lineNumberOnFile, errors: [] }
@@ -759,6 +821,13 @@ class Validator {
       }
       if (isTypeCpfCnpj(rules) && this._isRequiredOrFill(rules, el)) {
         lineErrors.errors = this._validateFieldCpfCnpj(rules, el, lineErrors.errors)
+      }
+      if (isTypeDocument(rules) && this._isRequiredOrFill(rules, el)) {
+        lineErrors.errors = this._validateFieldDocument(rules, el, lineErrors.errors)
+      }
+
+      if (isTypeListDocument(rules) && this._isRequiredOrFill(rules, el)) {
+        lineErrors.errors = this._validateFieldListDocument(rules, el, lineErrors.errors)
       }
     })
     return { valid: lineErrors.errors.length === 0, lineErrors }
@@ -854,6 +923,24 @@ class Validator {
     return fieldData
   }
 
+  _formatFieldDocument(fieldRules, fieldData) {
+    const document = { name: '', url: '', expiration_date: '4000-12-31', issue_date: moment().format('YYYY-MM-DD'), type: '' }
+    document.url = fieldData.url
+    document.name = fieldData.name
+    document.type = fieldData.type
+    if (fieldRules.has_expiration_date && fieldData.expiration_date) {
+      document.expiration_date = fieldData.expiration_date
+    }
+    if (fieldRules.has_issue_date && fieldData.issue_date) {
+      document.issue_date = fieldData.issue_date
+    }
+    return document
+  }
+
+  _formatFieldListDocument(fieldRules, fieldData) {
+    return fieldData.map((f) => this._formatFieldDocument(fieldRules, f))
+  }
+
   format(data, rules) {
     const formatted = {}
     const fieldKeyList = Object.keys(data)
@@ -877,6 +964,10 @@ class Validator {
         elText = this._formatFieldArray(fieldRules, elText)
       } else if (isTypeOptions(fieldRules)) {
         elText = this._formatFieldOptions(fieldRules, elText)
+      } else if (isTypeDocument(fieldRules)) {
+        elText = this._formatFieldDocument(fieldRules, elText)
+      } else if (isTypeListDocument(fieldRules)) {
+        elText = this._formatFieldListDocument(fieldRules, elText)
       }
       formatted[fieldRules.column] = elText
     }

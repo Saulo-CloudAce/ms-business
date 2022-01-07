@@ -1,6 +1,13 @@
 const { clearString } = require('../helpers/formatters')
 const { isArrayElementSameTypes, isArrayOfObjects, isArrayWithEmptyElement } = require('../helpers/validators')
-const { isTypeOptions, isTypeDate, isTypeMultipleOptions } = require('../helpers/field-methods')
+const {
+  isTypeOptions,
+  isTypeDate,
+  isTypeMultipleOptions,
+  isTypeArray,
+  isTypeDocument,
+  isTypeListDocument
+} = require('../helpers/field-methods')
 
 const supportedTypes = [
   'text',
@@ -17,7 +24,9 @@ const supportedTypes = [
   'date',
   'timestamp',
   'table',
-  'multiple_options'
+  'multiple_options',
+  'document',
+  'list_document'
 ]
 const supportedKeys = ['customer_cpfcnpj', 'customer_name', 'customer_phone_number', 'customer_email', 'customer_email_address']
 
@@ -49,7 +58,7 @@ function formatFieldsOptions(fields) {
     f.label = f.label ? String(f.label) : String(f.column)
     f.column = clearString(f.column.toLowerCase())
 
-    if (f.type === 'array') {
+    if (isTypeArray(f)) {
       if (f.fields) {
         f.fields.map((ff) => {
           ff.key = String(ff.key) === 'true'
@@ -65,6 +74,9 @@ function formatFieldsOptions(fields) {
           ff.column = clearString(ff.column.toLowerCase())
         })
       }
+    } else if (isTypeDocument(f) || isTypeListDocument(f)) {
+      f.has_expiration_date = String(f.has_expiration_date) === 'true'
+      f.has_issue_date = String(f.has_issue_date) === 'true'
     }
 
     return f
@@ -103,6 +115,22 @@ function validateFieldOptionsType(field) {
     }
   } else if (isArrayWithEmptyElement(field.list_options)) {
     return { error: 'O list_options não pode ter elemento do array vazio' }
+  }
+
+  return {}
+}
+
+function validateFieldDocument(field) {
+  if (!Object.keys(field).includes('has_expiration_date')) {
+    return { error: 'O has_expiration_date é obrigatório' }
+  } else if (typeof field.has_expiration_date !== 'boolean') {
+    return { error: 'O has_expiration_date deve ser true/false' }
+  }
+
+  if (!Object.keys(field).includes('has_issue_date')) {
+    return { error: 'O has_issue_date é obrigatório' }
+  } else if (typeof field.has_issue_date !== 'boolean') {
+    return { error: 'O has_issue_date deve ser true/false' }
   }
 
   return {}
@@ -165,6 +193,16 @@ function validateFields(fields) {
       if (isTypeDate(field)) {
         const error = validateFieldDate(field)
         if (Object.keys(error).length) errorsField.errors.push(error)
+      }
+
+      if (isTypeDocument(field)) {
+        const error = validateFieldDocument(field)
+        if (error && Object.keys(error).length) errorsField.errors.push(error)
+      }
+
+      if (isTypeListDocument(field)) {
+        const error = validateFieldDocument(field)
+        if (error && Object.keys(error).length) errorsField.errors.push(error)
       }
     } else {
       errorsField.push({ error: 'O type é obrigatório' })
