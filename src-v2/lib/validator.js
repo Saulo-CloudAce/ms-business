@@ -705,7 +705,7 @@ class Validator {
         column: rules.column,
         error: 'O campo deve ser um objeto com os dados do documento'
       })
-    } else if (rules.has_expiration) {
+    } else if (rules.has_expiration_date) {
       if (!Object.keys(fieldData).includes('expiration_date')) {
         errors.push({
           column: rules.column,
@@ -718,7 +718,20 @@ class Validator {
           current_value: `${fieldData.expiration_date}`
         })
       }
-    } else if (!rules.has_expiration && !Object.keys(fieldData).includes('url', 'name', 'type')) {
+    } else if (rules.has_issue_date) {
+      if (!Object.keys(fieldData).includes('issue_date')) {
+        errors.push({
+          column: rules.column,
+          error: 'O issue_date é obrigatório'
+        })
+      } else if (!isValidDate(fieldData.issue_date, 'YYYY-MM-DD')) {
+        errors.push({
+          column: rules.column,
+          error: 'Data do issue_date é inválida',
+          current_value: `${fieldData.issue_date}`
+        })
+      }
+    } else if (!rules.has_expiration_date && !rules.has_issue_date && !Object.keys(fieldData).includes('url', 'name', 'type')) {
       errors.push({
         column: rules.column,
         error: 'O url, name e type são obrigatórios'
@@ -911,12 +924,15 @@ class Validator {
   }
 
   _formatFieldDocument(fieldRules, fieldData) {
-    const document = { name: '', url: '', expiration_date: '4000-12-31', type: '' }
+    const document = { name: '', url: '', expiration_date: '4000-12-31', issue_date: moment().format('YYYY-MM-DD'), type: '' }
     document.url = fieldData.url
     document.name = fieldData.name
     document.type = fieldData.type
-    if (fieldRules.has_expiration && fieldData.expiration_date) {
+    if (fieldRules.has_expiration_date && fieldData.expiration_date) {
       document.expiration_date = fieldData.expiration_date
+    }
+    if (fieldRules.has_issue_date && fieldData.issue_date) {
+      document.issue_date = fieldData.issue_date
     }
     return document
   }

@@ -75,7 +75,8 @@ function formatFieldsOptions(fields) {
         })
       }
     } else if (isTypeDocument(f) || isTypeListDocument(f)) {
-      f.has_expiration = String(f.has_expiration) === 'true'
+      f.has_expiration_date = String(f.has_expiration_date) === 'true'
+      f.has_issue_date = String(f.has_issue_date) === 'true'
     }
 
     return f
@@ -120,10 +121,16 @@ function validateFieldOptionsType(field) {
 }
 
 function validateFieldDocument(field) {
-  if (!Object.keys(field).includes('has_expiration')) {
-    return { error: 'O has_expiration é obrigatório' }
-  } else if (typeof field.has_expiration !== 'boolean') {
-    return { error: 'O has_expiration deve ser true/false' }
+  if (!Object.keys(field).includes('has_expiration_date')) {
+    return { error: 'O has_expiration_date é obrigatório' }
+  } else if (typeof field.has_expiration_date !== 'boolean') {
+    return { error: 'O has_expiration_date deve ser true/false' }
+  }
+
+  if (!Object.keys(field).includes('has_issue_date')) {
+    return { error: 'O has_issue_date é obrigatório' }
+  } else if (typeof field.has_issue_date !== 'boolean') {
+    return { error: 'O has_issue_date deve ser true/false' }
   }
 
   return {}
