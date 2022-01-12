@@ -912,6 +912,7 @@ class BusinessController {
           register.businessUpdatedAt = moment().format()
         }
       })
+      
 
       const objCRM = {}
       template.fields.forEach((data) => {
@@ -934,11 +935,13 @@ class BusinessController {
         }
       })
 
-      await newBusiness.updateDataBusiness(businessId, register, updatedBy)
-      const searchCustomerCRM = await crmService.getCustomerById(dataUpdate.idCrm, companyToken)
+      if (dataUpdate.idCrm) {
+        await newBusiness.updateDataBusiness(businessId, register, updatedBy)
+        const searchCustomerCRM = await crmService.getCustomerById(dataUpdate.idCrm, companyToken)
 
-      if (!searchCustomerCRM.data) return res.status(500).send({ error: 'Os dados não foram atualizados corretamente.' })
-      await crmService.updateCustomer(searchCustomerCRM.data.id, objCRM, companyToken)
+        if (!searchCustomerCRM.data) return res.status(500).send({ error: 'Os dados não foram atualizados corretamente.' })
+        await crmService.updateCustomer(searchCustomerCRM.data.id, objCRM, companyToken)
+      }
 
       return res.status(200).send(register)
     } catch (err) {

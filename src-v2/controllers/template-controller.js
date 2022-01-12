@@ -330,34 +330,12 @@ class TemplateController {
 
       templateSaved.name = name
 
-      templateSaved.fields.forEach((field) => {
-        const updateField = fields.find((f) => f.column === field.column)
-        if (updateField.label.length && updateField.label !== field.label) {
-          field.label = updateField.label
-        }
-        field.visible = updateField.visible
-        field.has_tab = updateField.has_tab
-        field.operator_can_view = updateField.operator_can_view
-        if (!field.key) {
-          field.required = updateField.required
-          field.editable = updateField.editable
-        }
-        if (updateField.mask) field.mask = updateField.mask
-        if (isTypeArray(field) && isArrayObject(field.fields)) {
-          field.fields.forEach((subfield) => {
-            const updateSubfield = updateField.fields.find((sf) => sf.column === subfield.column)
-            if (updateSubfield.label.length && updateSubfield.label !== subfield.label) {
-              subfield.label = updateSubfield.label
-            }
-            subfield.visible = updateSubfield.visible
-            subfield.has_tab = updateSubfield.has_tab
-            subfield.operator_can_view = updateSubfield.operator_can_view
-            subfield.required = updateSubfield.required
-            subfield.editable = updateSubfield.editable
-            if (updateSubfield.mask) subfield.mask = updateSubfield.mask
-          })
-        }
-      })
+      const newFieldsValidated = validateFields(fields)
+      if (newFieldsValidated.errors.length) {
+        return res.status(400).send({ errors: newFieldsValidated.errors })
+      }
+
+      templateSaved.fields = newFieldsValidated.fields
 
       const template = await templateRepository.update(templateId, companyToken, templateSaved, updatedBy)
 
