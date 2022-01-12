@@ -345,13 +345,6 @@ class TemplateController {
       return res.status(500).send({ error: err.message })
     }
   }
-
-  getNewFields(fieldsSaved = [], fieldsUpdate = []) {
-    const columnsExisting = fieldsSaved.map(f => f.column)
-    const newColumns = fieldsUpdate.filter(f => !columnsExisting.includes(f.column))
-
-    return newColumns
-  }
 }
 
 module.exports = TemplateController
