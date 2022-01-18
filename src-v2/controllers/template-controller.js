@@ -173,6 +173,55 @@ class TemplateController {
     }
   }
 
+  async getDataByTemplateIdWithPagination(req, res) {
+    let page = 0
+    let limit = 10
+    const companyToken = req.headers['token']
+    const templateId = req.params.id
+
+    const sortBy = req.query.sort_by ? JSON.parse(req.query.sort_by) : []
+    const filterBy = req.query.filter_by ? JSON.parse(req.query.filter_by) : []
+
+    if (req.query.page && parseInt(req.query.page) >= 0) page = parseInt(req.query.page)
+    if (req.query.limit && parseInt(req.query.limit) >= 0) limit = parseInt(req.query.limit)
+
+    try {
+      const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
+
+      if (!mongoIdIsValid(templateId)) {
+        return res.status(400).send({ error: 'ID não válido' })
+      }
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) {
+        return res.status(400).send({ error: 'Company não identificada.' })
+      }
+
+      const template = await templateRepository.getById(templateId, companyToken)
+      if (!template) {
+        return res.status(400).send({ error: 'Template não identificado' })
+      }
+
+      // const businessData = await businessRepository.listAllBatchesAndChildsByTemplate(companyToken, templateId)
+      // businessData.forEach((bd) => delete bd.childBatchesId)
+      // template.data = businessData
+
+      const templateData = await businessRepository.listaDataByTemplateAndFilterByColumns(
+        companyToken,
+        templateId,
+        filterBy,
+        sortBy,
+        limit,
+        page
+      )
+
+      return res.status(200).send(templateData)
+    } catch (err) {
+      console.error(err)
+      return res.status(500).send({ error: 'Ocorreu erro ao listar os registros do template informado' })
+    }
+  }
+
   async exportDataByTemplateId(req, res) {
     const companyToken = req.headers['token']
     const templateId = req.params.id

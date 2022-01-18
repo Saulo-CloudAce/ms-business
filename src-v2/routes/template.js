@@ -12,8 +12,11 @@ const templateRoute = (app) => {
   app.get("/api/v2/templates/:id", (req, res) =>
     templateController.getById(req, res)
   );
-  app.get("/api/v2/templates/:id/data", (req, res) =>
-    templateController.getDataByTemplateId(req, res)
+  // app.get("/api/v2/templates/:id/data", (req, res) =>
+  //   templateController.getDataByTemplateId(req, res)
+  // );
+  app.get("/api/v2/templates/:id/data/paginated", (req, res) =>
+    templateController.getDataByTemplateIdWithPagination(req, res)
   );
   app.get("/api/v2/templates/:id/data_export", (req, res) =>
     templateController.exportDataByTemplateId(req, res)
