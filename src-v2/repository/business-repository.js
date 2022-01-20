@@ -521,7 +521,6 @@ class BusinessRepository {
 
       matchParams.push(param)
     }
-    console.log(matchParams)
 
     const businessIdActives = await this.getBusinessActiveId(companyToken, templateId)
 
