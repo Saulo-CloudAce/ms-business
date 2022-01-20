@@ -490,7 +490,7 @@ class BusinessRepository {
     }
   }
 
-  async listaDataByTemplateAndFilterByColumns(
+  async listPaginatedDataByTemplateAndFilterByColumns(
     companyToken = '',
     templateId = '',
     filterColumns = [],
@@ -525,7 +525,7 @@ class BusinessRepository {
 
     const businessIdActives = await this.getBusinessActiveId(companyToken, templateId)
 
-    const sortCriteria = { businessCreatedAt: -1 }
+    const sortCriteria = {}
     for (let criteria of sortColumns) {
       const column = Object.keys(criteria)[0]
       const sortType = Object.values(criteria)[0]
@@ -533,8 +533,9 @@ class BusinessRepository {
         sortCriteria[column] = sortType === 'asc' ? 1 : -1
       }
     }
-
-    console.log(businessIdActives)
+    if (Object.keys(sortCriteria).length === 0) {
+      sortCriteria['businessCreatedAt'] = -1
+    }
 
     let businessDataList = await this.db
       .collection('business_data')
@@ -598,6 +599,72 @@ class BusinessRepository {
     }
 
     return result
+  }
+
+  async listDataByTemplateAndFilterByColumns(companyToken = '', templateId = '', filterColumns = [], sortColumns = []) {
+    const matchParams = [{ templateId }]
+    for (const column of filterColumns) {
+      const param = {}
+      const columnName = Object.keys(column)[0]
+      const filterValue = Object.values(column)[0]
+
+      if (!Array.isArray(filterValue)) {
+        throw new Error('O valor da parâmetro deve ser um array')
+      }
+
+      if (filterValue.length === 0) {
+        continue
+      }
+
+      if (typeof filterValue[0] === 'string') {
+        param[columnName] = { $in: filterValue.map((v) => new RegExp(v, 'i')) }
+      } else {
+        param[columnName] = { $in: filterValue.map((v) => v) }
+      }
+
+      matchParams.push(param)
+    }
+
+    const businessIdActives = await this.getBusinessActiveId(companyToken, templateId)
+
+    const sortCriteria = {}
+    for (let criteria of sortColumns) {
+      const column = Object.keys(criteria)[0]
+      const sortType = Object.values(criteria)[0]
+      if (column && sortType) {
+        sortCriteria[column] = sortType === 'asc' ? 1 : -1
+      }
+    }
+    if (Object.keys(sortCriteria).length === 0) {
+      sortCriteria['businessCreatedAt'] = -1
+    }
+
+    let businessDataList = await this.db
+      .collection('business_data')
+      .aggregate([
+        {
+          $match: {
+            $and: matchParams,
+            companyToken: companyToken,
+            templateId: templateId,
+            businessId: { $in: businessIdActives }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            companyToken: 0,
+            templateId: 0,
+            businessId: 0,
+            businessCreatedAt: 0,
+            businessUpdatedAt: 0
+          }
+        }
+      ])
+      .sort(sortCriteria)
+      .toArray()
+
+    return businessDataList
   }
 
   async getBusinessActiveId(companyToken = '', templateId = '') {
