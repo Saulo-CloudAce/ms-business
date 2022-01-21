@@ -7,6 +7,7 @@ const { mongoIdIsValid } = require('../helpers/validators')
 const { isTypeArray } = require('../helpers/field-methods')
 const { isArrayObject } = require('../helpers/validators')
 const { generateCSV } = require('../helpers/csv-generator')
+const { generateExcel } = require('../helpers/excel-generator')
 const { sendEmail } = require('../helpers/email-sender')
 
 class TemplateController {
@@ -170,6 +171,124 @@ class TemplateController {
       return res.status(200).send(template)
     } catch (err) {
       return res.status(500).send({ error: err.message })
+    }
+  }
+
+  async getDataByTemplateIdWithPagination(req, res) {
+    let page = 0
+    let limit = 10
+    const companyToken = req.headers['token']
+    const templateId = req.params.id
+
+    const sortBy = req.query.sort_by ? JSON.parse(req.query.sort_by) : []
+    const filterBy = req.query.filter_by ? JSON.parse(req.query.filter_by) : []
+
+    if (req.query.page && parseInt(req.query.page) >= 0) page = parseInt(req.query.page)
+    if (req.query.limit && parseInt(req.query.limit) >= 0) limit = parseInt(req.query.limit)
+
+    try {
+      const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
+
+      if (!mongoIdIsValid(templateId)) {
+        return res.status(400).send({ error: 'ID não válido' })
+      }
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) {
+        return res.status(400).send({ error: 'Company não identificada.' })
+      }
+
+      const template = await templateRepository.getById(templateId, companyToken)
+      if (!template) {
+        return res.status(400).send({ error: 'Template não identificado' })
+      }
+
+      const templateData = await businessRepository.listPaginatedDataByTemplateAndFilterByColumns(
+        companyToken,
+        templateId,
+        filterBy,
+        sortBy,
+        limit,
+        page
+      )
+
+      return res.status(200).send(templateData)
+    } catch (err) {
+      console.error(err)
+      return res.status(500).send({ error: 'Ocorreu erro ao listar os registros do template informado' })
+    }
+  }
+
+  async exportFilteredDataByTemplateId(req, res) {
+    const companyToken = req.headers['token']
+    const templateId = req.params.id
+    const email = req.query.email
+    if (!email) {
+      return res.status(400).send({
+        error: 'Informe um e-mail para enviar o arquivo com os dados'
+      })
+    }
+
+    const sortBy = req.query.sort_by ? JSON.parse(req.query.sort_by) : []
+    const filterBy = req.query.filter_by ? JSON.parse(req.query.filter_by) : []
+
+    try {
+      const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
+
+      if (!mongoIdIsValid(templateId)) {
+        return res.status(400).send({ error: 'ID não válido' })
+      }
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) {
+        return res.status(400).send({ error: 'Company não identificada.' })
+      }
+
+      const template = await templateRepository.getById(templateId, companyToken)
+      if (!template) {
+        return res.status(400).send({ error: 'Template não identificado' })
+      }
+
+      const templateData = await businessRepository.listDataByTemplateAndFilterByColumns(companyToken, templateId, filterBy, sortBy)
+
+      if (templateData.length === 0) {
+        return res.status(404).send({ error: 'Não há dados para serem exportados' })
+      }
+
+      const templateFieldsIndexed = {}
+      for (let i = 0; i < template.fields.length; i++) {
+        const field = template.fields[i]
+        templateFieldsIndexed[field.column] = field.label
+      }
+
+      const header = Object.keys(templateData[0]).map((k) => {
+        return { key: `${k}`, header: `${templateFieldsIndexed[k]}` }
+      })
+
+      const filename = `${template.name}_search_result.xlsx`
+      const filepath = `/tmp/${filename}`
+
+      generateExcel(header, templateData, filepath).then(
+        setTimeout(() => {
+          const result = sendEmail(email, filepath, filename)
+          if (result.error) {
+            console.error('Ocorreu erro ao enviar o e-mail com o arquivo gerado.')
+          } else {
+            console.log('E-mail enviado com CSV gerado.')
+          }
+          fs.unlink(filepath, (err) => {
+            if (err) console.error('Ocorreu erro ao excluir o CSV gerado.')
+            else console.log('Arquivo CSV excluido.')
+          })
+        }, 5000)
+      )
+
+      return res
+        .status(200)
+        .send({ warn: `Em instantes será enviado um e-mail para ${email} contendo uma planilha com o resultado da busca.` })
+    } catch (err) {
+      console.error(err)
+      return res.status(500).send({ error: 'Ocorreu erro ao exportar os registros do template informado' })
     }
   }
 
