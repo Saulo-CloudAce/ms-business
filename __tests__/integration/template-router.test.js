@@ -850,4 +850,110 @@ describe('CRUD template', () => {
         done()
       })
   })
+
+  it('Create a simple template with fields to show on landing page', async (done) => {
+    const t = {
+      name: 'template simples com dados para landingpage',
+      fields: [
+        {
+          type: 'string',
+          column: 'name',
+          data: 'name',
+          label: 'Nome',
+          key: false,
+          operator_can_view: true,
+          required: true,
+          editable: false,
+          visible: true,
+          landingpage_can_show: true
+        },
+        {
+          type: 'cpfcnpj',
+          column: 'cpf_cnpj',
+          data: 'cpfcnpj',
+          label: 'CPF/CNPJ',
+          key: false,
+          operator_can_view: true,
+          required: true,
+          editable: false,
+          visible: true,
+          landingpage_can_show: false
+        }
+      ]
+    }
+    const requestCreate = await request
+      .post('/api/v2/templates')
+      .send(t)
+      .set('Accept', 'application/json')
+      .set('token', companyCreated.token)
+
+    const requestGetTemplate = await request
+      .get(`/api/v2/templates/${requestCreate.body._id}`)
+      .set('Accept', 'application/json')
+      .set('token', companyCreated.token)
+
+    expect(requestCreate.statusCode).toBe(201)
+
+    expect(requestCreate.body).toHaveProperty('_id')
+
+    expect(requestGetTemplate.body.name).toBe(t.name)
+
+    expect(requestGetTemplate.body.fields[0].landingpage_can_show).toBe(true)
+
+    expect(requestGetTemplate.body.fields[1].landingpage_can_show).toBe(false)
+
+    done()
+  })
+
+  it('Create a simple template without fields to show on landing page', async (done) => {
+    const t = {
+      name: 'template simples sem dados para landingpage',
+      fields: [
+        {
+          type: 'string',
+          column: 'name',
+          data: 'name',
+          label: 'Nome',
+          key: false,
+          operator_can_view: true,
+          required: true,
+          editable: false,
+          visible: true
+        },
+        {
+          type: 'cpfcnpj',
+          column: 'cpf_cnpj',
+          data: 'cpfcnpj',
+          label: 'CPF/CNPJ',
+          key: false,
+          operator_can_view: true,
+          required: true,
+          editable: false,
+          visible: true
+        }
+      ]
+    }
+    const requestCreate = await request
+      .post('/api/v2/templates')
+      .send(t)
+      .set('Accept', 'application/json')
+      .set('token', companyCreated.token)
+
+    const requestGetTemplate = await request
+      .get(`/api/v2/templates/${requestCreate.body._id}`)
+      .set('Accept', 'application/json')
+      .set('token', companyCreated.token)
+
+    expect(requestCreate.statusCode).toBe(201)
+
+    expect(requestCreate.body).toHaveProperty('_id')
+
+    expect(requestGetTemplate.body.name).toBe(t.name)
+
+    expect(requestGetTemplate.body.fields[0].landingpage_can_show).toBe(false)
+
+    expect(requestGetTemplate.body.fields[1].landingpage_can_show).toBe(false)
+
+    done()
+  })
 })

@@ -51,6 +51,7 @@ function formatFieldsOptions(fields) {
     f.required = String(f.required) === 'true'
     f.editable = String(f.editable) === 'true' && !f.key
     f.operator_can_view = String(f.operatorCanView) === 'true' || String(f.operator_can_view) === 'true'
+    f.landingpage_can_show = String(f.landingpage_can_show) === 'true'
     f.visible = String(f.visible) === 'true'
     f.has_tab = String(f.has_tab) === 'true'
     f.quick_search = String(f.quick_search) === 'true'
@@ -66,6 +67,7 @@ function formatFieldsOptions(fields) {
           ff.required = String(ff.required) === 'true'
           ff.editable = String(ff.editable) === 'true'
           ff.operator_can_view = String(ff.operatorCanView) === 'true' || String(ff.operator_can_view) === 'true'
+          ff.landingpage_can_show = String(ff.landingpage_can_show) === 'true'
           ff.visible = String(ff.visible) === 'true'
           ff.has_tab = String(ff.has_tab) === 'true'
           ff.quick_search = String(ff.quick_search) === 'true'
