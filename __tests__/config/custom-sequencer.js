@@ -1,8 +1,9 @@
 const Sequencer = require('@jest/test-sequencer').default
 
 class CustomSequencer extends Sequencer {
-  sort (tests) {
+  sort(tests) {
     const orderPath = [
+      'query-predicate.test.js',
       'company-router.test.js',
       'template-router.test.js',
       'business-router.test.js',

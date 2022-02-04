@@ -52,6 +52,10 @@ function isTypeCpfCnpj(field) {
   return field.data === 'customer_cpfcnpj' || field.type === 'cpfcnpj'
 }
 
+function isTypeString(field) {
+  return field.type === 'string'
+}
+
 function isRequired(field) {
   return field.required
 }
@@ -88,5 +92,6 @@ module.exports = {
   isTypeListDocument,
   isUnique,
   isTypeMultipleOptions,
-  isValidDate
+  isValidDate,
+  isTypeString
 }
