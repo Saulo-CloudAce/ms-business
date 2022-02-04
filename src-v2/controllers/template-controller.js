@@ -237,8 +237,8 @@ class TemplateController {
       })
     }
 
-    const sortBy = req.query.sort_by ? JSON.parse(req.query.sort_by) : []
-    const filterBy = req.query.filter_by ? JSON.parse(req.query.filter_by) : []
+    const sortBy = req.body.sort_by ? req.body.sort_by : []
+    const filterRules = req.body.filter_rules ? req.body.filter_rules : []
 
     try {
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
@@ -257,7 +257,9 @@ class TemplateController {
         return res.status(400).send({ error: 'Template não identificado' })
       }
 
-      const templateData = await businessRepository.listDataByTemplateAndFilterByColumns(companyToken, templateId, filterBy, sortBy)
+      const queryPredicate = new QueryPredicate(filterRules, template)
+
+      const templateData = await businessRepository.listDataByTemplateAndFilterByColumns(companyToken, templateId, queryPredicate, sortBy)
 
       if (templateData.length === 0) {
         return res.status(404).send({ error: 'Não há dados para serem exportados' })

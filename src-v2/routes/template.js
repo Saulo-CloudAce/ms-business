@@ -10,7 +10,7 @@ const templateRoute = (app) => {
   //   templateController.getDataByTemplateId(req, res)
   // );
   app.post('/api/v2/templates/:id/data/paginated', (req, res) => templateController.filterDataByTemplateIdWithPagination(req, res))
-  app.get('/api/v2/templates/:id/data/export', (req, res) => templateController.exportFilteredDataByTemplateId(req, res))
+  app.post('/api/v2/templates/:id/data/export', (req, res) => templateController.exportFilteredDataByTemplateId(req, res))
   app.get('/api/v2/templates/:id/data_export', (req, res) => templateController.exportDataByTemplateId(req, res))
   app.put('/api/v2/templates/:id/activate', (req, res) => templateController.activateTemplate(req, res))
   app.put('/api/v2/templates/:id/deactivate', (req, res) => templateController.deactivateTemplate(req, res))

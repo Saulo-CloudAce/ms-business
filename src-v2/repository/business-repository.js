@@ -585,28 +585,12 @@ class BusinessRepository {
     return result
   }
 
-  async listDataByTemplateAndFilterByColumns(companyToken = '', templateId = '', filterColumns = [], sortColumns = []) {
-    const matchParams = [{ templateId }]
-    for (const column of filterColumns) {
-      const param = {}
-      const columnName = Object.keys(column)[0]
-      const filterValue = Object.values(column)[0]
-
-      if (!Array.isArray(filterValue)) {
-        throw new Error('O valor da parâmetro deve ser um array')
-      }
-
-      if (filterValue.length === 0) {
-        continue
-      }
-
-      if (typeof filterValue[0] === 'string') {
-        param[columnName] = { $in: filterValue.map((v) => new RegExp(v, 'i')) }
-      } else {
-        param[columnName] = { $in: filterValue.map((v) => v) }
-      }
-
-      matchParams.push(param)
+  async listDataByTemplateAndFilterByColumns(companyToken = '', templateId = '', queryPredicate = new QueryPredicate(), sortColumns = []) {
+    let matchParams = []
+    if (queryPredicate.isEmpty()) {
+      matchParams.push({ templateId })
+    } else {
+      matchParams = queryPredicate.generateMongoQuery()
     }
 
     const businessIdActives = await this.getBusinessActiveId(companyToken, templateId)
