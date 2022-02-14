@@ -3,6 +3,7 @@ const moment = require('moment')
 
 const { calcExpireTime } = require('../helpers/util')
 const { AggregateModeType } = require('../../domain-v2/aggregate-mode-enum')
+const QueryPredicate = require('./query-predicate')
 
 const BYTES_ON_MEGA = 1048576
 const LIMIT_SIZE_DOC_BSON_MEGABYTES = 14
@@ -493,33 +494,17 @@ class BusinessRepository {
   async listPaginatedDataByTemplateAndFilterByColumns(
     companyToken = '',
     templateId = '',
-    filterColumns = [],
+    queryPredicate = new QueryPredicate(),
     sortColumns = [],
     limit = 10,
     page = 0
   ) {
     const offset = page * limit
-    const matchParams = [{ templateId }]
-    for (const column of filterColumns) {
-      const param = {}
-      const columnName = Object.keys(column)[0]
-      const filterValue = Object.values(column)[0]
-
-      if (!Array.isArray(filterValue)) {
-        throw new Error('O valor da parâmetro deve ser um array')
-      }
-
-      if (filterValue.length === 0) {
-        continue
-      }
-
-      if (typeof filterValue[0] === 'string') {
-        param[columnName] = { $in: filterValue.map((v) => new RegExp(v, 'i')) }
-      } else {
-        param[columnName] = { $in: filterValue.map((v) => v) }
-      }
-
-      matchParams.push(param)
+    let matchParams = []
+    if (queryPredicate.isEmpty()) {
+      matchParams.push({ templateId })
+    } else {
+      matchParams = queryPredicate.generateMongoQuery()
     }
 
     const businessIdActives = await this.getBusinessActiveId(companyToken, templateId)
@@ -582,7 +567,7 @@ class BusinessRepository {
       ])
       .toArray()
 
-    const totalRows = countRows[0].totalRows
+    const totalRows = countRows.length ? countRows[0].totalRows : 0
     const totalPages = Math.ceil(totalRows / limit) - 1
 
     const pagination = {
@@ -600,28 +585,12 @@ class BusinessRepository {
     return result
   }
 
-  async listDataByTemplateAndFilterByColumns(companyToken = '', templateId = '', filterColumns = [], sortColumns = []) {
-    const matchParams = [{ templateId }]
-    for (const column of filterColumns) {
-      const param = {}
-      const columnName = Object.keys(column)[0]
-      const filterValue = Object.values(column)[0]
-
-      if (!Array.isArray(filterValue)) {
-        throw new Error('O valor da parâmetro deve ser um array')
-      }
-
-      if (filterValue.length === 0) {
-        continue
-      }
-
-      if (typeof filterValue[0] === 'string') {
-        param[columnName] = { $in: filterValue.map((v) => new RegExp(v, 'i')) }
-      } else {
-        param[columnName] = { $in: filterValue.map((v) => v) }
-      }
-
-      matchParams.push(param)
+  async listDataByTemplateAndFilterByColumns(companyToken = '', templateId = '', queryPredicate = new QueryPredicate(), sortColumns = []) {
+    let matchParams = []
+    if (queryPredicate.isEmpty()) {
+      matchParams.push({ templateId })
+    } else {
+      matchParams = queryPredicate.generateMongoQuery()
     }
 
     const businessIdActives = await this.getBusinessActiveId(companyToken, templateId)

@@ -26,6 +26,285 @@ async function createCompany() {
   return companyModel.create(c.name, c.prefix_index_elastic, c.callback)
 }
 
+async function createTemplateSimples5() {
+  const t = {
+    name: 'template simples - 5',
+    fields: [
+      {
+        type: 'string',
+        column: 'name',
+        data: 'customer_name',
+        label: 'Nome',
+        key: false,
+        operator_can_view: true,
+        required: true,
+        editable: false,
+        visible: true
+      },
+      {
+        type: 'cpfcnpj',
+        column: 'cpf_cnpj',
+        data: 'customer_cpfcnpj',
+        label: 'CPF/CNPJ',
+        key: true,
+        operator_can_view: true,
+        required: true,
+        editable: false,
+        visible: true
+      },
+      {
+        type: 'string',
+        column: 'produto',
+        data: 'produto',
+        label: 'Produto',
+        key: true,
+        operator_can_view: true,
+        required: true,
+        editable: false,
+        visible: true
+      },
+      {
+        type: 'int',
+        column: 'idade',
+        data: 'idade',
+        label: 'Idade',
+        key: true,
+        operator_can_view: true,
+        required: true,
+        editable: false,
+        visible: true
+      }
+    ],
+    active: false
+  }
+  const tCreated = await templateRepository.save(t.name, t.fields, companyCreated.token, t.active)
+
+  const mailing = {
+    companyToken: companyCreated.token,
+    name: 'Mailing teste 1',
+    filePath: '',
+    templateId: tCreated._id.toString(),
+    quantityRows: 3,
+    fieldsData: [
+      {
+        name: 'Cliente 1',
+        cpf_cnpj: '00000000001',
+        produto: 'Alfinete',
+        idade: 10
+      },
+      {
+        name: 'Cliente 2',
+        cpf_cnpj: '00000000002',
+        produto: 'Mouse',
+        idade: 20
+      },
+      {
+        name: 'Cliente 3',
+        cpf_cnpj: '00000000003',
+        produto: 'Abóbora',
+        idade: 35
+      }
+    ]
+  }
+
+  await businessRepository.save(
+    mailing.companyToken,
+    mailing.name,
+    mailing.filePath,
+    mailing.templateId,
+    mailing.quantityRows,
+    mailing.fieldsData
+  )
+
+  return tCreated._id
+}
+
+async function createTemplateSimples6() {
+  const t = {
+    name: 'template simples - 6',
+    fields: [
+      {
+        type: 'string',
+        column: 'name',
+        data: 'customer_name',
+        label: 'Nome',
+        key: false,
+        operator_can_view: true,
+        required: true,
+        editable: false,
+        visible: true
+      },
+      {
+        type: 'cpfcnpj',
+        column: 'cpf_cnpj',
+        data: 'customer_cpfcnpj',
+        label: 'CPF/CNPJ',
+        key: true,
+        operator_can_view: true,
+        required: true,
+        editable: false,
+        visible: true
+      },
+      {
+        type: 'string',
+        column: 'produto',
+        data: 'produto',
+        label: 'Produto',
+        key: true,
+        operator_can_view: true,
+        required: true,
+        editable: false,
+        visible: true
+      },
+      {
+        type: 'int',
+        column: 'idade',
+        data: 'idade',
+        label: 'Idade',
+        key: true,
+        operator_can_view: true,
+        required: true,
+        editable: false,
+        visible: true
+      }
+    ],
+    active: false
+  }
+  const tCreated = await templateRepository.save(t.name, t.fields, companyCreated.token, t.active)
+
+  const mailing = {
+    companyToken: companyCreated.token,
+    name: 'Mailing teste 1',
+    filePath: '',
+    templateId: tCreated._id.toString(),
+    quantityRows: 3,
+    fieldsData: [
+      {
+        name: 'Cliente 1',
+        cpf_cnpj: '00000000001',
+        produto: 'Alfinete',
+        idade: 10
+      },
+      {
+        name: 'Cliente 2',
+        cpf_cnpj: '00000000002',
+        produto: 'Mouse',
+        idade: 20
+      },
+      {
+        name: 'Cliente 3',
+        cpf_cnpj: '00000000003',
+        produto: 'Abóbora',
+        idade: 35
+      }
+    ]
+  }
+
+  await businessRepository.save(
+    mailing.companyToken,
+    mailing.name,
+    mailing.filePath,
+    mailing.templateId,
+    mailing.quantityRows,
+    mailing.fieldsData
+  )
+
+  return tCreated._id
+}
+
+async function createTemplateSimples7() {
+  const t = {
+    name: 'template simples - 7',
+    fields: [
+      {
+        type: 'string',
+        column: 'name',
+        data: 'customer_name',
+        label: 'Nome',
+        key: false,
+        operator_can_view: true,
+        required: true,
+        editable: false,
+        visible: true
+      },
+      {
+        type: 'cpfcnpj',
+        column: 'cpf_cnpj',
+        data: 'customer_cpfcnpj',
+        label: 'CPF/CNPJ',
+        key: true,
+        operator_can_view: true,
+        required: true,
+        editable: false,
+        visible: true
+      },
+      {
+        type: 'string',
+        column: 'produto',
+        data: 'produto',
+        label: 'Produto',
+        key: true,
+        operator_can_view: true,
+        required: true,
+        editable: false,
+        visible: true
+      },
+      {
+        type: 'int',
+        column: 'idade',
+        data: 'idade',
+        label: 'Idade',
+        key: true,
+        operator_can_view: true,
+        required: true,
+        editable: false,
+        visible: true
+      }
+    ],
+    active: false
+  }
+  const tCreated = await templateRepository.save(t.name, t.fields, companyCreated.token, t.active)
+
+  const mailing = {
+    companyToken: companyCreated.token,
+    name: 'Mailing teste 1',
+    filePath: '',
+    templateId: tCreated._id.toString(),
+    quantityRows: 3,
+    fieldsData: [
+      {
+        name: 'Cliente 1',
+        cpf_cnpj: '00000000001',
+        produto: 'Alfinete',
+        idade: 10
+      },
+      {
+        name: 'Cliente 2',
+        cpf_cnpj: '00000000002',
+        produto: 'Mouse',
+        idade: 20
+      },
+      {
+        name: 'Cliente 3',
+        cpf_cnpj: '00000000003',
+        produto: 'Abóbora',
+        idade: 35
+      }
+    ]
+  }
+
+  await businessRepository.save(
+    mailing.companyToken,
+    mailing.name,
+    mailing.filePath,
+    mailing.templateId,
+    mailing.quantityRows,
+    mailing.fieldsData
+  )
+
+  return tCreated._id
+}
+
 describe('CRUD template', () => {
   beforeAll(async () => {
     await new Promise((resolve, reject) => {
@@ -421,145 +700,11 @@ describe('CRUD template', () => {
       })
   })
 
-  // it('Get data from template', async (done) => {
-  //   const t = {
-  //     name: 'template simples - 4',
-  //     fields: [
-  //       {
-  //         type: 'string',
-  //         column: 'name',
-  //         data: 'customer_name',
-  //         label: 'Nome',
-  //         key: false,
-  //         operator_can_view: true,
-  //         required: true,
-  //         editable: false,
-  //         visible: true
-  //       },
-  //       {
-  //         type: 'cpfcnpj',
-  //         column: 'cpf_cnpj',
-  //         data: 'customer_cpfcnpj',
-  //         label: 'CPF/CNPJ',
-  //         key: true,
-  //         operator_can_view: true,
-  //         required: true,
-  //         editable: false,
-  //         visible: true
-  //       }
-  //     ],
-  //     active: false
-  //   }
-  //   const tCreated = await templateRepository.save(t.name, t.fields, companyCreated.token, t.active)
-
-  //   request
-  //     .get(`/api/v2/templates/${tCreated._id}/data`)
-  //     .set('token', companyCreated.token)
-  //     .end((err, res) => {
-  //       if (err) done(err)
-
-  //       expect(res.statusCode).toBe(200)
-
-  //       expect(res.body).toHaveProperty('_id')
-  //       expect(res.body).toHaveProperty('name')
-  //       expect(res.body).toHaveProperty('data')
-
-  //       done()
-  //     })
-  // })
-
   it('List data paginated from template', async (done) => {
-    const t = {
-      name: 'template simples - 5',
-      fields: [
-        {
-          type: 'string',
-          column: 'name',
-          data: 'customer_name',
-          label: 'Nome',
-          key: false,
-          operator_can_view: true,
-          required: true,
-          editable: false,
-          visible: true
-        },
-        {
-          type: 'cpfcnpj',
-          column: 'cpf_cnpj',
-          data: 'customer_cpfcnpj',
-          label: 'CPF/CNPJ',
-          key: true,
-          operator_can_view: true,
-          required: true,
-          editable: false,
-          visible: true
-        },
-        {
-          type: 'string',
-          column: 'produto',
-          data: 'produto',
-          label: 'Produto',
-          key: true,
-          operator_can_view: true,
-          required: true,
-          editable: false,
-          visible: true
-        },
-        {
-          type: 'int',
-          column: 'idade',
-          data: 'idade',
-          label: 'Idade',
-          key: true,
-          operator_can_view: true,
-          required: true,
-          editable: false,
-          visible: true
-        }
-      ],
-      active: false
-    }
-    const tCreated = await templateRepository.save(t.name, t.fields, companyCreated.token, t.active)
-
-    const mailing = {
-      companyToken: companyCreated.token,
-      name: 'Mailing teste 1',
-      filePath: '',
-      templateId: tCreated._id.toString(),
-      quantityRows: 3,
-      fieldsData: [
-        {
-          name: 'Cliente 1',
-          cpf_cnpj: '00000000001',
-          produto: 'Alfinete',
-          idade: 10
-        },
-        {
-          name: 'Cliente 2',
-          cpf_cnpj: '00000000002',
-          produto: 'Mouse',
-          idade: 20
-        },
-        {
-          name: 'Cliente 3',
-          cpf_cnpj: '00000000003',
-          produto: 'Abóbora',
-          idade: 35
-        }
-      ]
-    }
-
-    await businessRepository.save(
-      mailing.companyToken,
-      mailing.name,
-      mailing.filePath,
-      mailing.templateId,
-      mailing.quantityRows,
-      mailing.fieldsData
-    )
+    const templateId = await createTemplateSimples5()
 
     request
-      .get(`/api/v2/templates/${tCreated._id}/data/paginated?page=0&limit=1`)
+      .post(`/api/v2/templates/${templateId}/data/paginated?page=0&limit=1`)
       .set('token', companyCreated.token)
       .end((err, res) => {
         if (err) done(err)
@@ -580,98 +725,12 @@ describe('CRUD template', () => {
   })
 
   it('Should list data paginated from template filtered by criteria', async (done) => {
-    const t = {
-      name: 'template simples - 6',
-      fields: [
-        {
-          type: 'string',
-          column: 'name',
-          data: 'customer_name',
-          label: 'Nome',
-          key: false,
-          operator_can_view: true,
-          required: true,
-          editable: false,
-          visible: true
-        },
-        {
-          type: 'cpfcnpj',
-          column: 'cpf_cnpj',
-          data: 'customer_cpfcnpj',
-          label: 'CPF/CNPJ',
-          key: true,
-          operator_can_view: true,
-          required: true,
-          editable: false,
-          visible: true
-        },
-        {
-          type: 'string',
-          column: 'produto',
-          data: 'produto',
-          label: 'Produto',
-          key: true,
-          operator_can_view: true,
-          required: true,
-          editable: false,
-          visible: true
-        },
-        {
-          type: 'int',
-          column: 'idade',
-          data: 'idade',
-          label: 'Idade',
-          key: true,
-          operator_can_view: true,
-          required: true,
-          editable: false,
-          visible: true
-        }
-      ],
-      active: false
-    }
-    const tCreated = await templateRepository.save(t.name, t.fields, companyCreated.token, t.active)
-
-    const mailing = {
-      companyToken: companyCreated.token,
-      name: 'Mailing teste 1',
-      filePath: '',
-      templateId: tCreated._id.toString(),
-      quantityRows: 3,
-      fieldsData: [
-        {
-          name: 'Cliente 1',
-          cpf_cnpj: '00000000001',
-          produto: 'Alfinete',
-          idade: 10
-        },
-        {
-          name: 'Cliente 2',
-          cpf_cnpj: '00000000002',
-          produto: 'Mouse',
-          idade: 20
-        },
-        {
-          name: 'Cliente 3',
-          cpf_cnpj: '00000000003',
-          produto: 'Abóbora',
-          idade: 35
-        }
-      ]
-    }
-
-    await businessRepository.save(
-      mailing.companyToken,
-      mailing.name,
-      mailing.filePath,
-      mailing.templateId,
-      mailing.quantityRows,
-      mailing.fieldsData
-    )
+    const templateId = await createTemplateSimples6()
 
     request
-      .get(`/api/v2/templates/${tCreated._id}/data/paginated?page=0&limit=1&filter_by=[{"produto":["Alfinete"]}]`)
+      .post(`/api/v2/templates/${templateId}/data/paginated?page=0&limit=1`)
       .set('token', companyCreated.token)
+      .send({ filter_rules: [{ condition: 'ONLY', rules: [{ condition: 'EQUAL', field: 'produto', value: 'Alfinete' }] }] })
       .end((err, res) => {
         if (err) done(err)
 
@@ -688,98 +747,11 @@ describe('CRUD template', () => {
   })
 
   it('Should list data paginated from template sorted by criteria', async (done) => {
-    const t = {
-      name: 'template simples - 7',
-      fields: [
-        {
-          type: 'string',
-          column: 'name',
-          data: 'customer_name',
-          label: 'Nome',
-          key: false,
-          operator_can_view: true,
-          required: true,
-          editable: false,
-          visible: true
-        },
-        {
-          type: 'cpfcnpj',
-          column: 'cpf_cnpj',
-          data: 'customer_cpfcnpj',
-          label: 'CPF/CNPJ',
-          key: true,
-          operator_can_view: true,
-          required: true,
-          editable: false,
-          visible: true
-        },
-        {
-          type: 'string',
-          column: 'produto',
-          data: 'produto',
-          label: 'Produto',
-          key: true,
-          operator_can_view: true,
-          required: true,
-          editable: false,
-          visible: true
-        },
-        {
-          type: 'int',
-          column: 'idade',
-          data: 'idade',
-          label: 'Idade',
-          key: true,
-          operator_can_view: true,
-          required: true,
-          editable: false,
-          visible: true
-        }
-      ],
-      active: false
-    }
-    const tCreated = await templateRepository.save(t.name, t.fields, companyCreated.token, t.active)
-
-    const mailing = {
-      companyToken: companyCreated.token,
-      name: 'Mailing teste 1',
-      filePath: '',
-      templateId: tCreated._id.toString(),
-      quantityRows: 3,
-      fieldsData: [
-        {
-          name: 'Cliente 1',
-          cpf_cnpj: '00000000001',
-          produto: 'Alfinete',
-          idade: 10
-        },
-        {
-          name: 'Cliente 2',
-          cpf_cnpj: '00000000002',
-          produto: 'Mouse',
-          idade: 20
-        },
-        {
-          name: 'Cliente 3',
-          cpf_cnpj: '00000000003',
-          produto: 'Abóbora',
-          idade: 35
-        }
-      ]
-    }
-
-    await businessRepository.save(
-      mailing.companyToken,
-      mailing.name,
-      mailing.filePath,
-      mailing.templateId,
-      mailing.quantityRows,
-      mailing.fieldsData
-    )
-
+    const templateId = await createTemplateSimples7()
     request
-      .get(`/api/v2/templates/${tCreated._id}/data/paginated?page=0&limit=1&sort_by=[{"name": "desc"}]`)
+      .post(`/api/v2/templates/${templateId}/data/paginated?page=0&limit=1`)
       .set('token', companyCreated.token)
+      .send({ sort_by: [{ name: 'desc' }] })
       .end((err, res) => {
         if (err) done(err)
 
@@ -956,4 +928,51 @@ describe('CRUD template', () => {
 
     done()
   })
+
+  // it('Get data from template', async (done) => {
+  //   const t = {
+  //     name: 'template simples - 4',
+  //     fields: [
+  //       {
+  //         type: 'string',
+  //         column: 'name',
+  //         data: 'customer_name',
+  //         label: 'Nome',
+  //         key: false,
+  //         operator_can_view: true,
+  //         required: true,
+  //         editable: false,
+  //         visible: true
+  //       },
+  //       {
+  //         type: 'cpfcnpj',
+  //         column: 'cpf_cnpj',
+  //         data: 'customer_cpfcnpj',
+  //         label: 'CPF/CNPJ',
+  //         key: true,
+  //         operator_can_view: true,
+  //         required: true,
+  //         editable: false,
+  //         visible: true
+  //       }
+  //     ],
+  //     active: false
+  //   }
+  //   const tCreated = await templateRepository.save(t.name, t.fields, companyCreated.token, t.active)
+
+  //   request
+  //     .get(`/api/v2/templates/${tCreated._id}/data`)
+  //     .set('token', companyCreated.token)
+  //     .end((err, res) => {
+  //       if (err) done(err)
+
+  //       expect(res.statusCode).toBe(200)
+
+  //       expect(res.body).toHaveProperty('_id')
+  //       expect(res.body).toHaveProperty('name')
+  //       expect(res.body).toHaveProperty('data')
+
+  //       done()
+  //     })
+  // })
 })

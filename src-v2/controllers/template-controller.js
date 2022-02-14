@@ -9,6 +9,8 @@ const { isArrayObject } = require('../helpers/validators')
 const { generateCSV } = require('../helpers/csv-generator')
 const { generateExcel } = require('../helpers/excel-generator')
 const { sendEmail } = require('../helpers/email-sender')
+const QueryPredicate = require('../repository/query-predicate')
+const QueryPredicateError = require('../repository/query-predicate-error')
 
 class TemplateController {
   _getInstanceRepositories(app) {
@@ -174,14 +176,14 @@ class TemplateController {
     }
   }
 
-  async getDataByTemplateIdWithPagination(req, res) {
+  async filterDataByTemplateIdWithPagination(req, res) {
     let page = 0
     let limit = 10
     const companyToken = req.headers['token']
     const templateId = req.params.id
 
-    const sortBy = req.query.sort_by ? JSON.parse(req.query.sort_by) : []
-    const filterBy = req.query.filter_by ? JSON.parse(req.query.filter_by) : []
+    const sortBy = req.body.sort_by ? req.body.sort_by : []
+    const filterBy = req.body.filter_rules ? req.body.filter_rules : []
 
     if (req.query.page && parseInt(req.query.page) >= 0) page = parseInt(req.query.page)
     if (req.query.limit && parseInt(req.query.limit) >= 0) limit = parseInt(req.query.limit)
@@ -203,10 +205,12 @@ class TemplateController {
         return res.status(400).send({ error: 'Template não identificado' })
       }
 
+      const queryPredicate = new QueryPredicate(filterBy, template)
+
       const templateData = await businessRepository.listPaginatedDataByTemplateAndFilterByColumns(
         companyToken,
         templateId,
-        filterBy,
+        queryPredicate,
         sortBy,
         limit,
         page
@@ -215,6 +219,10 @@ class TemplateController {
       return res.status(200).send(templateData)
     } catch (err) {
       console.error(err)
+      if (err instanceof QueryPredicateError) {
+        return res.status(500).send({ error: err.message })
+      }
+
       return res.status(500).send({ error: 'Ocorreu erro ao listar os registros do template informado' })
     }
   }
@@ -229,8 +237,8 @@ class TemplateController {
       })
     }
 
-    const sortBy = req.query.sort_by ? JSON.parse(req.query.sort_by) : []
-    const filterBy = req.query.filter_by ? JSON.parse(req.query.filter_by) : []
+    const sortBy = req.body.sort_by ? req.body.sort_by : []
+    const filterRules = req.body.filter_rules ? req.body.filter_rules : []
 
     try {
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
@@ -249,7 +257,9 @@ class TemplateController {
         return res.status(400).send({ error: 'Template não identificado' })
       }
 
-      const templateData = await businessRepository.listDataByTemplateAndFilterByColumns(companyToken, templateId, filterBy, sortBy)
+      const queryPredicate = new QueryPredicate(filterRules, template)
+
+      const templateData = await businessRepository.listDataByTemplateAndFilterByColumns(companyToken, templateId, queryPredicate, sortBy)
 
       if (templateData.length === 0) {
         return res.status(404).send({ error: 'Não há dados para serem exportados' })
