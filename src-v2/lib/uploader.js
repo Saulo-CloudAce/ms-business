@@ -1,13 +1,13 @@
-const { uploadFromFile, uploadFromEncoded } = require('../helpers/upload-file')
-const StorageService = require('../services/storage-service')
+import { uploadFromFile, uploadFromEncoded } from '../helpers/upload-file.js'
+import StorageService from '../services/storage-service.js'
 
-class Uploader {
-  constructor (bucket) {
+export default class Uploader {
+  constructor(bucket) {
     this.bucket = bucket
     this._storageService = new StorageService()
   }
 
-  async upload (file) {
+  async upload(file) {
     const filename = file.name.replace(/\s/g, '')
     const bucket = process.env.BUCKET
     const publicAccess = false
@@ -15,12 +15,16 @@ class Uploader {
     return resultLinkFile
   }
 
-  async uploadContent (dir, content, filename) {
+  async uploadContent(dir, content, filename) {
     const bucket = process.env.BUCKET
     const publicAccess = false
-    const resultLinkFile = await this._storageService.uploadFromEncoded(dir, JSON.stringify(content), filename.replace(/\s/g, ''), bucket, publicAccess)
+    const resultLinkFile = await this._storageService.uploadFromEncoded(
+      dir,
+      JSON.stringify(content),
+      filename.replace(/\s/g, ''),
+      bucket,
+      publicAccess
+    )
     return resultLinkFile
   }
 }
-
-module.exports = Uploader

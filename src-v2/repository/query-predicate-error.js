@@ -1,8 +1,6 @@
-class QueryPredicateError extends Error {
+export default class QueryPredicateError extends Error {
   constructor(message = '') {
     super()
     this.message = message
   }
 }
-
-module.exports = QueryPredicateError

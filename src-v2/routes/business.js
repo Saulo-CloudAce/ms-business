@@ -1,10 +1,10 @@
-const multiparty = require('connect-multiparty')
-const BusinessController = require('../controllers/business-controller')
+import multiparty from 'connect-multiparty'
+import BusinessController from '../controllers/business-controller.js'
 
 const multipartyMiddleware = multiparty()
 const businessController = new BusinessController(null)
 
-const businessRoute = (app) => {
+export default function businessRoute(app) {
   app.post('/api/v2/business', multipartyMiddleware, (req, res) => businessController.create(req, res))
   app.post('/api/v2/business_url_file', multipartyMiddleware, (req, res) => businessController.createFromUrlFile(req, res))
   app.post('/api/v2/business_json', (req, res) => businessController.createFromJson(req, res))
@@ -26,5 +26,3 @@ const businessRoute = (app) => {
   app.put('/api/v2/business/:businessId/data/:registerId', (req, res) => businessController.updateBusinessRegisterById(req, res))
   app.post('/api/v2/business/full_search', (req, res) => businessController.searchDataInBusiness(req, res))
 }
-
-module.exports = businessRoute

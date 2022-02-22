@@ -1,8 +1,8 @@
-const CustomerController = require('../controllers/customer-controller')
+import CustomerController from '../controllers/customer-controller.js'
 
 const customerController = new CustomerController()
 
-const customerRoute = (app) => {
+export default function customerRoute(app) {
   app.post('/api/v2/customers', (req, res) => customerController.create(req, res))
   app.get('/api/v2/customers', (req, res) => customerController.getByCpfCnpj(req, res))
   app.get('/api/v2/customers/info', (req, res) => customerController.getCustomerInfoByCpfCnpj(req, res))
@@ -16,5 +16,3 @@ const customerRoute = (app) => {
   app.get('/api/v2/customers/:id/template/:templateId/formatted', (req, res) => customerController.getByIdAndTemplateIdFormatted(req, res))
   app.put('/api/v2/customers/:id', (req, res) => customerController.update(req, res))
 }
-
-module.exports = customerRoute

@@ -1,7 +1,7 @@
-const moment = require('moment')
-const ObjectID = require('mongodb').ObjectID
+import moment from 'moment'
+import { ObjectID } from 'mongodb'
 
-class CompanyRepository {
+export default class CompanyRepository {
   constructor(db) {
     this.db = db
   }
@@ -78,5 +78,3 @@ class CompanyRepository {
     }
   }
 }
-
-module.exports = CompanyRepository

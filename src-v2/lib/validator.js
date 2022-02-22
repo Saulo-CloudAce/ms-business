@@ -1,9 +1,9 @@
-const fs = require('fs')
-const readline = require('readline')
-const md5 = require('md5')
-const moment = require('moment')
-const { validateEmail, isArrayObject, arraysEqual, arraysDiff, listElementDuplicated } = require('../helpers/validators')
-const {
+import fs from 'fs'
+import readline from 'readline'
+import md5 from 'md5'
+import moment from 'moment'
+import { validateEmail, isArrayObject, arraysEqual, arraysDiff, listElementDuplicated } from '../helpers/validators.js'
+import {
   isKey,
   isTypeDate,
   isTypeOptions,
@@ -21,13 +21,13 @@ const {
   isValidDate,
   isTypeDocument,
   isTypeListDocument
-} = require('../helpers/field-methods')
+} from '../helpers/field-methods.js'
 
-const StorageService = require('../services/storage-service')
+import StorageService from '../services/storage-service.js'
 
 const storageService = new StorageService()
 
-class Validator {
+export default class Validator {
   _mapLineDataToLineDataWithRules(line, rulesByColumn) {
     const lineWithRulesFields = {}
     Object.keys(line).forEach((key) => {
@@ -1062,5 +1062,3 @@ class Validator {
     return arrData
   }
 }
-
-module.exports = Validator

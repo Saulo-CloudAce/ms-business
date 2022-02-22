@@ -1,6 +1,6 @@
-const MongoClient = require('mongodb').MongoClient
+import { MongoClient } from 'mongodb'
 
-async function connect(app, callback) {
+export async function connect(app, callback) {
   let connectionMongo = ''
   const config = { username: '', password: '', host: '', port: '', database: '', additionalParams: '' }
 
@@ -27,6 +27,8 @@ async function connect(app, callback) {
   }
   if (config.additionalParams) connectionMongo = `${connectionMongo}?${config.additionalParams}`
 
+  console.log(connectionMongo)
+
   MongoClient.connect(connectionMongo, { promiseLibrary: Promise }, (err, conn) => {
     if (err) console.error(`#00000 - Falha ao conectar ao banco de dados. ${err.stack}`)
 
@@ -35,5 +37,3 @@ async function connect(app, callback) {
     callback()
   })
 }
-
-module.exports = { connect }

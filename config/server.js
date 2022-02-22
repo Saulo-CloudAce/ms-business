@@ -1,43 +1,28 @@
 // const elasticAPM = require('./elastic-apm')(process.env.APM_SERVICE_NAME, process.env.APM_SERVER_URL)
 
-const express = require('express')
-const bodyParser = require('body-parser')
-const expressValidator = require('express-validator')
-const multipart = require('connect-multiparty')
-const helmet = require('helmet')
-const cors = require('cors')
-const morgan = require('morgan')
+import express from 'express'
+import bodyParser from 'body-parser'
+import multipart from 'connect-multiparty'
+import helmet from 'helmet'
+import cors from 'cors'
+import morgan from 'morgan'
 
-const businessRoutes = require('../src/routes/business')
-const companyRoutes = require('../src/routes/company')
-const templateRoutes = require('../src/routes/template')
-const customerRoutes = require('../src/routes/customer')
-const healthRoutes = require('../src/routes/health')
+import businessRoutesV2 from '../src-v2/routes/business.js'
+import companyRoutesV2 from '../src-v2/routes/company.js'
+import templateRoutesV2 from '../src-v2/routes/template.js'
+import customerRoutesV2 from '../src-v2/routes/customer.js'
+import healthRoutesV2 from '../src-v2/routes/health.js'
 
-const businessRoutesV2 = require('../src-v2/routes/business')
-const companyRoutesV2 = require('../src-v2/routes/company')
-const templateRoutesV2 = require('../src-v2/routes/template')
-const customerRoutesV2 = require('../src-v2/routes/customer')
-const healthRoutesV2 = require('../src-v2/routes/health')
-
-const { connect } = require('../config/mongodb')
-const healthRoute = require('../src/routes/health')
+import { connect } from '../config/mongodb.js'
 
 const app = express()
 app.use(bodyParser.json({ limit: '5000mb' }))
 app.use(bodyParser.urlencoded({ limit: '5000mb', extended: true }))
-app.use(expressValidator())
 app.use(multipart())
 app.use(helmet())
 app.use(cors())
 
 app.use(morgan('combined'))
-
-businessRoutes(app)
-companyRoutes(app)
-templateRoutes(app)
-customerRoutes(app)
-healthRoutes(app)
 
 businessRoutesV2(app)
 companyRoutesV2(app)
@@ -62,7 +47,7 @@ global.cache = {
   customers_formatted: {},
   hashSearch: {},
   business_data: {},
-  default_expire: (process.env.EXPIRE_CACHE_IN_SECONDS) ? parseInt(process.env.EXPIRE_CACHE_IN_SECONDS) : 3600
+  default_expire: process.env.EXPIRE_CACHE_IN_SECONDS ? parseInt(process.env.EXPIRE_CACHE_IN_SECONDS) : 3600
 }
 
-module.exports = app
+export default app

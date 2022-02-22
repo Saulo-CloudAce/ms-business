@@ -1,5 +1,5 @@
-function normalizeArraySubfields (templateData = [], template = {}) {
-  const fieldArrayList = template.fields.filter(f => f.type === 'array')
+export function normalizeArraySubfields(templateData = [], template = {}) {
+  const fieldArrayList = template.fields.filter((f) => f.type === 'array')
 
   if (fieldArrayList.length === 0) return templateData
 
@@ -28,31 +28,29 @@ function normalizeArraySubfields (templateData = [], template = {}) {
   return templateDataNormalized
 }
 
-function normalizeField (dataList = [], arrayField = {}) {
-    const dataNormalizaded = []
-    const cacheArrayFields = {}
+export function normalizeField(dataList = [], arrayField = {}) {
+  const dataNormalizaded = []
+  const cacheArrayFields = {}
 
-    arrayField.fields.forEach(f => {
-      cacheArrayFields[f.data] = f.column
+  arrayField.fields.forEach((f) => {
+    cacheArrayFields[f.data] = f.column
+  })
+
+  for (let i in dataList) {
+    let row = dataList[i]
+
+    row[arrayField.column] = row[arrayField.column].map((k) => {
+      const n = {}
+      Object.keys(cacheArrayFields).forEach((c) => {
+        const column = cacheArrayFields[c]
+        const data = c
+        n[column] = k[data]
+      })
+      return n
     })
 
-    for (let i in dataList) {
-      let row = dataList[i]
+    dataNormalizaded.push(row)
+  }
 
-      row[arrayField.column] = row[arrayField.column].map(k => {
-        const n = {}
-        Object.keys(cacheArrayFields).forEach(c => {
-          const column = cacheArrayFields[c]
-          const data = c
-          n[column] = k[data]
-        })
-        return n
-      })
-
-      dataNormalizaded.push(row)
-    }
-
-    return dataNormalizaded
+  return dataNormalizaded
 }
-
-module.exports = { normalizeArraySubfields, normalizeField }

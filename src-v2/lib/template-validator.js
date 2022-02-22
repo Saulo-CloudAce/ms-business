@@ -1,13 +1,13 @@
-const { clearString } = require('../helpers/formatters')
-const { isArrayElementSameTypes, isArrayOfObjects, isArrayWithEmptyElement } = require('../helpers/validators')
-const {
+import { clearString } from '../helpers/formatters.js'
+import { isArrayElementSameTypes, isArrayOfObjects, isArrayWithEmptyElement } from '../helpers/validators.js'
+import {
   isTypeOptions,
   isTypeDate,
   isTypeMultipleOptions,
   isTypeArray,
   isTypeDocument,
   isTypeListDocument
-} = require('../helpers/field-methods')
+} from '../helpers/field-methods.js'
 
 const supportedTypes = [
   'text',
@@ -30,15 +30,15 @@ const supportedTypes = [
 ]
 const supportedKeys = ['customer_cpfcnpj', 'customer_name', 'customer_phone_number', 'customer_email', 'customer_email_address']
 
-function hasFieldUnique(fields) {
+export function hasFieldUnique(fields) {
   return fields.filter((f) => f.unique).length > 0
 }
 
-function hasCustomerFields(fields) {
+export function hasCustomerFields(fields) {
   return fields.filter((f) => f.data.indexOf('customer') >= 0).length > 0
 }
 
-function validateKey(fields) {
+export function validateKey(fields) {
   const keys = fields.filter((f) => f.key)
   return keys.length > 0
 }
@@ -138,7 +138,7 @@ function validateFieldDocument(field) {
   return {}
 }
 
-function validateFields(fields) {
+export function validateFields(fields) {
   const formattedFields = formatFieldsOptions(fields)
   const errors = []
 
@@ -221,11 +221,4 @@ function validateFields(fields) {
   }
 
   return { fields: formattedFields, errors }
-}
-
-module.exports = {
-  validateFields,
-  validateKey,
-  hasCustomerFields,
-  hasFieldUnique
 }

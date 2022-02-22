@@ -1,14 +1,11 @@
-const ObjectID = require('mongodb').ObjectID
-const moment = require('moment')
+import { ObjectID } from 'mongodb'
+import moment from 'moment'
 
-const { calcExpireTime } = require('../helpers/util')
-const { AggregateModeType } = require('../../domain-v2/aggregate-mode-enum')
-const QueryPredicate = require('./query-predicate')
+import { calcExpireTime } from '../helpers/util.js'
+import { AggregateModeType } from '../../domain-v2/aggregate-mode-enum.js'
+import QueryPredicate from './query-predicate.js'
 
-const BYTES_ON_MEGA = 1048576
-const LIMIT_SIZE_DOC_BSON_MEGABYTES = 14
-
-class BusinessRepository {
+export default class BusinessRepository {
   constructor(db) {
     this.db = db
   }
@@ -1303,5 +1300,3 @@ class BusinessRepository {
     }
   }
 }
-
-module.exports = BusinessRepository

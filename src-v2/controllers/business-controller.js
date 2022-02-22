@@ -1,18 +1,18 @@
-const moment = require('moment')
+import moment from 'moment'
 
-const Business = require('../../domain-v2/business')
-const BusinessRepository = require('../repository/business-repository')
-const CompanyRepository = require('../repository/company-repository')
-const TemplateRepository = require('../repository/template-repository')
-const Uploader = require('../lib/uploader')
-const Validator = require('../lib/validator')
-const crmService = require('../services/crm-service')
-const { mongoIdIsValid } = require('../helpers/validators')
-const { normalizeArraySubfields } = require('../lib/data-transform')
-const { calcExpireTime } = require('../helpers/util')
-const { AggregateModeType } = require('../../domain-v2/aggregate-mode-enum')
+import Business from '../../domain-v2/business.js'
+import BusinessRepository from '../repository/business-repository.js'
+import CompanyRepository from '../repository/company-repository.js'
+import TemplateRepository from '../repository/template-repository.js'
+import Uploader from '../lib/uploader.js'
+import Validator from '../lib/validator.js'
+import * as crmService from '../services/crm-service.js'
+import { mongoIdIsValid } from '../helpers/validators.js'
+import { normalizeArraySubfields } from '../lib/data-transform.js'
+import { calcExpireTime } from '../helpers/util.js'
+import { AggregateModeType } from '../../domain-v2/aggregate-mode-enum.js'
 
-class BusinessController {
+export default class BusinessController {
   constructor(businessService) {
     this.businessService = businessService
     this.uploader = new Uploader(process.env.BUCKET)
@@ -912,7 +912,6 @@ class BusinessController {
           register.businessUpdatedAt = moment().format()
         }
       })
-      
 
       const objCRM = {}
       template.fields.forEach((data) => {
@@ -1030,5 +1029,3 @@ class BusinessController {
     }
   }
 }
-
-module.exports = BusinessController
