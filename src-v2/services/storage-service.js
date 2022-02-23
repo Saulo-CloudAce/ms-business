@@ -61,32 +61,6 @@ export default class StorageService {
     return urlFile
   }
 
-  async listObjects(dirBucket, bucket) {
-    return new Promise((resolve, reject) => {
-      const params = {
-        s3Params: {
-          Bucket: bucket,
-          Delimiter: '',
-          EncodingType: 'url',
-          MaxKeys: 50000,
-          Prefix: dirBucket
-        },
-        recursive: true
-      }
-
-      let dataLst = []
-      const listobj = this._client.listObjects(params)
-      listobj.on('data', function (data) {
-        dataLst = dataLst.concat(data.Contents)
-        resolve(data.Contents)
-      })
-      listobj.on('error', function (error) {
-        console.log(error)
-        reject(error)
-      })
-    })
-  }
-
   downloadFile(dirBucket = '', bucket = '') {
     const params = {
       Bucket: bucket,
