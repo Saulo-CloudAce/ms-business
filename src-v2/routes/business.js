@@ -1,5 +1,8 @@
 import multiparty from 'connect-multiparty'
+import { checkSchema } from 'express-validator'
 import BusinessController from '../controllers/business-controller.js'
+import { applyRules } from '../middlewares/validate-request.js'
+import { createFromJSONSpec } from './req-schemas/business.js'
 
 const multipartyMiddleware = multiparty()
 const businessController = new BusinessController(null)
@@ -7,7 +10,7 @@ const businessController = new BusinessController(null)
 export default function businessRoute(app) {
   app.post('/api/v2/business', multipartyMiddleware, (req, res) => businessController.create(req, res))
   app.post('/api/v2/business_url_file', multipartyMiddleware, (req, res) => businessController.createFromUrlFile(req, res))
-  app.post('/api/v2/business_json', (req, res) => businessController.createFromJson(req, res))
+  app.post('/api/v2/business_json', checkSchema(createFromJSONSpec), applyRules, (req, res) => businessController.createFromJson(req, res))
   app.post('/api/v2/business_single_register', (req, res) => businessController.createSingleRegisterBusiness(req, res))
   app.get('/api/v2/business_all_activated', (req, res) => businessController.getAllActivated(req, res))
   app.get('/api/v2/business/activated', (req, res) => businessController.getAllActivatedPaginated(req, res))

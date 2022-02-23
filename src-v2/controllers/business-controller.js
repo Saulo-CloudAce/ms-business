@@ -200,15 +200,6 @@ export default class BusinessController {
 
   async createFromJson(req, res) {
     console.log('createFromJson')
-    req.assert('name', 'Nome é obrigatório').notEmpty()
-    req.assert('templateId', 'O ID do template é obrigatório').notEmpty()
-    req.assert('data', 'Os dados são obrigatórios.').notEmpty()
-    req.assert('active_until', 'O active until é obrigatório').notEmpty()
-
-    if (req.validationErrors()) {
-      return res.status(400).send({ errors: req.validationErrors() })
-    }
-
     const companyToken = req.headers['token']
 
     if (req.body.aggregate_mode && !Object.values(AggregateModeType).includes(req.body.aggregate_mode)) {

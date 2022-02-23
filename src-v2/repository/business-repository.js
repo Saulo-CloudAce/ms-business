@@ -691,45 +691,34 @@ export default class BusinessRepository {
 
   async listAllBatchesAndChildsByTemplateId(companyToken, templateId) {
     try {
-      const businessList = await this.db
-        .collection('business')
-        .find({ templateId, companyToken }, [
-          '_id',
-          'name',
-          'childBatchesId',
-          'data',
-          'activeUntil',
-          'active',
-          'aggregateMode',
-          'createdAt',
-          'updatedAt',
-          'createdBy',
-          'updatedBy',
-          'flow_passed',
-          'activeUntil',
-          'active'
+      const businessDataList = await this.db
+        .collection('business_data')
+        .aggregate([
+          {
+            $match: {
+              companyToken: companyToken,
+              templateId: templateId
+            }
+          },
+          {
+            $group: {
+              _id: '$businessId',
+              data: { $push: '$$ROOT' }
+            }
+          },
+          {
+            $project: {
+              'data.companyToken': 0,
+              'data.templateId': 0,
+              'data.businessId': 0,
+              'data.businessCreatedAt': 0,
+              'data.businessUpdatedAt': 0
+            }
+          }
         ])
         .toArray()
 
-      // const businessChildList = []
-      // const businessIndexed = {}
-      // const businessIdList = []
-      // businessList.filter(business => business.childBatchesId && business.childBatchesId.length > 0)
-      //   .forEach(business => {
-      //     businessChildList.push(...business.childBatchesId)
-      //     businessIndexed[business._id] = business
-      //     businessIdList.push(new ObjectID(business._id))
-      //   })
-
-      // const businessChildDataList = await this.getChildBatches(businessIdList)
-      // businessChildDataList.forEach(businessChildData => {
-      //   businessIndexed[businessChildData.parentBatchId].data.push(...businessChildData.data)
-      // })
-
-      // businessList.filter(business => !business.childBatchesId)
-      //   .forEach(business => { businessIndexed[business._id] = business })
-
-      return Object.values(businessList)
+      return businessDataList
     } catch (err) {
       throw new Error(err)
     }
