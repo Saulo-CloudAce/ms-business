@@ -29,10 +29,6 @@ export default class CustomerController {
   }
 
   async create(req, res) {
-    req.assert('customer_cpfcnpj', 'O CPF/CNPJ é obrigatório').notEmpty()
-
-    if (req.validationErrors()) return res.status(400).send({ errors: req.validationErrors() })
-
     const companyToken = req.headers['token']
 
     try {
@@ -54,10 +50,6 @@ export default class CustomerController {
   }
 
   async update(req, res) {
-    req.assert('customer_cpfcnpj', 'O CPF/CNPJ é obrigatório').notEmpty()
-
-    if (req.validationErrors()) return res.status(400).send({ errors: req.validationErrors() })
-
     const companyToken = req.headers['token']
 
     try {
@@ -468,7 +460,6 @@ export default class CustomerController {
   async search(req, res) {
     const companyToken = req.headers['token']
     const queryTemplateId = req.headers['templateid']
-    const templateCache = {}
 
     try {
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)

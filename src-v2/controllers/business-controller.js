@@ -270,12 +270,6 @@ export default class BusinessController {
 
   async createSingleRegisterBusiness(req, res) {
     console.log('createSingleRegisterBusiness')
-    req.assert('templateId', 'O ID do template é obrigatório').notEmpty()
-    req.assert('data', 'Os dados são obrigatórios.').notEmpty()
-
-    if (req.validationErrors()) {
-      return res.status(400).send({ errors: req.validationErrors() })
-    }
 
     if (req.body.aggregate_mode && !Object.values(AggregateModeType).includes(req.body.aggregate_mode)) {
       return res.status(400).send({
@@ -605,67 +599,7 @@ export default class BusinessController {
     }
   }
 
-  async markBusinessFlowPassed(req, res) {
-    const companyToken = req.headers['token']
-
-    const businessId = req.params.id
-    if (!mongoIdIsValid(businessId)) return res.status(500).send({ error: 'Código do lote inválido' })
-
-    let updatedBy = 0
-    if (req.body.updated_by && !isNaN(req.body.updated_by)) {
-      updatedBy = parseInt(req.body.updated_by)
-    }
-
-    try {
-      const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
-
-      const company = await companyRepository.getByToken(companyToken)
-      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
-
-      const business = await businessRepository.getById(companyToken, businessId)
-      if (!business) return res.status(400).send({ error: 'Business não identificado' })
-
-      await businessRepository.markFlowPassed(companyToken, businessId, updatedBy)
-
-      return res.sendStatus(200)
-    } catch (e) {
-      return res.status(500).send({ error: e.message })
-    }
-  }
-
-  async unmarkBusinessFlowPassed(req, res) {
-    const companyToken = req.headers['token']
-
-    const businessId = req.params.id
-    if (!mongoIdIsValid(businessId)) return res.status(500).send({ error: 'Código do lote inválido' })
-
-    let updatedBy = 0
-    if (req.body.updated_by && !isNaN(req.body.updated_by)) {
-      updatedBy = parseInt(req.body.updated_by)
-    }
-
-    try {
-      const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
-
-      const company = await companyRepository.getByToken(companyToken)
-      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
-
-      const business = await businessRepository.getById(companyToken, businessId)
-      if (!business) return res.status(400).send({ error: 'Business não identificado' })
-
-      await businessRepository.unmarkFlowPassed(companyToken, businessId, updatedBy)
-
-      return res.sendStatus(200)
-    } catch (e) {
-      return res.status(500).send({ error: e.message })
-    }
-  }
-
   async activateBusiness(req, res) {
-    req.assert('active_until', 'O active until deve ser informado').notEmpty()
-
-    if (req.validationErrors()) return res.status(400).send({ errors: req.validationErrors() })
-
     const companyToken = req.headers['token']
 
     const businessId = req.params.id

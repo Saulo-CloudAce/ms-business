@@ -65,7 +65,8 @@ export default class TemplateRepository {
     try {
       const result = await this.db
         .collection('business_template')
-        .find({ companyToken }, ['_id', 'name', 'active', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy'])
+        .find({ companyToken })
+        .project(['_id', 'name', 'active', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy'])
         .toArray()
 
       return result
@@ -76,7 +77,7 @@ export default class TemplateRepository {
 
   async getAllByName(name, companyToken) {
     try {
-      const result = await this.db.collection('business_template').find({ name, companyToken }, ['_id']).toArray()
+      const result = await this.db.collection('business_template').find({ name, companyToken }).project(['_id']).toArray()
 
       return result
     } catch (err) {
@@ -88,7 +89,8 @@ export default class TemplateRepository {
     try {
       const result = await this.db
         .collection('business_template')
-        .find({ name, companyToken, _id: { $ne: new ObjectID(templateId) } }, ['_id'])
+        .find({ name, companyToken, _id: { $ne: new ObjectID(templateId) } })
+        .project(['_id'])
         .toArray()
 
       return result
@@ -140,7 +142,8 @@ export default class TemplateRepository {
 
       const result = await this.db
         .collection('business_template')
-        .find({ _id: { $in: listObjectId }, companyToken }, ['_id', 'name', 'fields', 'active', 'createdAt', 'updatedAt'])
+        .find({ _id: { $in: listObjectId }, companyToken })
+        .project(['_id', 'name', 'fields', 'active', 'createdAt', 'updatedAt'])
         .toArray()
 
       return result
