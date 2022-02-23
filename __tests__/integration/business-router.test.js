@@ -1,21 +1,22 @@
-const supertest = require('supertest')
-const nock = require('nock')
-const axios = require('axios')
+import supertest from 'supertest'
+import nock from 'nock'
+import axios from 'axios'
 
-axios.defaults.adapter = require('axios/lib/adapters/http')
+import adapter from 'axios/lib/adapters/http'
+axios.defaults.adapter = adapter
 
-const UploaderMock = require('../utils/uploader-mock')
-const CRMServiceMock = require('../utils/crm-service-mock')
+import UploaderMock from '../utils/uploader-mock.js'
+import CRMServiceMock from '../utils/crm-service-mock.js'
 
-const app = require('../../config/server')
-const { connect } = require('../../config/mongodb')
+import app from '../../config/server.js'
+import { connect } from '../../config/mongodb.js'
 
-const CompanyModel = require('../../domain-v2/company')
-const CompanyRepository = require('../../src-v2/repository/company-repository')
-const TemplateRepository = require('../../src-v2/repository/template-repository')
-const BusinessModel = require('../../domain-v2/business')
-const BusinessRepository = require('../../src-v2/repository/business-repository')
-const Validator = require('../../src-v2/lib/validator')
+import CompanyModel from '../../domain-v2/company.js'
+import CompanyRepository from '../../src-v2/repository/company-repository.js'
+import TemplateRepository from '../../src-v2/repository/template-repository.js'
+import BusinessModel from '../../domain-v2/business.js'
+import BusinessRepository from '../../src-v2/repository/business-repository.js'
+import Validator from '../../src-v2/lib/validator.js'
 
 let companyModel = ''
 let companyRepository = ''
@@ -362,32 +363,6 @@ describe('CRUD business', () => {
         expect(fResult.data[0]).toHaveProperty('name')
         expect(fResult.data[0]).toHaveProperty('cpf_cnpj')
         expect(fResult.data[0]).toHaveProperty('_id')
-
-        done()
-      })
-  })
-
-  it('Mark flow passed on business', async (done) => {
-    request
-      .put(`/api/v2/business/${businessCreated.businessId}/mark_flow_passed`)
-      .set('token', companyCreated.token)
-      .end((err, res) => {
-        if (err) done(err)
-
-        expect(res.statusCode).toBe(200)
-
-        done()
-      })
-  })
-
-  it('Unmark flow passed on business', async (done) => {
-    request
-      .put(`/api/v2/business/${businessCreated.businessId}/unmark_flow_passed`)
-      .set('token', companyCreated.token)
-      .end((err, res) => {
-        if (err) done(err)
-
-        expect(res.statusCode).toBe(200)
 
         done()
       })

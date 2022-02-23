@@ -1,12 +1,12 @@
-const supertest = require('supertest')
+import supertest from 'supertest'
 
-const app = require('../../config/server')
-const { connect } = require('../../config/mongodb')
+import app from '../../config/server.js'
+import { connect } from '../../config/mongodb.js'
 
-const CompanyModel = require('../../domain-v2/company')
-const CompanyRepository = require('../../src-v2/repository/company-repository')
-const TemplateRepository = require('../../src-v2/repository/template-repository')
-const BusinessRepository = require('../../src-v2/repository/business-repository')
+import CompanyModel from '../../domain-v2/company.js'
+import CompanyRepository from '../../src-v2/repository/company-repository.js'
+import TemplateRepository from '../../src-v2/repository/template-repository.js'
+import BusinessRepository from '../../src-v2/repository/business-repository.js'
 
 let companyModel = ''
 let companyRepository = ''

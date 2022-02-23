@@ -1,7 +1,5 @@
-class CRMServiceMock {
-  async sendData () {
+export default class CRMServiceMock {
+  async sendData() {
     return null
   }
 }
-
-module.exports = CRMServiceMock

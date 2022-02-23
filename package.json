@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "NODE_ENV=development ./node_modules/.bin/run.env nodemon --max-old-space-size=4096 index.js",
-    "test": "cross-env NODE_ENV=test ./node_modules/.bin/run.env jest --detectOpenHandles --forceExit",
+    "test": "cross-env NODE_ENV=test NODE_OPTIONS='--experimental-vm-modules' ./node_modules/.bin/run.env jest --detectOpenHandles --forceExit",
     "clear_test": "jest --clearCache"
   },
   "author": "Silas Silva <silas.ti2010@gmail.com>",

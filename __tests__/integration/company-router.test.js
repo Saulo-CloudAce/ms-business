@@ -1,17 +1,17 @@
-const supertest = require('supertest')
+import supertest from 'supertest'
 
-const app = require('../../config/server')
-const { connect } = require('../../config/mongodb')
+import app from '../../config/server.js'
+import { connect } from '../../config/mongodb.js'
 
-const CompanyModel = require('../../domain-v2/company')
-const CompanyRepository = require('../../src-v2/repository/company-repository')
+import CompanyModel from '../../domain-v2/company.js'
+import CompanyRepository from '../../src-v2/repository/company-repository.js'
 
 let companyModel = ''
 let companyRepository = ''
 
 const request = supertest(app)
 
-describe ('CRUD Company', () => {
+describe('CRUD Company', () => {
   beforeAll(async () => {
     await new Promise((resolve, reject) => {
       connect(app, async () => {
@@ -24,7 +24,7 @@ describe ('CRUD Company', () => {
       })
     })
   })
-  it ('Create a company', async (done) => {
+  it('Create a company', async (done) => {
     const company = {
       name: 'company-test',
       prefix_index_elastic: 'company-test',
@@ -51,30 +51,28 @@ describe ('CRUD Company', () => {
       })
   })
 
-  it ('List all companies', async (done) => {
-    request
-      .get('/api/v2/companies')
-      .end((err, res) => {
-        if (err) done(err)
+  it('List all companies', async (done) => {
+    request.get('/api/v2/companies').end((err, res) => {
+      if (err) done(err)
 
-        expect(res.statusCode).toBe(200)
+      expect(res.statusCode).toBe(200)
 
-        const bodyResult = res.body[0]
+      const bodyResult = res.body[0]
 
-        expect(bodyResult).toHaveProperty('_id')
-        expect(bodyResult).toHaveProperty('token')
-        expect(bodyResult).toHaveProperty('name')
-        expect(bodyResult).toHaveProperty('prefix_index_elastic')
-        expect(bodyResult).toHaveProperty('callback')
-        expect(bodyResult).toHaveProperty('activated')
-        expect(bodyResult).toHaveProperty('created_at')
-        expect(bodyResult).toHaveProperty('updated_at')
+      expect(bodyResult).toHaveProperty('_id')
+      expect(bodyResult).toHaveProperty('token')
+      expect(bodyResult).toHaveProperty('name')
+      expect(bodyResult).toHaveProperty('prefix_index_elastic')
+      expect(bodyResult).toHaveProperty('callback')
+      expect(bodyResult).toHaveProperty('activated')
+      expect(bodyResult).toHaveProperty('created_at')
+      expect(bodyResult).toHaveProperty('updated_at')
 
-        done()
-      })
+      done()
+    })
   })
 
-  it ('Get a company by ID', async (done) => {
+  it('Get a company by ID', async (done) => {
     const c1 = {
       name: 'company-test-1',
       prefix_index_elastic: 'company-test-1',
@@ -82,27 +80,25 @@ describe ('CRUD Company', () => {
     }
     const c1Created = await companyModel.create(c1.name, c1.prefix_index_elastic, c1.callback)
 
-    request
-      .get(`/api/v2/companies/${c1Created._id}`)
-      .end((err, res) => {
-        if (err) done(err)
+    request.get(`/api/v2/companies/${c1Created._id}`).end((err, res) => {
+      if (err) done(err)
 
-        const bodyResult = res.body
+      const bodyResult = res.body
 
-        expect(bodyResult).toHaveProperty('_id')
-        expect(bodyResult).toHaveProperty('token')
-        expect(bodyResult).toHaveProperty('name')
-        expect(bodyResult).toHaveProperty('prefix_index_elastic')
-        expect(bodyResult).toHaveProperty('callback')
-        expect(bodyResult).toHaveProperty('activated')
-        expect(bodyResult).toHaveProperty('created_at')
-        expect(bodyResult).toHaveProperty('updated_at')
+      expect(bodyResult).toHaveProperty('_id')
+      expect(bodyResult).toHaveProperty('token')
+      expect(bodyResult).toHaveProperty('name')
+      expect(bodyResult).toHaveProperty('prefix_index_elastic')
+      expect(bodyResult).toHaveProperty('callback')
+      expect(bodyResult).toHaveProperty('activated')
+      expect(bodyResult).toHaveProperty('created_at')
+      expect(bodyResult).toHaveProperty('updated_at')
 
-        done()
-      })
+      done()
+    })
   })
 
-  it ('Update a company', async (done) => {
+  it('Update a company', async (done) => {
     const c = {
       name: 'company-test-2',
       prefix_index_elastic: 'company-test-2',
