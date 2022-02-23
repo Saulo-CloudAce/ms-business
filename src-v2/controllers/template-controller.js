@@ -22,13 +22,6 @@ export default class TemplateController {
   }
 
   async create(req, res) {
-    req.assert('name', 'O nome é obrigatório').notEmpty()
-    req.assert('fields', 'Os fields são obrigatórios').notEmpty()
-
-    if (req.validationErrors()) {
-      return res.status(400).send({ errors: req.validationErrors() })
-    }
-
     const companyToken = req.headers['token']
 
     let createdBy = 0
@@ -419,15 +412,8 @@ export default class TemplateController {
   }
 
   async update(req, res) {
-    req.assert('name', 'O nome é obrigatório').notEmpty()
-    req.assert('fields', 'Os fields são obrigatórios').notEmpty()
-
     const companyToken = req.headers['token']
     const templateId = req.params.id
-
-    if (req.validationErrors()) {
-      return res.status(400).send({ errors: req.validationErrors() })
-    }
 
     try {
       const { name, fields } = req.body
