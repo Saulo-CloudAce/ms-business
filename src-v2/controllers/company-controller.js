@@ -2,12 +2,6 @@ import CompanyRepository from '../repository/company-repository.js'
 import Company from '../../domain-v2/company.js'
 export default class CompanyController {
   async create(req, res) {
-    req.assert('name', 'O nome é obrigatório').notEmpty()
-    req.assert('prefix_index_elastic', 'O prefix index elastic é obrigatório').notEmpty()
-    req.assert('callback', 'A URL de callback é obrigatória').notEmpty()
-
-    if (req.validationErrors()) return res.status(400).send({ errors: req.validationErrors() })
-
     try {
       const companyRepository = new CompanyRepository(req.app.locals.db)
       const company = new Company(companyRepository)
@@ -56,12 +50,6 @@ export default class CompanyController {
   }
 
   async update(req, res) {
-    req.assert('name', 'O nome é obrigatório').notEmpty()
-    req.assert('callback', 'A URL de callback é obrigatória').notEmpty()
-    req.assert('activated', 'O activated é obrigatório').notEmpty()
-
-    if (req.validationErrors()) return res.status(400).send({ errors: req.validationErrors() })
-
     try {
       const companyRepository = new CompanyRepository(req.app.locals.db)
       const company = new Company(companyRepository)

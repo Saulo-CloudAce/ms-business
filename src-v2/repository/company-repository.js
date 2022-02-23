@@ -19,9 +19,9 @@ export default class CompanyRepository {
 
     try {
       const r = await this.db.collection('company').insertOne(newCompany)
-      const company = r.ops[0]
+      newCompany._id = r.insertedId
 
-      return company
+      return newCompany
     } catch (err) {
       throw new Error(err)
     }
