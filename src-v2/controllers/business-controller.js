@@ -33,14 +33,6 @@ export default class BusinessController {
 
   async createFromUrlFile(req, res) {
     console.log('createFromUrlFile')
-    req.assert('name', 'Nome é obrigatório').notEmpty()
-    req.assert('file', 'O arquivo é obrigatório').notEmpty()
-    req.assert('templateId', 'O ID do template é obrigatório').notEmpty()
-    req.assert('active_until', 'O active until é obrigatório').notEmpty()
-
-    if (req.validationErrors()) {
-      return res.status(400).send({ errors: req.validationErrors() })
-    }
 
     const companyToken = req.headers['token']
     const templateId = req.body.templateId

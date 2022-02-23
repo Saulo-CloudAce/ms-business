@@ -203,9 +203,11 @@ export default class Validator {
 
     let { invalids, valids, validsCustomer } = data
 
-    valids = this._joinDataBatch(valids, fields)
+    if (valids.length) {
+      valids = this._joinDataBatch(valids, fields)
 
-    validsCustomer = this._joinCustomerBatch(validsCustomer, fields)
+      validsCustomer = this._joinCustomerBatch(validsCustomer, fields)
+    }
 
     return {
       invalids,
@@ -304,19 +306,7 @@ export default class Validator {
     const dirFile = filePathParts[filePathParts.length - 2]
     const bucket = filePathParts[filePathParts.length - 3]
 
-    const readStream = await new Promise((resolve, reject) => {
-      const tmpFilename = `/tmp/${md5(new Date())}`
-      storageService
-        .downloadFile(`${dirFile}/${fileName}`, bucket, tmpFilename)
-        .then(() => {
-          console.log('DOWNLOAD_FILE_FINISHED', filePath)
-          resolve(fs.createReadStream(tmpFilename))
-        })
-        .catch((err) => {
-          console.error('S3: ', err)
-          reject(err)
-        })
-    })
+    const readStream = storageService.downloadFile(`${dirFile}/${fileName}`, bucket)
 
     const reader = readline.createInterface({
       input: readStream

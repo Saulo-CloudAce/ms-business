@@ -2,14 +2,24 @@ import multiparty from 'connect-multiparty'
 import { checkSchema } from 'express-validator'
 import BusinessController from '../controllers/business-controller.js'
 import { applyRules } from '../middlewares/validate-request.js'
-import { activateSpec, createFromJSONSpec, createSingleRegisterSpec } from './req-schemas/business.js'
+import {
+  activateSpec,
+  createFromFileSpec,
+  createFromJSONSpec,
+  createFromUrlFileSpec,
+  createSingleRegisterSpec
+} from './req-schemas/business.js'
 
 const multipartyMiddleware = multiparty()
 const businessController = new BusinessController(null)
 
 export default function businessRoute(app) {
-  app.post('/api/v2/business', multipartyMiddleware, (req, res) => businessController.create(req, res))
-  app.post('/api/v2/business_url_file', multipartyMiddleware, (req, res) => businessController.createFromUrlFile(req, res))
+  app.post('/api/v2/business', checkSchema(createFromFileSpec), applyRules, multipartyMiddleware, (req, res) =>
+    businessController.create(req, res)
+  )
+  app.post('/api/v2/business_url_file', checkSchema(createFromUrlFileSpec), applyRules, multipartyMiddleware, (req, res) =>
+    businessController.createFromUrlFile(req, res)
+  )
   app.post('/api/v2/business_json', checkSchema(createFromJSONSpec), applyRules, (req, res) => businessController.createFromJson(req, res))
   app.post('/api/v2/business_single_register', checkSchema(createSingleRegisterSpec), applyRules, (req, res) =>
     businessController.createSingleRegisterBusiness(req, res)

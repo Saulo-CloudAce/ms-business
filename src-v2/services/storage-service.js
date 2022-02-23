@@ -87,20 +87,13 @@ export default class StorageService {
     })
   }
 
-  async downloadFile(dirBucket, bucket, localPath) {
-    return new Promise((resolve, reject) => {
-      const params = {
-        localFile: localPath,
-        s3Params: {
-          Bucket: bucket,
-          Key: dirBucket
-        },
-        recursive: true
-      }
+  downloadFile(dirBucket = '', bucket = '') {
+    const params = {
+      Bucket: bucket,
+      Key: dirBucket
+    }
 
-      const downloader = this._client.downloadFile(params)
-      downloader.on('error', (err) => reject(err.stack))
-      downloader.on('end', () => resolve(true))
-    })
+    const readStream = this._nativeClient.getObject(params).createReadStream()
+    return readStream
   }
 }
