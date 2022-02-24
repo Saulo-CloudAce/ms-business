@@ -174,6 +174,10 @@ describe('CRUD business', () => {
     })
   })
 
+  afterAll(() => {
+    app.locals.conn.close()
+  })
+
   it('Create a business from JSON', async (done) => {
     b.templateId = templateCreated._id
     b.name = 'lote0004'

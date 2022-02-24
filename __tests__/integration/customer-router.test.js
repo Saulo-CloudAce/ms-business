@@ -51,6 +51,10 @@ describe('Customer functions', () => {
     })
   })
 
+  afterAll(() => {
+    app.locals.conn.close()
+  })
+
   it('Create a single customer', async (done) => {
     const customerResult = customer
     customerResult.customer_id = 5

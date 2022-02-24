@@ -323,6 +323,10 @@ describe('CRUD template', () => {
     })
   })
 
+  afterAll(() => {
+    app.locals.conn.close()
+  })
+
   it('Create a simple template with customer fields', async (done) => {
     const t = {
       name: 'template simples',

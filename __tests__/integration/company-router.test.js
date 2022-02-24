@@ -24,6 +24,11 @@ describe('CRUD Company', () => {
       })
     })
   })
+
+  afterAll(() => {
+    app.locals.conn.close()
+  })
+
   it('Create a company', async (done) => {
     const company = {
       name: 'company-test',
