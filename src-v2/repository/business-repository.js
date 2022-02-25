@@ -480,7 +480,6 @@ class BusinessRepository {
           'createdBy',
           'updatedBy',
           'flow_passed',
-          'activeUntil',
           'active'
         ])
         .toArray()
@@ -659,7 +658,6 @@ class BusinessRepository {
           'createdBy',
           'updatedBy',
           'flow_passed',
-          'activeUntil',
           'active'
         ])
         .toArray()
@@ -709,7 +707,6 @@ class BusinessRepository {
           'createdBy',
           'updatedBy',
           'flow_passed',
-          'activeUntil',
           'active'
         ])
         .toArray()
@@ -754,7 +751,6 @@ class BusinessRepository {
           'createdBy',
           'updatedBy',
           'flow_passed',
-          'activeUntil',
           'active'
         ])
         .toArray()
@@ -783,7 +779,6 @@ class BusinessRepository {
           'createdBy',
           'updatedBy',
           'flow_passed',
-          'activeUntil',
           'active'
         ])
         .toArray()
@@ -962,7 +957,7 @@ class BusinessRepository {
 
       const businessList = await this.db
         .collection('business')
-        .find({ _id: { $in: businessIdList }, companyToken }, ['_id', 'name', 'templateId', 'createdAt', 'activeUntil'])
+        .find({ _id: { $in: businessIdList }, companyToken }, ['_id', 'name', 'templateId', 'createdAt', 'activeUntil', 'active'])
         .sort({ createdAt: -1 })
         .toArray()
 
