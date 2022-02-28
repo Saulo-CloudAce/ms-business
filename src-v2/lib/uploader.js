@@ -1,4 +1,3 @@
-import { uploadFromFile, uploadFromEncoded } from '../helpers/upload-file.js'
 import StorageService from '../services/storage-service.js'
 
 export default class Uploader {

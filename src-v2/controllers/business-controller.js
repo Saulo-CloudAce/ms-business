@@ -107,21 +107,12 @@ export default class BusinessController {
       return res.status(201).send({ businessId })
     } catch (e) {
       const errCode = '00014'
-      console.error(`#${errCode}`, e.message)
+      console.error(`#${errCode}`, e)
       return res.status(500).send({ error: `#${errCode}` })
     }
   }
 
   async create(req, res) {
-    req.assert('name', 'Nome é obrigatório')
-    req.assert('file', 'O arquivo é obrigatório')
-    req.assert('templateId', 'O ID do template é obrigatório')
-    req.assert('active_until', 'O active until é obrigatório')
-
-    if (req.validationErrors()) {
-      return res.status(400).send({ errors: req.validationErrors() })
-    }
-
     const companyToken = req.headers['token']
     const templateId = req.body.templateId
     const activeUntil = req.body.active_until

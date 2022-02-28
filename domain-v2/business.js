@@ -41,8 +41,7 @@ export default class Business {
       return { businessId: null, invalids }
     }
 
-    // const filePath = await this.uploader.upload(file)
-    const filePath = ''
+    const filePath = await this.uploader.upload(file)
     console.time('save mongodb')
     const businessId = await this.repository.save(
       companyToken,
