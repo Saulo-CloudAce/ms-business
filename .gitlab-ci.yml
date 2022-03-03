@@ -8,17 +8,16 @@ stages:
 
 integration:
   stage: test
-  image: node:10.16.0
+  image: node
   services:
     - mongo:latest
   script:
-   - mv .env.test .env
-   - CI=true npm install
-   - CI=true npm run clear_test
-   - CI=true npm run test
+    - mv .env.test .env
+    - CI=true npm install
+    - CI=true npm run clear_test
+    - CI=true npm run test
   only:
-   - master
-
+    - master
 
 deploy_homol:
   stage: homol
@@ -101,7 +100,7 @@ check_homol:
   only:
     - master
   allow_failure: false
-  needs: ["deploy_homol"]
+  needs: ['deploy_homol']
 
 create-release:
   image: node
@@ -129,7 +128,7 @@ create-release:
     refs:
       - master
   when: manual
-  needs: ["check_homol"]
+  needs: ['check_homol']
   allow_failure: false
 
 deploy_prod:
@@ -224,7 +223,7 @@ check_prod:
   only:
     - tags
   allow_failure: false
-  needs: ["deploy_prod"]
+  needs: ['deploy_prod']
 
 deploy_bs:
   stage: prod
@@ -320,4 +319,4 @@ check_bs:
   only:
     - tags
   allow_failure: false
-  needs: ["deploy_bs"]
+  needs: ['deploy_bs']
