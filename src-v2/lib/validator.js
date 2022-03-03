@@ -212,7 +212,6 @@ export default class Validator {
   _mergeData(listLineData, columnsArray) {
     if (columnsArray.length) {
       const firstLineData = listLineData.shift()
-      console.log(firstLineData)
       listLineData.forEach((line) => {
         columnsArray.forEach((col) => {
           const lineFilled = line[col.column].filter(
@@ -351,7 +350,7 @@ export default class Validator {
                   columns_diff: columnsDiff,
                   columns_duplicated: columnsDuplicated
                 })
-                resolve({ invalids: lineInvalids, valids: lineValids })
+                resolve({ invalids: lineInvalids, valids: lineValids, validsCustomer: lineValidsCustomer })
                 // reader.close()
                 // reader.removeAllListeners()
               } else if (!arraysEqual(columnsName, fileColumnsName)) {
@@ -362,7 +361,7 @@ export default class Validator {
                   columns_file: fileColumnsName,
                   columns_diff: columnsDiff
                 })
-                resolve({ invalids: lineInvalids, valids: lineValids })
+                resolve({ invalids: lineInvalids, valids: lineValids, validsCustomer: lineValidsCustomer })
                 // reader.close()
                 // reader.removeAllListeners()
               }
@@ -859,8 +858,6 @@ export default class Validator {
     elText = elText.replace(' ', '')
 
     if (elText.length <= 8) return ''
-
-    console.log('tel', elText)
 
     return elText
   }
