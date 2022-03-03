@@ -1,6 +1,6 @@
-const ExcelJS = require('exceljs')
+import ExcelJS from 'exceljs'
 
-async function generateExcel(header = [], data = [], filename = '') {
+export async function generateExcel(header = [], data = [], filename = '') {
   const workbook = new ExcelJS.Workbook()
   const sheet = workbook.addWorksheet('Dados')
 
@@ -13,5 +13,3 @@ async function generateExcel(header = [], data = [], filename = '') {
 
   await workbook.xlsx.writeFile(filename)
 }
-
-module.exports = { generateExcel }

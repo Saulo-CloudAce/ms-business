@@ -1,22 +1,16 @@
-const CompanyRepository = require('../repository/company-repository')
-const Company = require('../../domain-v2/company')
-class CompanyController {
-  async create (req, res) {
-    req.assert('name', 'O nome é obrigatório').notEmpty()
-    req.assert('prefix_index_elastic', 'O prefix index elastic é obrigatório').notEmpty()
-    req.assert('callback', 'A URL de callback é obrigatória').notEmpty()
-
-    if (req.validationErrors()) return res.status(400).send({ errors: req.validationErrors() })
-
+import CompanyRepository from '../repository/company-repository.js'
+import Company from '../../domain-v2/company.js'
+export default class CompanyController {
+  async create(req, res) {
     try {
       const companyRepository = new CompanyRepository(req.app.locals.db)
       const company = new Company(companyRepository)
 
       const companies = await company.getAll()
       if (companies && companies.length > 0) {
-        let comp = companies.filter(c => c.name === req.body.name)
+        let comp = companies.filter((c) => c.name === req.body.name)
         if (comp && comp.length > 0) return res.status(400).send({ error: 'Já existe uma company com este nome.' })
-        comp = companies.filter(c => c.prefix_index_elastic === req.body.prefix_index_elastic)
+        comp = companies.filter((c) => c.prefix_index_elastic === req.body.prefix_index_elastic)
         if (comp && comp.length > 0) return res.status(400).send({ error: 'Já existe uma company com este prefix index elastic nome.' })
       }
 
@@ -29,7 +23,7 @@ class CompanyController {
     }
   }
 
-  async getAll (req, res) {
+  async getAll(req, res) {
     try {
       const companyRepository = new CompanyRepository(req.app.locals.db)
       const company = new Company(companyRepository)
@@ -42,7 +36,7 @@ class CompanyController {
     }
   }
 
-  async getById (req, res) {
+  async getById(req, res) {
     try {
       const companyRepository = new CompanyRepository(req.app.locals.db)
       const company = new Company(companyRepository)
@@ -55,13 +49,7 @@ class CompanyController {
     }
   }
 
-  async update (req, res) {
-    req.assert('name', 'O nome é obrigatório').notEmpty()
-    req.assert('callback', 'A URL de callback é obrigatória').notEmpty()
-    req.assert('activated', 'O activated é obrigatório').notEmpty()
-
-    if (req.validationErrors()) return res.status(400).send({ errors: req.validationErrors() })
-
+  async update(req, res) {
     try {
       const companyRepository = new CompanyRepository(req.app.locals.db)
       const company = new Company(companyRepository)
@@ -74,5 +62,3 @@ class CompanyController {
     }
   }
 }
-
-module.exports = CompanyController

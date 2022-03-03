@@ -1,7 +1,7 @@
-const moment = require('moment')
-const ObjectID = require('mongodb').ObjectID
+import moment from 'moment'
+import { ObjectID } from 'mongodb'
 
-class CompanyRepository {
+export default class CompanyRepository {
   constructor(db) {
     this.db = db
   }
@@ -19,9 +19,9 @@ class CompanyRepository {
 
     try {
       const r = await this.db.collection('company').insertOne(newCompany)
-      const company = r.ops[0]
+      newCompany._id = r.insertedId
 
-      return company
+      return newCompany
     } catch (err) {
       throw new Error(err)
     }
@@ -78,5 +78,3 @@ class CompanyRepository {
     }
   }
 }
-
-module.exports = CompanyRepository

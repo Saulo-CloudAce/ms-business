@@ -1,6 +1,4 @@
-const AggregateModeType = {
-  INCREMENT: "increment",
-  REPLACE: "replace",
-};
-
-module.exports = { AggregateModeType };
+export const AggregateModeType = {
+  INCREMENT: 'increment',
+  REPLACE: 'replace'
+}

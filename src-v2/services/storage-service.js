@@ -1,103 +1,83 @@
-const fs = require('fs')
-const AWS = require('aws-sdk')
+import fs from 'fs'
 
-const S3Client = require('../../config/s3')
+import S3 from '../../config/s3.js'
+
+import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3'
 
 const bucketDefault = process.env.BUCKET
 
-class StorageService {
-  constructor () {
-    this._client = S3Client.newInstance()
-    this._nativeClient = S3Client.newNativeInstance()
+export default class StorageService {
+  constructor() {
+    this._client = S3.newInstance()
   }
 
-  async upload (dirBucket, dirFile, fileName, bucket = bucketDefault, publicAccess = false) {
+  async upload(dirBucket, dirFile, fileName, bucket = bucketDefault, publicAccess = false) {
     return new Promise((resolve, reject) => {
-      const fileInfos = {
-        localFile: dirFile,
-        s3Params: {
-          Bucket: bucket,
-          ACL: (publicAccess) ? 'public-read' : 'private',
-          Key: `${dirBucket}/${fileName}`
-        }
+      const fileKey = `${dirBucket}/${fileName}`
+      const params = {
+        Bucket: bucket,
+        ACL: publicAccess ? 'public-read' : 'private',
+        Body: dirFile,
+        Key: fileKey
       }
 
-      const uploader = this._client.uploadFile(fileInfos)
-      uploader.on('error', (err) => console.error('unable to upload:', err.stack))
-      uploader.on('end', () => {
-        try {
+      const uploader = this._client
+        .send(new PutObjectCommand(params))
+        .then(() => {
           fs.unlinkSync(dirFile)
           resolve(`https://s3.amazonaws.com/${bucket}/${dirBucket}/${fileName}`)
-        } catch (err) {
-          console.log(err)
+        })
+        .catch((err) => {
+          console.error(err)
           reject(err)
-        }
-      })
+        })
     })
   }
 
-  async uploadFromEncoded (dirBucket, buffer, fileName, bucket = bucketDefault, publicAccess = false) {
-    let urlFile = null
-    
-    if (dirBucket && dirBucket.length > 0) fileName = `${dirBucket}/${fileName}`
-    
-    await this._nativeClient.putObject({
-      Bucket: bucket,
-      Key: fileName,
-      Body: buffer,
-      ContentEncoding: 'utf8',
-      ContentType: 'application/json',
-      ACL: (publicAccess) ? 'public-read' : 'private'
-    }, function (err) {
-      if (err) { throw new Error(err) }
-    })
-    urlFile = `https://${bucket}.s3.amazonaws.com/${fileName}`
-
-    return urlFile
-  }
-
-  async listObjects (dirBucket, bucket) {
+  async uploadFromEncoded(dirBucket, buffer, fileName, bucket = bucketDefault, publicAccess = false) {
     return new Promise((resolve, reject) => {
       const params = {
-        s3Params: {
-          Bucket: bucket,
-          Delimiter: '',
-          EncodingType: 'url',
-          MaxKeys: 50000,
-          Prefix: dirBucket
-        },
-        recursive: true
+        Bucket: bucket,
+        Key: fileName,
+        Body: buffer,
+        ContentEncoding: 'utf8',
+        ContentType: 'application/json',
+        ACL: publicAccess ? 'public-read' : 'private'
       }
+      if (dirBucket && dirBucket.length > 0) fileName = `${dirBucket}/${fileName}`
 
-      let dataLst = []
-      const listobj = this._client.listObjects(params)
-      listobj.on('data', function (data) {
-        dataLst = dataLst.concat(data.Contents)
-        resolve(data.Contents)
-      })
-      listobj.on('error', function (error) {
-        console.log(error)
-        reject(error)
-      })
+      const urlFile = `https://${bucket}.s3.amazonaws.com/${fileName}`
+
+      this._client
+        .send(new PutObjectCommand(params))
+        .then(() => {
+          resolve(urlFile)
+        })
+        .catch((err) => {
+          console.error(err)
+          reject(err)
+        })
     })
   }
 
-  async downloadFile (dirBucket, bucket, localPath) {
+  async downloadFile(dirBucket = '', bucket = '', localpath = '') {
     return new Promise((resolve, reject) => {
       const params = {
-        localFile: localPath,
-        s3Params: {
-          Bucket: bucket,
-          Key: dirBucket
-        },
-        recursive: true
+        Bucket: bucket,
+        Key: dirBucket
       }
 
-      const downloader = this._client.downloadFile(params)
-      downloader.on('error', err => reject(err.stack))
-      downloader.on('end', () => resolve(true))
+      this._client
+        .send(new GetObjectCommand(params))
+        .then(async (data) => {
+          data.Body.pipe(fs.createWriteStream(localpath))
+            .on('error', (err) => reject(err))
+            .on('close', () => resolve(localpath))
+        })
+        .catch((err) => {
+          console.error(err)
+          reject(err)
+        })
     })
   }
 }
-
-module.exports = StorageService

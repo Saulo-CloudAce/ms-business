@@ -1,14 +1,11 @@
-const ObjectID = require('mongodb').ObjectID
-const moment = require('moment')
+import { ObjectID } from 'mongodb'
+import moment from 'moment'
 
-const { calcExpireTime } = require('../helpers/util')
-const { AggregateModeType } = require('../../domain-v2/aggregate-mode-enum')
-const QueryPredicate = require('./query-predicate')
+import { calcExpireTime } from '../helpers/util.js'
+import { AggregateModeType } from '../../domain-v2/aggregate-mode-enum.js'
+import QueryPredicate from './query-predicate.js'
 
-const BYTES_ON_MEGA = 1048576
-const LIMIT_SIZE_DOC_BSON_MEGABYTES = 14
-
-class BusinessRepository {
+export default class BusinessRepository {
   constructor(db) {
     this.db = db
   }
@@ -176,14 +173,23 @@ class BusinessRepository {
     try {
       let businessList = await this.db
         .collection('business')
-        .find(
-          {
-            companyToken: companyToken,
-            templateId,
-            name: { $regex: new RegExp(businessName, 'i') }
-          },
-          ['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'aggregateMode']
-        )
+        .find({
+          companyToken: companyToken,
+          templateId,
+          name: { $regex: new RegExp(businessName, 'i') }
+        })
+        .project([
+          '_id',
+          'name',
+          'templateId',
+          'activeUntil',
+          'active',
+          'createdAt',
+          'updatedAt',
+          'createdBy',
+          'updatedBy',
+          'aggregateMode'
+        ])
         .toArray()
 
       businessList = businessList.sort((a, b) => moment(b.createdAt) - moment(a.createdAt))
@@ -198,7 +204,8 @@ class BusinessRepository {
     try {
       let businessList = await this.db
         .collection('business')
-        .find({ companyToken: companyToken, parentBatchId: { $exists: false } }, [
+        .find({ companyToken: companyToken, parentBatchId: { $exists: false } })
+        .project([
           '_id',
           'name',
           'templateId',
@@ -225,7 +232,8 @@ class BusinessRepository {
     try {
       let businessList = await this.db
         .collection('business')
-        .find({ companyToken: companyToken, parentBatchId: { $exists: false } }, [
+        .find({ companyToken: companyToken, parentBatchId: { $exists: false } })
+        .project([
           '_id',
           'name',
           'templateId',
@@ -252,7 +260,8 @@ class BusinessRepository {
     try {
       const businessList = await this.db
         .collection('business')
-        .find({ companyToken: companyToken, parentBatchId: { $exists: false } }, [
+        .find({ companyToken: companyToken, parentBatchId: { $exists: false } })
+        .project([
           '_id',
           'name',
           'templateId',
@@ -279,26 +288,24 @@ class BusinessRepository {
     try {
       const businessList = await this.db
         .collection('business')
-        .find(
-          {
-            companyToken: companyToken,
-            parentBatchId: { $exists: false },
-            active: true
-          },
-          [
-            '_id',
-            'name',
-            'templateId',
-            'activeUntil',
-            'active',
-            'createdAt',
-            'updatedAt',
-            'createdBy',
-            'updatedBy',
-            'aggregateMode',
-            'quantityRows'
-          ]
-        )
+        .find({
+          companyToken: companyToken,
+          parentBatchId: { $exists: false },
+          active: true
+        })
+        .project([
+          '_id',
+          'name',
+          'templateId',
+          'activeUntil',
+          'active',
+          'createdAt',
+          'updatedAt',
+          'createdBy',
+          'updatedBy',
+          'aggregateMode',
+          'quantityRows'
+        ])
         .sort({ createdAt: -1 })
         .toArray()
 
@@ -314,7 +321,8 @@ class BusinessRepository {
       console.time('select')
       const businessList = await this.db
         .collection('business')
-        .find({ companyToken: companyToken, parentBatchId: { $exists: false } }, [
+        .find({ companyToken: companyToken, parentBatchId: { $exists: false } })
+        .project([
           '_id',
           'name',
           'templateId',
@@ -335,7 +343,8 @@ class BusinessRepository {
 
       const businessListCount = await this.db
         .collection('business')
-        .find({ companyToken, parentBatchId: { $exists: false } }, ['_id'])
+        .find({ companyToken, parentBatchId: { $exists: false } })
+        .project(['_id'])
         .sort({ createdAt: -1 })
         .count()
 
@@ -358,26 +367,24 @@ class BusinessRepository {
       console.time('select')
       const businessList = await this.db
         .collection('business')
-        .find(
-          {
-            companyToken: companyToken,
-            parentBatchId: { $exists: false },
-            active: true
-          },
-          [
-            '_id',
-            'name',
-            'templateId',
-            'activeUntil',
-            'active',
-            'createdAt',
-            'updatedAt',
-            'createdBy',
-            'updatedBy',
-            'aggregateMode',
-            'quantityRows'
-          ]
-        )
+        .find({
+          companyToken: companyToken,
+          parentBatchId: { $exists: false },
+          active: true
+        })
+        .project([
+          '_id',
+          'name',
+          'templateId',
+          'activeUntil',
+          'active',
+          'createdAt',
+          'updatedAt',
+          'createdBy',
+          'updatedBy',
+          'aggregateMode',
+          'quantityRows'
+        ])
         .skip(skipDocs)
         .limit(limit)
         .sort({ createdAt: -1 })
@@ -385,14 +392,12 @@ class BusinessRepository {
 
       const businessListCount = await this.db
         .collection('business')
-        .find(
-          {
-            companyToken: companyToken,
-            parentBatchId: { $exists: false },
-            active: true
-          },
-          ['_id']
-        )
+        .find({
+          companyToken: companyToken,
+          parentBatchId: { $exists: false },
+          active: true
+        })
+        .project(['_id'])
         .count()
 
       const pagination = {
@@ -414,26 +419,24 @@ class BusinessRepository {
       console.time('select')
       const businessList = await this.db
         .collection('business')
-        .find(
-          {
-            companyToken: companyToken,
-            parentBatchId: { $exists: false },
-            active: false
-          },
-          [
-            '_id',
-            'name',
-            'templateId',
-            'activeUntil',
-            'active',
-            'createdAt',
-            'updatedAt',
-            'createdBy',
-            'updatedBy',
-            'aggregateMode',
-            'quantityRows'
-          ]
-        )
+        .find({
+          companyToken: companyToken,
+          parentBatchId: { $exists: false },
+          active: false
+        })
+        .project([
+          '_id',
+          'name',
+          'templateId',
+          'activeUntil',
+          'active',
+          'createdAt',
+          'updatedAt',
+          'createdBy',
+          'updatedBy',
+          'aggregateMode',
+          'quantityRows'
+        ])
         .skip(skipDocs)
         .limit(limit)
         .sort({ createdAt: -1 })
@@ -441,14 +444,12 @@ class BusinessRepository {
 
       const businessListCount = await this.db
         .collection('business')
-        .find(
-          {
-            companyToken: companyToken,
-            parentBatchId: { $exists: false },
-            active: false
-          },
-          ['_id']
-        )
+        .find({
+          companyToken: companyToken,
+          parentBatchId: { $exists: false },
+          active: false
+        })
+        .project(['_id'])
         .count()
 
       const pagination = {
@@ -468,7 +469,8 @@ class BusinessRepository {
     try {
       const businessList = await this.db
         .collection('business')
-        .find({ templateId, companyToken, parentBatchId: { $exists: false } }, [
+        .find({ templateId, companyToken, parentBatchId: { $exists: false } })
+        .project([
           '_id',
           'name',
           'data',
@@ -635,7 +637,7 @@ class BusinessRepository {
   }
 
   async getBusinessActiveId(companyToken = '', templateId = '') {
-    let businessIdActives = await this.db.collection('business').find({ companyToken, templateId, active: true }, ['_id']).toArray()
+    let businessIdActives = await this.db.collection('business').find({ companyToken, templateId, active: true }).project(['_id']).toArray()
     businessIdActives = businessIdActives.map((b) => b._id)
 
     return businessIdActives
@@ -645,7 +647,8 @@ class BusinessRepository {
     try {
       const businessList = await this.db
         .collection('business')
-        .find({ templateId, companyToken, parentBatchId: { $exists: false } }, [
+        .find({ templateId, companyToken, parentBatchId: { $exists: false } })
+        .project([
           '_id',
           'name',
           'childBatchesId',
@@ -692,44 +695,34 @@ class BusinessRepository {
 
   async listAllBatchesAndChildsByTemplateId(companyToken, templateId) {
     try {
-      const businessList = await this.db
-        .collection('business')
-        .find({ templateId, companyToken }, [
-          '_id',
-          'name',
-          'childBatchesId',
-          'data',
-          'activeUntil',
-          'active',
-          'aggregateMode',
-          'createdAt',
-          'updatedAt',
-          'createdBy',
-          'updatedBy',
-          'flow_passed',
-          'active'
+      const businessDataList = await this.db
+        .collection('business_data')
+        .aggregate([
+          {
+            $match: {
+              companyToken: companyToken,
+              templateId: templateId
+            }
+          },
+          {
+            $group: {
+              _id: '$businessId',
+              data: { $push: '$$ROOT' }
+            }
+          },
+          {
+            $project: {
+              'data.companyToken': 0,
+              'data.templateId': 0,
+              'data.businessId': 0,
+              'data.businessCreatedAt': 0,
+              'data.businessUpdatedAt': 0
+            }
+          }
         ])
         .toArray()
 
-      // const businessChildList = []
-      // const businessIndexed = {}
-      // const businessIdList = []
-      // businessList.filter(business => business.childBatchesId && business.childBatchesId.length > 0)
-      //   .forEach(business => {
-      //     businessChildList.push(...business.childBatchesId)
-      //     businessIndexed[business._id] = business
-      //     businessIdList.push(new ObjectID(business._id))
-      //   })
-
-      // const businessChildDataList = await this.getChildBatches(businessIdList)
-      // businessChildDataList.forEach(businessChildData => {
-      //   businessIndexed[businessChildData.parentBatchId].data.push(...businessChildData.data)
-      // })
-
-      // businessList.filter(business => !business.childBatchesId)
-      //   .forEach(business => { businessIndexed[business._id] = business })
-
-      return Object.values(businessList)
+      return businessDataList
     } catch (err) {
       throw new Error(err)
     }
@@ -739,7 +732,8 @@ class BusinessRepository {
     try {
       let businessList = await this.db
         .collection('business')
-        .find({ templateId, companyToken, parentBatchId: { $exists: false } }, [
+        .find({ templateId, companyToken, parentBatchId: { $exists: false } })
+        .project([
           '_id',
           'name',
           'data',
@@ -766,7 +760,8 @@ class BusinessRepository {
     try {
       let businessList = await this.db
         .collection('business')
-        .find({ templateId, companyToken }, [
+        .find({ templateId, companyToken })
+        .project([
           '_id',
           'name',
           'data',
@@ -845,23 +840,6 @@ class BusinessRepository {
           }
         ])
         .toArray()
-      // businessListStored = businessListStored.sort((a, b) =>
-      //   a.createdAt > b.createdAt ? -1 : b.createdAt > a.createdAt ? 1 : 0
-      // );
-
-      // for (const i in businessListStored) {
-      //   const bData = businessListStored[i];
-      //   businessList.push({
-      //     _id: bData.parentBatchId ? bData.parentBatchId : bData._id,
-      //     name: bData.name,
-      //     data: bData.data,
-      //     activeUntil: bData.activeUntil,
-      //     flow_passed: bData.flow_passed,
-      //     active: bData.active,
-      //     createdAt: bData.createdAt,
-      //     updatedAt: bData.updatedAt,
-      //   });
-      // }
 
       const businessIdList = []
       const businessDataMap = {}
@@ -872,16 +850,8 @@ class BusinessRepository {
 
       const businessList = await this.db
         .collection('business')
-        .find({ _id: { $in: businessIdList }, companyToken }, [
-          '_id',
-          'name',
-          'createdAt',
-          'updatedAt',
-          'activeUntil',
-          'flow_passed',
-          'aggregateMode',
-          'active'
-        ])
+        .find({ _id: { $in: businessIdList }, companyToken })
+        .project(['_id', 'name', 'createdAt', 'updatedAt', 'activeUntil', 'flow_passed', 'aggregateMode', 'active'])
         .sort({ createdAt: -1 })
         .toArray()
 
@@ -930,23 +900,6 @@ class BusinessRepository {
           }
         ])
         .toArray()
-      // businessListStored = businessListStored.sort((a, b) =>
-      //   a.createdAt > b.createdAt ? -1 : b.createdAt > a.createdAt ? 1 : 0
-      // );
-
-      // for (const i in businessListStored) {
-      //   const bData = businessListStored[i];
-      //   businessList.push({
-      //     _id: bData.parentBatchId ? bData.parentBatchId : bData._id,
-      //     name: bData.name,
-      //     data: bData.data,
-      //     activeUntil: bData.activeUntil,
-      //     flow_passed: bData.flow_passed,
-      //     active: bData.active,
-      //     createdAt: bData.createdAt,
-      //     updatedAt: bData.updatedAt,
-      //   });
-      // }
 
       const businessIdList = []
       const businessDataMap = {}
@@ -957,7 +910,8 @@ class BusinessRepository {
 
       const businessList = await this.db
         .collection('business')
-        .find({ _id: { $in: businessIdList }, companyToken }, ['_id', 'name', 'templateId', 'createdAt', 'activeUntil', 'active'])
+        .find({ _id: { $in: businessIdList }, companyToken })
+        .project(['_id', 'name', 'templateId', 'createdAt', 'activeUntil', 'active'])
         .sort({ createdAt: -1 })
         .toArray()
 
@@ -985,25 +939,19 @@ class BusinessRepository {
     try {
       let businessList = await this.db
         .collection('business')
-        .find(
-          { companyToken, templateId, active: true },
-          {
-            _id: 1,
-            name: 1,
-            activeUntil: 1,
-            flow_passed: 1,
-            active: 1,
-            createdAt: 1,
-            updatedAt: 1
-          }
-        )
+        .find({ companyToken, templateId, active: true })
+        .project({
+          _id: 1,
+          name: 1,
+          activeUntil: 1,
+          flow_passed: 1,
+          active: 1,
+          createdAt: 1,
+          updatedAt: 1
+        })
         .sort({ createdAt: -1 })
         .toArray()
-      // businessIdList = businessIdList
-      //   .sort((a, b) =>
-      //     a.createdAt > b.createdAt ? -1 : b.createdAt > a.createdAt ? 1 : 0
-      //   )
-      //   .map((b) => b._id);
+
       const businessListIndexed = {}
       const businessIdList = []
       businessList.forEach((b) => {
@@ -1046,17 +994,6 @@ class BusinessRepository {
           businessIndexed.data = bData.data
           businessListLast.push(businessIndexed)
         }
-
-        // businessList.push({
-        //   _id: bData.parentBatchId ? bData.parentBatchId : bData._id,
-        //   name: bData.name,
-        //   data: bData.data,
-        //   activeUntil: bData.activeUntil,
-        //   flow_passed: bData.flow_passed,
-        //   active: bData.active,
-        //   createdAt: bData.createdAt,
-        //   updatedAt: bData.updatedAt,
-        // });
       }
 
       return businessListLast
@@ -1070,17 +1007,8 @@ class BusinessRepository {
     try {
       const businessList = await this.db
         .collection('business')
-        .find({ templateId, companyToken, parentBatchId: { $exists: false } }, [
-          '_id',
-          'name',
-          'activeUntil',
-          'active',
-          'createdAt',
-          'updatedAt',
-          'createdBy',
-          'aggregateMode',
-          'updatedBy'
-        ])
+        .find({ templateId, companyToken, parentBatchId: { $exists: false } })
+        .project(['_id', 'name', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'createdBy', 'aggregateMode', 'updatedBy'])
         .toArray()
 
       return businessList
@@ -1132,21 +1060,20 @@ class BusinessRepository {
       resultFields[sf] = 1
     })
 
+    console.log(resultFields)
+
     try {
       const businessData = await this.db
         .collection('business_data')
-        .find(
-          {
-            companyToken,
-            templateId: { $in: listTemplateIdQuery },
-            businessId: { $in: listBusinessIdQuery },
-            _id: { $in: listItemIdQuery }
-          },
-          {
-            ...resultFields
-          }
-        )
+        .find({
+          companyToken,
+          templateId: { $in: listTemplateIdQuery },
+          businessId: { $in: listBusinessIdQuery },
+          _id: { $in: listItemIdQuery }
+        })
+        .project(resultFields)
         .toArray()
+      console.log(businessData)
       return businessData
     } catch (err) {
       throw new Error(err)
@@ -1157,7 +1084,8 @@ class BusinessRepository {
     try {
       const businessList = await this.db
         .collection('business')
-        .find({ parentBatchId: { $in: listParentBatchId } }, ['_id', 'parentBatchId', 'data'])
+        .find({ parentBatchId: { $in: listParentBatchId } })
+        .project(['_id', 'parentBatchId', 'data'])
         .toArray()
 
       return businessList
@@ -1190,7 +1118,8 @@ class BusinessRepository {
 
       const data = await this.db
         .collection('business_data')
-        .find({ companyToken: companyToken, businessId: new ObjectID(id) }, { fields: { companyToken: 0, businessId: 0, templateId: 0 } })
+        .find({ companyToken: companyToken, businessId: new ObjectID(id) })
+        .project({ companyToken: 0, businessId: 0, templateId: 0 })
         .toArray()
 
       business.data = data
@@ -1249,7 +1178,8 @@ class BusinessRepository {
 
       const businessData = await this.db
         .collection('business_data')
-        .find({ companyToken, businessId: ObjectID(businessId) }, { fields: { companyToken: 0, businessId: 0, templateId: 0 } })
+        .find({ companyToken, businessId: ObjectID(businessId) })
+        .project({ companyToken: 0, businessId: 0, templateId: 0 })
         .skip(skipDocs)
         .limit(limit)
         .toArray()
@@ -1290,7 +1220,11 @@ class BusinessRepository {
 
   async getExpiredBusiness(date) {
     try {
-      const businessList = await this.db.collection('business').find({ activeUntil: date, active: true }, ['_id', 'companyToken']).toArray()
+      const businessList = await this.db
+        .collection('business')
+        .find({ activeUntil: date, active: true })
+        .project(['_id', 'companyToken'])
+        .toArray()
 
       return businessList
     } catch (err) {
@@ -1298,5 +1232,3 @@ class BusinessRepository {
     }
   }
 }
-
-module.exports = BusinessRepository

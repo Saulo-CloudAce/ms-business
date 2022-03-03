@@ -1,14 +1,14 @@
-const moment = require('moment')
-const ObjectID = require('mongodb').ObjectID
+import moment from 'moment'
+import { ObjectID } from 'mongodb'
 
-const { calcExpireTime } = require('../helpers/util')
+import { calcExpireTime } from '../helpers/util.js'
 
-class TemplateRepository {
-  constructor (db) {
+export default class TemplateRepository {
+  constructor(db) {
     this.db = db
   }
 
-  async save (name, fields, companyToken, active, createdBy = 0) {
+  async save(name, fields, companyToken, active, createdBy = 0) {
     const newTemplate = {
       name,
       fields,
@@ -30,7 +30,7 @@ class TemplateRepository {
     }
   }
 
-  async updateActive (templateId, active, updatedBy) {
+  async updateActive(templateId, active, updatedBy) {
     try {
       const templateUpdated = { active, updateAt: moment().format(), updatedBy }
       await this.db.collection('business_template').update({ _id: new ObjectID(templateId) }, { $set: templateUpdated })
@@ -41,12 +41,17 @@ class TemplateRepository {
     }
   }
 
-  async update (templateId, companyToken, templateUpdate, updatedBy = 0) {
+  async update(templateId, companyToken, templateUpdate, updatedBy = 0) {
     try {
       templateUpdate.updatedAt = moment().format()
       templateUpdate.updatedBy = updatedBy
 
-      const templateUpdated = { name: templateUpdate.name, fields: templateUpdate.fields, updatedAt: templateUpdate.updatedAt, updatedBy: templateUpdate.updatedBy }
+      const templateUpdated = {
+        name: templateUpdate.name,
+        fields: templateUpdate.fields,
+        updatedAt: templateUpdate.updatedAt,
+        updatedBy: templateUpdate.updatedBy
+      }
 
       await this.db.collection('business_template').update({ _id: new ObjectID(templateId), companyToken }, { $set: templateUpdated })
 
@@ -56,9 +61,13 @@ class TemplateRepository {
     }
   }
 
-  async getAllByCompany (companyToken) {
+  async getAllByCompany(companyToken) {
     try {
-      const result = await this.db.collection('business_template').find({ companyToken }, ['_id', 'name', 'active', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy']).toArray()
+      const result = await this.db
+        .collection('business_template')
+        .find({ companyToken })
+        .project(['_id', 'name', 'active', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy'])
+        .toArray()
 
       return result
     } catch (err) {
@@ -66,9 +75,9 @@ class TemplateRepository {
     }
   }
 
-  async getAllByName (name, companyToken) {
+  async getAllByName(name, companyToken) {
     try {
-      const result = await this.db.collection('business_template').find({ name, companyToken }, ['_id']).toArray()
+      const result = await this.db.collection('business_template').find({ name, companyToken }).project(['_id']).toArray()
 
       return result
     } catch (err) {
@@ -76,9 +85,13 @@ class TemplateRepository {
     }
   }
 
-  async getAllByNameWhereIdNotIs (name, companyToken, templateId) {
+  async getAllByNameWhereIdNotIs(name, companyToken, templateId) {
     try {
-      const result = await this.db.collection('business_template').find({ name, companyToken, _id: { $ne: new ObjectID(templateId) } }, ['_id']).toArray()
+      const result = await this.db
+        .collection('business_template')
+        .find({ name, companyToken, _id: { $ne: new ObjectID(templateId) } })
+        .project(['_id'])
+        .toArray()
 
       return result
     } catch (err) {
@@ -86,13 +99,13 @@ class TemplateRepository {
     }
   }
 
-  async getById (id, companyToken) {
+  async getById(id, companyToken) {
     try {
       if (global.cache.templates[id]) {
         const templateCached = global.cache.templates[id]
         if (templateCached && templateCached.expire && calcExpireTime(new Date(), templateCached.expire) < global.cache.default_expire) {
           console.log('TEMPLATE_CACHED')
-        
+
           return templateCached.data
         } else {
           global.cache.templates[id] = null
@@ -101,7 +114,18 @@ class TemplateRepository {
 
       console.log('TEMPLATE_STORED')
 
-      const result = await this.db.collection('business_template').findOne({ _id: new ObjectID(id), companyToken }, ['_id', 'name', 'fields', 'active', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy'])
+      const result = await this.db
+        .collection('business_template')
+        .findOne({ _id: new ObjectID(id), companyToken }, [
+          '_id',
+          'name',
+          'fields',
+          'active',
+          'createdAt',
+          'updatedAt',
+          'createdBy',
+          'updatedBy'
+        ])
 
       global.cache.templates[id] = { data: result, expire: new Date() }
 
@@ -112,12 +136,14 @@ class TemplateRepository {
     }
   }
 
-  async getByListId (listId = [], companyToken = '') {
+  async getByListId(listId = [], companyToken = '') {
     try {
-      const listObjectId = listId.map(id => new ObjectID(id))
+      const listObjectId = listId.map((id) => new ObjectID(id))
 
-      const result = await this.db.collection('business_template')
-        .find({ _id: { $in: listObjectId }, companyToken }, ['_id', 'name', 'fields', 'active', 'createdAt', 'updatedAt'])
+      const result = await this.db
+        .collection('business_template')
+        .find({ _id: { $in: listObjectId }, companyToken })
+        .project(['_id', 'name', 'fields', 'active', 'createdAt', 'updatedAt'])
         .toArray()
 
       return result
@@ -126,7 +152,7 @@ class TemplateRepository {
     }
   }
 
-  async getNameById (id, companyToken) {
+  async getNameById(id, companyToken) {
     try {
       const result = await this.db.collection('business_template').findOne({ _id: new ObjectID(id), companyToken }, ['_id', 'name'])
 
@@ -136,5 +162,3 @@ class TemplateRepository {
     }
   }
 }
-
-module.exports = TemplateRepository

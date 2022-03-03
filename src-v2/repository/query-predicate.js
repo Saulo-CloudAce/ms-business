@@ -1,4 +1,4 @@
-const {
+import {
   isTypeInt,
   isTypeBoolean,
   isTypeDecimal,
@@ -6,8 +6,8 @@ const {
   isTypeCep,
   isTypeEmail,
   isTypePhoneNumber
-} = require('../helpers/field-methods')
-const QueryPredicateError = require('./query-predicate-error')
+} from '../helpers/field-methods.js'
+import QueryPredicateError from './query-predicate-error.js'
 
 const connectConditions = {
   AND: 'AND',
@@ -22,7 +22,7 @@ const comparatorConditions = {
   LESS_THAN: 'LESS_THAN'
 }
 
-class QueryPredicate {
+export default class QueryPredicate {
   constructor(rulesGroup = [], template = {}) {
     this.templateFields = this._indexTemplateFields(template)
 
@@ -163,5 +163,3 @@ class QueryPredicate {
     return !this.rulesGroup || !Array.isArray(this.rulesGroup) || this.rulesGroup.length === 0
   }
 }
-
-module.exports = QueryPredicate

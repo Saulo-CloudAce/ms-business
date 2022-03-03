@@ -1,4 +1,4 @@
-const QueryPredicate = require('../../src-v2/repository/query-predicate')
+import QueryPredicate from '../../src-v2/repository/query-predicate.js'
 
 const templateExample = {
   name: 'Template Teste',

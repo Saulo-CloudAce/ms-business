@@ -1,11 +1,9 @@
-class UploaderMock {
-  async upload () {
+export default class UploaderMock {
+  async upload() {
     return null
   }
 
-  async uploadContent () {
+  async uploadContent() {
     return null
   }
 }
-
-module.exports = UploaderMock

@@ -1,18 +1,18 @@
-const moment = require('moment')
+import moment from 'moment'
 
-const Business = require('../../domain-v2/business')
-const BusinessRepository = require('../repository/business-repository')
-const CompanyRepository = require('../repository/company-repository')
-const TemplateRepository = require('../repository/template-repository')
-const Uploader = require('../lib/uploader')
-const Validator = require('../lib/validator')
-const crmService = require('../services/crm-service')
-const { mongoIdIsValid } = require('../helpers/validators')
-const { normalizeArraySubfields } = require('../lib/data-transform')
-const { calcExpireTime } = require('../helpers/util')
-const { AggregateModeType } = require('../../domain-v2/aggregate-mode-enum')
+import Business from '../../domain-v2/business.js'
+import BusinessRepository from '../repository/business-repository.js'
+import CompanyRepository from '../repository/company-repository.js'
+import TemplateRepository from '../repository/template-repository.js'
+import Uploader from '../lib/uploader.js'
+import Validator from '../lib/validator.js'
+import * as crmService from '../services/crm-service.js'
+import { mongoIdIsValid } from '../helpers/validators.js'
+import { normalizeArraySubfields } from '../lib/data-transform.js'
+import { calcExpireTime } from '../helpers/util.js'
+import { AggregateModeType } from '../../domain-v2/aggregate-mode-enum.js'
 
-class BusinessController {
+export default class BusinessController {
   constructor(businessService) {
     this.businessService = businessService
     this.uploader = new Uploader(process.env.BUCKET)
@@ -33,14 +33,6 @@ class BusinessController {
 
   async createFromUrlFile(req, res) {
     console.log('createFromUrlFile')
-    req.assert('name', 'Nome é obrigatório').notEmpty()
-    req.assert('file', 'O arquivo é obrigatório').notEmpty()
-    req.assert('templateId', 'O ID do template é obrigatório').notEmpty()
-    req.assert('active_until', 'O active until é obrigatório').notEmpty()
-
-    if (req.validationErrors()) {
-      return res.status(400).send({ errors: req.validationErrors() })
-    }
 
     const companyToken = req.headers['token']
     const templateId = req.body.templateId
@@ -115,21 +107,12 @@ class BusinessController {
       return res.status(201).send({ businessId })
     } catch (e) {
       const errCode = '00014'
-      console.error(`#${errCode}`, e.message)
+      console.error(`#${errCode}`, e)
       return res.status(500).send({ error: `#${errCode}` })
     }
   }
 
   async create(req, res) {
-    req.assert('name', 'Nome é obrigatório')
-    req.assert('file', 'O arquivo é obrigatório')
-    req.assert('templateId', 'O ID do template é obrigatório')
-    req.assert('active_until', 'O active until é obrigatório')
-
-    if (req.validationErrors()) {
-      return res.status(400).send({ errors: req.validationErrors() })
-    }
-
     const companyToken = req.headers['token']
     const templateId = req.body.templateId
     const activeUntil = req.body.active_until
@@ -200,15 +183,6 @@ class BusinessController {
 
   async createFromJson(req, res) {
     console.log('createFromJson')
-    req.assert('name', 'Nome é obrigatório').notEmpty()
-    req.assert('templateId', 'O ID do template é obrigatório').notEmpty()
-    req.assert('data', 'Os dados são obrigatórios.').notEmpty()
-    req.assert('active_until', 'O active until é obrigatório').notEmpty()
-
-    if (req.validationErrors()) {
-      return res.status(400).send({ errors: req.validationErrors() })
-    }
-
     const companyToken = req.headers['token']
 
     if (req.body.aggregate_mode && !Object.values(AggregateModeType).includes(req.body.aggregate_mode)) {
@@ -279,12 +253,6 @@ class BusinessController {
 
   async createSingleRegisterBusiness(req, res) {
     console.log('createSingleRegisterBusiness')
-    req.assert('templateId', 'O ID do template é obrigatório').notEmpty()
-    req.assert('data', 'Os dados são obrigatórios.').notEmpty()
-
-    if (req.validationErrors()) {
-      return res.status(400).send({ errors: req.validationErrors() })
-    }
 
     if (req.body.aggregate_mode && !Object.values(AggregateModeType).includes(req.body.aggregate_mode)) {
       return res.status(400).send({
@@ -614,67 +582,7 @@ class BusinessController {
     }
   }
 
-  async markBusinessFlowPassed(req, res) {
-    const companyToken = req.headers['token']
-
-    const businessId = req.params.id
-    if (!mongoIdIsValid(businessId)) return res.status(500).send({ error: 'Código do lote inválido' })
-
-    let updatedBy = 0
-    if (req.body.updated_by && !isNaN(req.body.updated_by)) {
-      updatedBy = parseInt(req.body.updated_by)
-    }
-
-    try {
-      const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
-
-      const company = await companyRepository.getByToken(companyToken)
-      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
-
-      const business = await businessRepository.getById(companyToken, businessId)
-      if (!business) return res.status(400).send({ error: 'Business não identificado' })
-
-      await businessRepository.markFlowPassed(companyToken, businessId, updatedBy)
-
-      return res.sendStatus(200)
-    } catch (e) {
-      return res.status(500).send({ error: e.message })
-    }
-  }
-
-  async unmarkBusinessFlowPassed(req, res) {
-    const companyToken = req.headers['token']
-
-    const businessId = req.params.id
-    if (!mongoIdIsValid(businessId)) return res.status(500).send({ error: 'Código do lote inválido' })
-
-    let updatedBy = 0
-    if (req.body.updated_by && !isNaN(req.body.updated_by)) {
-      updatedBy = parseInt(req.body.updated_by)
-    }
-
-    try {
-      const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
-
-      const company = await companyRepository.getByToken(companyToken)
-      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
-
-      const business = await businessRepository.getById(companyToken, businessId)
-      if (!business) return res.status(400).send({ error: 'Business não identificado' })
-
-      await businessRepository.unmarkFlowPassed(companyToken, businessId, updatedBy)
-
-      return res.sendStatus(200)
-    } catch (e) {
-      return res.status(500).send({ error: e.message })
-    }
-  }
-
   async activateBusiness(req, res) {
-    req.assert('active_until', 'O active until deve ser informado').notEmpty()
-
-    if (req.validationErrors()) return res.status(400).send({ errors: req.validationErrors() })
-
     const companyToken = req.headers['token']
 
     const businessId = req.params.id
@@ -912,7 +820,6 @@ class BusinessController {
           register.businessUpdatedAt = moment().format()
         }
       })
-      
 
       const objCRM = {}
       template.fields.forEach((data) => {
@@ -1030,5 +937,3 @@ class BusinessController {
     }
   }
 }
-
-module.exports = BusinessController

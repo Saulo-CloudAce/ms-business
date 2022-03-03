@@ -1,9 +1,9 @@
-const fs = require('fs')
-const readline = require('readline')
-const md5 = require('md5')
-const moment = require('moment')
-const { validateEmail, isArrayObject, arraysEqual, arraysDiff, listElementDuplicated } = require('../helpers/validators')
-const {
+import fs from 'fs'
+import readline from 'linebyline'
+import md5 from 'md5'
+import moment from 'moment'
+import { validateEmail, isArrayObject, arraysEqual, arraysDiff, listElementDuplicated } from '../helpers/validators.js'
+import {
   isKey,
   isTypeDate,
   isTypeOptions,
@@ -21,13 +21,13 @@ const {
   isValidDate,
   isTypeDocument,
   isTypeListDocument
-} = require('../helpers/field-methods')
+} from '../helpers/field-methods.js'
 
-const StorageService = require('../services/storage-service')
+import StorageService from '../services/storage-service.js'
 
 const storageService = new StorageService()
 
-class Validator {
+export default class Validator {
   _mapLineDataToLineDataWithRules(line, rulesByColumn) {
     const lineWithRulesFields = {}
     Object.keys(line).forEach((key) => {
@@ -120,10 +120,7 @@ class Validator {
 
   async validateAndFormat(filePath, fields, jumpFirstLine = false, dataSeparator = ';', listBatches = []) {
     const rulesByColumn = this._indexTemplateFieldsByColumn(fields)
-    const readStream = fs.createReadStream(filePath)
-    const reader = readline.createInterface({
-      input: readStream
-    })
+    const reader = readline(filePath)
 
     const firstLine = 1
 
@@ -156,8 +153,6 @@ class Validator {
                   columns_duplicated: columnsDuplicated
                 })
                 resolve({ invalids: lineInvalids, valids: lineValids })
-                reader.close()
-                reader.removeAllListeners()
               } else if (!arraysEqual(columnsName, fileColumnsName)) {
                 const columnsDiff = arraysDiff(columnsName, fileColumnsName)
                 lineInvalids.push({
@@ -167,8 +162,6 @@ class Validator {
                   columns_diff: columnsDiff
                 })
                 resolve({ invalids: lineInvalids, valids: lineValids })
-                reader.close()
-                reader.removeAllListeners()
               }
             } else {
               const data = line.split(dataSeparator)
@@ -203,9 +196,11 @@ class Validator {
 
     let { invalids, valids, validsCustomer } = data
 
-    valids = this._joinDataBatch(valids, fields)
+    if (valids.length) {
+      valids = this._joinDataBatch(valids, fields)
 
-    validsCustomer = this._joinCustomerBatch(validsCustomer, fields)
+      validsCustomer = this._joinCustomerBatch(validsCustomer, fields)
+    }
 
     return {
       invalids,
@@ -217,7 +212,6 @@ class Validator {
   _mergeData(listLineData, columnsArray) {
     if (columnsArray.length) {
       const firstLineData = listLineData.shift()
-      console.log(firstLineData)
       listLineData.forEach((line) => {
         columnsArray.forEach((col) => {
           const lineFilled = line[col.column].filter(
@@ -298,29 +292,32 @@ class Validator {
 
   async validateAndFormatFromUrlFile(filePath, fields, jumpFirstLine = false, dataSeparator = ';', listBatches = []) {
     const rulesByColumn = this._indexTemplateFieldsByColumn(fields)
+    let fileName, dirFile, bucket
 
-    const filePathParts = filePath.split('/')
-    const fileName = filePathParts[filePathParts.length - 1]
-    const dirFile = filePathParts[filePathParts.length - 2]
-    const bucket = filePathParts[filePathParts.length - 3]
+    const fileUrlS3 = filePath.replace('http://', '').replace('https://', '')
+    const urlPartsPoint = fileUrlS3.split('.')
+    if (urlPartsPoint[0] === 's3') {
+      // formato antigo de URL
+      const filePathParts = fileUrlS3.split('/')
+      fileName = filePathParts[filePathParts.length - 1]
+      dirFile = filePathParts.slice(2, filePathParts.length - 1).join('/')
+      bucket = filePathParts[1]
+    } else {
+      // formato novo
+      bucket = urlPartsPoint[0]
+      const filePathParts = fileUrlS3.split('/')
+      fileName = filePathParts[filePathParts.length - 1]
+      dirFile = filePathParts.slice(1, filePathParts.length - 1).join('/')
+    }
 
-    const readStream = await new Promise((resolve, reject) => {
-      const tmpFilename = `/tmp/${md5(new Date())}`
-      storageService
-        .downloadFile(`${dirFile}/${fileName}`, bucket, tmpFilename)
-        .then(() => {
-          console.log('DOWNLOAD_FILE_FINISHED', filePath)
-          resolve(fs.createReadStream(tmpFilename))
-        })
-        .catch((err) => {
-          console.error('S3: ', err)
-          reject(err)
-        })
-    })
+    const tmpFilename = `/tmp/${md5(new Date())}.csv`
 
-    const reader = readline.createInterface({
-      input: readStream
-    })
+    console.log('DOWNLOAD_FILE_START')
+    await storageService.downloadFile(`${dirFile}/${fileName}`, bucket, tmpFilename)
+    console.log('DOWNLOAD_FILE_FINISHED', filePath)
+
+    // const readStream = fs.createReadStream(tmpFilename)
+    const reader = readline(tmpFilename)
 
     const firstLine = 1
 
@@ -353,9 +350,9 @@ class Validator {
                   columns_diff: columnsDiff,
                   columns_duplicated: columnsDuplicated
                 })
-                resolve({ invalids: lineInvalids, valids: lineValids })
-                reader.close()
-                reader.removeAllListeners()
+                resolve({ invalids: lineInvalids, valids: lineValids, validsCustomer: lineValidsCustomer })
+                // reader.close()
+                // reader.removeAllListeners()
               } else if (!arraysEqual(columnsName, fileColumnsName)) {
                 const columnsDiff = arraysDiff(columnsName, fileColumnsName)
                 lineInvalids.push({
@@ -364,9 +361,9 @@ class Validator {
                   columns_file: fileColumnsName,
                   columns_diff: columnsDiff
                 })
-                resolve({ invalids: lineInvalids, valids: lineValids })
-                reader.close()
-                reader.removeAllListeners()
+                resolve({ invalids: lineInvalids, valids: lineValids, validsCustomer: lineValidsCustomer })
+                // reader.close()
+                // reader.removeAllListeners()
               }
             } else {
               const data = line.split(dataSeparator)
@@ -398,15 +395,22 @@ class Validator {
           throw new Error(err)
         })
         .on('end', () => {
-          console.log('aaaa')
+          console.log('READ_FILE_FINISHED', filePath)
+          return resolve({
+            invalids: lineInvalids,
+            valids: lineValids,
+            validsCustomer: lineValidsCustomer
+          })
         })
     })
 
     let { invalids, valids, validsCustomer } = data
 
-    valids = this._joinDataBatch(valids, fields)
+    if (valids.length) {
+      valids = this._joinDataBatch(valids, fields)
 
-    validsCustomer = this._joinCustomerBatch(validsCustomer, fields)
+      validsCustomer = this._joinCustomerBatch(validsCustomer, fields)
+    }
 
     return {
       invalids,
@@ -855,8 +859,6 @@ class Validator {
 
     if (elText.length <= 8) return ''
 
-    console.log('tel', elText)
-
     return elText
   }
 
@@ -1062,5 +1064,3 @@ class Validator {
     return arrData
   }
 }
-
-module.exports = Validator

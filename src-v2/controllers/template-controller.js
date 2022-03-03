@@ -1,18 +1,18 @@
-const fs = require('fs')
-const { validateFields, validateKey, hasCustomerFields } = require('../lib/template-validator')
-const CompanyRepository = require('../repository/company-repository')
-const TemplateRepository = require('../repository/template-repository')
-const BusinessRepository = require('../repository/business-repository')
-const { mongoIdIsValid } = require('../helpers/validators')
-const { isTypeArray } = require('../helpers/field-methods')
-const { isArrayObject } = require('../helpers/validators')
-const { generateCSV } = require('../helpers/csv-generator')
-const { generateExcel } = require('../helpers/excel-generator')
-const { sendEmail } = require('../helpers/email-sender')
-const QueryPredicate = require('../repository/query-predicate')
-const QueryPredicateError = require('../repository/query-predicate-error')
+import fs from 'fs'
+import { validateFields, validateKey, hasCustomerFields } from '../lib/template-validator.js'
+import CompanyRepository from '../repository/company-repository.js'
+import TemplateRepository from '../repository/template-repository.js'
+import BusinessRepository from '../repository/business-repository.js'
+import { mongoIdIsValid } from '../helpers/validators.js'
+import { isTypeArray } from '../helpers/field-methods.js'
+import { isArrayObject } from '../helpers/validators.js'
+import { generateCSV } from '../helpers/csv-generator.js'
+import { generateExcel } from '../helpers/excel-generator.js'
+import { sendEmail } from '../helpers/email-sender.js'
+import QueryPredicate from '../repository/query-predicate.js'
+import QueryPredicateError from '../repository/query-predicate-error.js'
 
-class TemplateController {
+export default class TemplateController {
   _getInstanceRepositories(app) {
     const companyRepository = new CompanyRepository(app.locals.db)
     const templateRepository = new TemplateRepository(app.locals.db)
@@ -22,13 +22,6 @@ class TemplateController {
   }
 
   async create(req, res) {
-    req.assert('name', 'O nome é obrigatório').notEmpty()
-    req.assert('fields', 'Os fields são obrigatórios').notEmpty()
-
-    if (req.validationErrors()) {
-      return res.status(400).send({ errors: req.validationErrors() })
-    }
-
     const companyToken = req.headers['token']
 
     let createdBy = 0
@@ -419,15 +412,8 @@ class TemplateController {
   }
 
   async update(req, res) {
-    req.assert('name', 'O nome é obrigatório').notEmpty()
-    req.assert('fields', 'Os fields são obrigatórios').notEmpty()
-
     const companyToken = req.headers['token']
     const templateId = req.params.id
-
-    if (req.validationErrors()) {
-      return res.status(400).send({ errors: req.validationErrors() })
-    }
 
     try {
       const { name, fields } = req.body
@@ -475,5 +461,3 @@ class TemplateController {
     }
   }
 }
-
-module.exports = TemplateController

@@ -1,6 +1,6 @@
-const Sequencer = require('@jest/test-sequencer').default
+import Sequencer from '@jest/test-sequencer'
 
-class CustomSequencer extends Sequencer {
+export default class CustomSequencer extends Sequencer.default {
   sort(tests) {
     const orderPath = [
       'query-predicate.test.js',
@@ -27,5 +27,3 @@ class CustomSequencer extends Sequencer {
     return testsInOrder
   }
 }
-
-module.exports = CustomSequencer

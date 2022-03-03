@@ -1,14 +1,15 @@
-const supertest = require('supertest')
-const nock = require('nock')
-const axios = require('axios')
+import supertest from 'supertest'
+import nock from 'nock'
+import axios from 'axios'
 
-axios.defaults.adapter = require('axios/lib/adapters/http')
+import adapter from 'axios/lib/adapters/http'
+axios.defaults.adapter = adapter
 
-const app = require('../../config/server')
-const { connect } = require('../../config/mongodb')
+import app from '../../config/server.js'
+import { connect } from '../../config/mongodb.js'
 
-const CompanyModel = require('../../domain-v2/company')
-const CompanyRepository = require('../../src-v2/repository/company-repository')
+import CompanyModel from '../../domain-v2/company.js'
+import CompanyRepository from '../../src-v2/repository/company-repository.js'
 
 let companyModel = ''
 let companyRepository = ''
@@ -20,9 +21,7 @@ let companyCreated = ''
 const customer = {
   customer_cpfcnpj: '88010287334',
   customer_name: 'Pessoal Y',
-  customer_email: [
-    { customer_email: 'pessoay@email.com' }
-  ]
+  customer_email: [{ customer_email: 'pessoay@email.com' }]
 }
 
 const c = {
@@ -31,11 +30,11 @@ const c = {
   callback: 'http://localhost:5500/v1/crm-c'
 }
 
-async function createCompany () {
+async function createCompany() {
   return companyModel.create(c.name, c.prefix_index_elastic, c.callback)
 }
 
-describe ('Customer functions', () => {
+describe('Customer functions', () => {
   beforeAll(async () => {
     await new Promise((resolve, reject) => {
       connect(app, async () => {
@@ -52,7 +51,11 @@ describe ('Customer functions', () => {
     })
   })
 
-  it ('Create a single customer', async (done) => {
+  afterAll(() => {
+    app.locals.conn.close()
+  })
+
+  it('Create a single customer', async (done) => {
     const customerResult = customer
     customerResult.customer_id = 5
 
@@ -84,7 +87,7 @@ describe ('Customer functions', () => {
       })
   })
 
-  it ('Update a single customer', async (done) => {
+  it('Update a single customer', async (done) => {
     const customerResult = customer
     customerResult.customer_id = 5
 
@@ -111,7 +114,7 @@ describe ('Customer functions', () => {
       })
   })
 
-  it ('Get a customer by CPF/CNPJ', async (done) => {
+  it('Get a customer by CPF/CNPJ', async (done) => {
     const cResult = {
       id: 5,
       cpfcnpj: '88010287334',
@@ -174,7 +177,7 @@ describe ('Customer functions', () => {
       })
   })
 
-  it ('Get a customer by ID', async (done) => {
+  it('Get a customer by ID', async (done) => {
     const cResult = {
       id: 5,
       cpfcnpj: '88010287334',
@@ -237,15 +240,13 @@ describe ('Customer functions', () => {
       })
   })
 
-  it ('Get a customer by ID with fields formatted', async (done) => {
+  it('Get a customer by ID with fields formatted', async (done) => {
     const cResult = {
       id: 5,
       customer_cpfcnpj: '88010287334',
       customer_name: 'Pessoal Y',
       customer_deceased: null,
-      customer_email: [
-        { id: 100, customer_email: 'pessoay@email.com' }
-      ],
+      customer_email: [{ id: 100, customer_email: 'pessoay@email.com' }],
       customer_address: [],
       customer_business_partner: [],
       customer_phone: [],
@@ -286,14 +287,12 @@ describe ('Customer functions', () => {
       })
   })
 
-  it ('Search a customer by ID with fields formatted', async (done) => {
+  it('Search a customer by ID with fields formatted', async (done) => {
     const cResult = {
       id: 5,
       customer_cpfcnpj: '88010287334',
       customer_name: 'Pessoal Y',
-      customer_email: [
-        { id: 100, customer_email: 'pessoay@email.com' }
-      ],
+      customer_email: [{ id: 100, customer_email: 'pessoay@email.com' }],
       customer_phome: [],
       business_list: [],
       business_template_list: []
@@ -330,17 +329,17 @@ describe ('Customer functions', () => {
       })
   })
 
-  it ('List all customers', async (done) => {
+  it('List all customers', async (done) => {
     const cResult = {
-      customers: [{
-        id: 5,
-        cpfcnpj: '88010287334',
-        name: 'Pessoal Y',
-        email: [
-          { id: 100, email: 'pessoay@email.com' }
-        ],
-        phone: []
-      }],
+      customers: [
+        {
+          id: 5,
+          cpfcnpj: '88010287334',
+          name: 'Pessoal Y',
+          email: [{ id: 100, email: 'pessoay@email.com' }],
+          phone: []
+        }
+      ],
       pagination: {
         numRows: 1,
         page: 0,

@@ -1,18 +1,18 @@
-const md5 = require('md5')
+import md5 from 'md5'
 
-class Company {
-  constructor (repository) {
+export default class Company {
+  constructor(repository) {
     this.repository = repository
   }
 
-  async create (name, prefixIndexElastic, callback) {
+  async create(name, prefixIndexElastic, callback) {
     const token = md5(name + callback + new Date())
     const company = await this.repository.save(name, prefixIndexElastic, callback, token)
 
     return company
   }
 
-  async getAll () {
+  async getAll() {
     try {
       const companies = await this.repository.getAll()
 
@@ -22,7 +22,7 @@ class Company {
     }
   }
 
-  async getById (id) {
+  async getById(id) {
     try {
       const company = await this.repository.getById(id)
 
@@ -32,7 +32,7 @@ class Company {
     }
   }
 
-  async update (id, name, callback, activated) {
+  async update(id, name, callback, activated) {
     try {
       const company = await this.repository.update(id, name, callback, activated)
 
@@ -42,5 +42,3 @@ class Company {
     }
   }
 }
-
-module.exports = Company

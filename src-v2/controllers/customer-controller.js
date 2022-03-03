@@ -1,5 +1,5 @@
-const moment = require('moment')
-const {
+import moment from 'moment'
+import {
   createSingleCustomer,
   getByCpfCnpj,
   getAllCustomersByCompany,
@@ -9,17 +9,18 @@ const {
   getCustomerById,
   getCustomerFormattedById,
   getAllCustomersByCompanyPaginated,
-  getListCustomersByCpfCnpj } = require('../services/crm-service')
-const { clearCPFCNPJ } = require('../helpers/formatters')
-const { normalizeArraySubfields } = require('../lib/data-transform')
-const { calcExpireTime } = require('../helpers/util')
-const CompanyRepository = require('../repository/company-repository')
-const TemplateRepository = require('../repository/template-repository')
-const BusinessRepository = require('../repository/business-repository')
-const Business = require('../../domain-v2/business')
+  getListCustomersByCpfCnpj
+} from '../services/crm-service.js'
+import { clearCPFCNPJ } from '../helpers/formatters.js'
+import { normalizeArraySubfields } from '../lib/data-transform.js'
+import { calcExpireTime } from '../helpers/util.js'
+import CompanyRepository from '../repository/company-repository.js'
+import TemplateRepository from '../repository/template-repository.js'
+import BusinessRepository from '../repository/business-repository.js'
+import Business from '../../domain-v2/business.js'
 
-class CustomerController {
-  _getInstanceRepositories (app) {
+export default class CustomerController {
+  _getInstanceRepositories(app) {
     const businessRepository = new BusinessRepository(app.locals.db)
     const companyRepository = new CompanyRepository(app.locals.db)
     const templateRepository = new TemplateRepository(app.locals.db)
@@ -27,11 +28,7 @@ class CustomerController {
     return { businessRepository, companyRepository, templateRepository }
   }
 
-  async create (req, res) {
-    req.assert('customer_cpfcnpj', 'O CPF/CNPJ é obrigatório').notEmpty()
-
-    if (req.validationErrors()) return res.status(400).send({ errors: req.validationErrors() })
-
+  async create(req, res) {
     const companyToken = req.headers['token']
 
     try {
@@ -44,18 +41,15 @@ class CustomerController {
       req.body.customer_cpfcnpj = cpfcnpj
 
       const request = await createSingleCustomer(req.body, companyToken, company.prefix_index_elastic)
-      if (request.response && request.response.status && request.response.status !== 200) return res.status(request.response.status).send(request.response.data)
+      if (request.response && request.response.status && request.response.status !== 200)
+        return res.status(request.response.status).send(request.response.data)
       return res.status(201).send(request.data)
     } catch (err) {
       return res.status(500).send({ error: err.message })
     }
   }
 
-  async update (req, res) {
-    req.assert('customer_cpfcnpj', 'O CPF/CNPJ é obrigatório').notEmpty()
-
-    if (req.validationErrors()) return res.status(400).send({ errors: req.validationErrors() })
-
+  async update(req, res) {
     const companyToken = req.headers['token']
 
     try {
@@ -68,14 +62,15 @@ class CustomerController {
       req.body.customer_cpfcnpj = cpfcnpj
 
       const request = await updateCustomer(req.params.id, req.body, companyToken)
-      if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
+      if (request.response && request.response.status && request.response.status != 200)
+        return res.status(request.response.status).send(request.response.data)
       return res.status(200).send(request.data)
     } catch (err) {
       return res.status(500).send({ error: err.message })
     }
   }
 
-  async getById (req, res) {
+  async getById(req, res) {
     const companyToken = req.headers['token']
     const customerId = req.params.id
 
@@ -89,7 +84,8 @@ class CustomerController {
 
       const request = await getCustomerById(req.params.id, companyToken)
 
-      if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
+      if (request.response && request.response.status && request.response.status != 200)
+        return res.status(request.response.status).send(request.response.data)
 
       if (global.cache.customers[customerId]) {
         const customerCached = global.cache.customers[customerId]
@@ -102,7 +98,7 @@ class CustomerController {
       }
 
       const customer = request.data
-      
+
       if (customer) {
         const mailings = await businessDomain.listMailingByTemplateListAndKeySortedReverse(companyToken, customer, templateRepository)
 
@@ -121,7 +117,7 @@ class CustomerController {
     }
   }
 
-  async getByIdAndTemplateId (req, res) {
+  async getByIdAndTemplateId(req, res) {
     const companyToken = req.headers['token']
     const customerId = req.params.id
     const templateId = req.params.templateId
@@ -138,21 +134,22 @@ class CustomerController {
 
       const request = await getCustomerById(customerId, companyToken)
 
-      if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
+      if (request.response && request.response.status && request.response.status != 200)
+        return res.status(request.response.status).send(request.response.data)
 
       const customer = request.data
       const templateList = customer.business_template_list
       if (!templateList || !Array.isArray(templateList)) {
         return res.status(404).send({ error: 'Este customer não está vinculado a um mailing.' })
       }
-      const hasTemplate = templateList.find(tl => tl === templateId)
+      const hasTemplate = templateList.find((tl) => tl === templateId)
       if (!hasTemplate) {
         return res.status(404).send({ error: 'Este customer não está vinculado a um mailing do template informado.' })
       }
 
       // Fixa o ID do template procurado, já que este cliente tem vínculo com este template
       customer.business_template_list = [templateId]
-      
+
       if (customer) {
         const mailings = await businessDomain.getLastMailingByTemplateListAndKeySortedReverse(companyToken, customer, templateRepository)
         customer.schema_list = mailings
@@ -167,7 +164,7 @@ class CustomerController {
     }
   }
 
-  async getByIdFormatted (req, res) {
+  async getByIdFormatted(req, res) {
     const companyToken = req.headers['token']
     const customerId = req.params.id
 
@@ -181,7 +178,8 @@ class CustomerController {
 
       const request = await getCustomerFormattedById(req.params.id, companyToken)
 
-      if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
+      if (request.response && request.response.status && request.response.status != 200)
+        return res.status(request.response.status).send(request.response.data)
 
       if (global.cache.customers_formatted[customerId]) {
         const customerCached = global.cache.customers_formatted[customerId]
@@ -212,11 +210,11 @@ class CustomerController {
     }
   }
 
-  async getByIdAndTemplateIdFormatted (req, res) {
+  async getByIdAndTemplateIdFormatted(req, res) {
     const companyToken = req.headers['token']
     const customerId = req.params.id
     const templateId = req.params.templateId
-    
+
     if (!customerId) return res.status(400).send({ error: 'Informe o ID do customer.' })
     if (!templateId) return res.status(400).send({ error: 'Informe o ID do template.' })
 
@@ -230,20 +228,21 @@ class CustomerController {
 
       const request = await getCustomerFormattedById(customerId, companyToken)
 
-      if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
+      if (request.response && request.response.status && request.response.status != 200)
+        return res.status(request.response.status).send(request.response.data)
 
       const customer = request.data
       const templateList = customer.business_template_list
       if (!templateList || !Array.isArray(templateList)) {
         return res.status(404).send({ error: 'Este customer não está vinculado a um mailing.' })
       }
-      const hasTemplate = templateList.find(tl => tl === templateId)
+      const hasTemplate = templateList.find((tl) => tl === templateId)
       if (!hasTemplate) {
         return res.status(404).send({ error: 'Este customer não está vinculado a um mailing do template informado.' })
       }
 
       customer.business_template_list = [templateId]
-      
+
       // let templateFinal = {}
       // const template = await templateRepository.getById(templateId, companyToken)
       // if (template) {
@@ -271,7 +270,6 @@ class CustomerController {
       //     }
       //   }
       // }
-      
 
       if (customer) {
         const mailings = await businessDomain.getLastMailingByTemplateListAndKeySortedReverse(companyToken, customer, templateRepository)
@@ -288,7 +286,7 @@ class CustomerController {
     }
   }
 
-  async getCustomerInfoByCpfCnpj (req, res) {
+  async getCustomerInfoByCpfCnpj(req, res) {
     const companyToken = req.headers['token']
 
     try {
@@ -306,9 +304,10 @@ class CustomerController {
         request = await getAllCustomersByCompany(companyToken)
       }
 
-      if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
+      if (request.response && request.response.status && request.response.status != 200)
+        return res.status(request.response.status).send(request.response.data)
 
-      const customer = (request.data) ? request.data : {}
+      const customer = request.data ? request.data : {}
       if (customer) return res.status(200).send(customer)
       return res.status(404).send()
     } catch (err) {
@@ -317,7 +316,7 @@ class CustomerController {
     }
   }
 
-  async getCustomerPoolInfoByCpfCnpj (req, res) {
+  async getCustomerPoolInfoByCpfCnpj(req, res) {
     const companyToken = req.headers['token']
 
     try {
@@ -327,15 +326,16 @@ class CustomerController {
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       let cpfcnpjList = req.body.cpfcnpj_list
-      
-      cpfcnpjList = cpfcnpjList.map(cpfcnpj => {
+
+      cpfcnpjList = cpfcnpjList.map((cpfcnpj) => {
         return clearCPFCNPJ(cpfcnpj)
       })
       const request = await getListCustomersByCpfCnpj(cpfcnpjList, companyToken)
 
-      if (request.response && request.response.status && request.response.status !== 200) return res.status(request.response.status).send(request.response.data)
+      if (request.response && request.response.status && request.response.status !== 200)
+        return res.status(request.response.status).send(request.response.data)
 
-      const customers = (request.data) ? request.data : []
+      const customers = request.data ? request.data : []
       if (customers) return res.status(200).send(customers)
       return res.status(404).send()
     } catch (err) {
@@ -344,7 +344,7 @@ class CustomerController {
     }
   }
 
-  async getByCpfCnpj (req, res) {
+  async getByCpfCnpj(req, res) {
     const companyToken = req.headers['token']
 
     try {
@@ -362,55 +362,63 @@ class CustomerController {
         request = await getAllCustomersByCompany(companyToken)
       }
 
-      if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
+      if (request.response && request.response.status && request.response.status != 200)
+        return res.status(request.response.status).send(request.response.data)
 
       console.time('format data')
-      const customer = (request.data) ? request.data : []
-      const templateList = (customer && customer.business_template_list) ? customer.business_template_list : []
+      const customer = request.data ? request.data : []
+      const templateList = customer && customer.business_template_list ? customer.business_template_list : []
       let templates = []
       if (templateList && templateList.length > 0) {
-        templates = await Promise.all(templateList.map(async templateId => {
-          const template = await templateRepository.getById(templateId, companyToken)
-          if (template) {
-            const templateFinal = { _id: template._id, name: template.name, updatedAt: template.updatedAt }
-            let templateData = []
-            const fieldKey = template.fields.find(f => f.data === 'customer_cpfcnpj')
+        templates = await Promise.all(
+          templateList.map(async (templateId) => {
+            const template = await templateRepository.getById(templateId, companyToken)
+            if (template) {
+              const templateFinal = { _id: template._id, name: template.name, updatedAt: template.updatedAt }
+              let templateData = []
+              const fieldKey = template.fields.find((f) => f.data === 'customer_cpfcnpj')
 
-            if (fieldKey) {
-              const keyCpfCnpj = fieldKey.column
-              let data = []
-              if (cpfcnpj) {
-                templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, [keyCpfCnpj], cpfcnpj)
-              } else {
-                console.log('aaa')
-                data = await businessRepository.listAllAndChildsByTemplateSortedReverse(companyToken, templateId)
+              if (fieldKey) {
+                const keyCpfCnpj = fieldKey.column
+                let data = []
+                if (cpfcnpj) {
+                  templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(
+                    companyToken,
+                    templateId,
+                    [keyCpfCnpj],
+                    cpfcnpj
+                  )
+                } else {
+                  console.log('aaa')
+                  data = await businessRepository.listAllAndChildsByTemplateSortedReverse(companyToken, templateId)
 
-                data = data.filter(d => d.data)
-                if (data && data.length > 0) {
-                  data.map(m => {
-                    m.data = m.data.filter(md => md[keyCpfCnpj] === cpfcnpj)
-                    if (m.parentBatchId) {
-                      m._id = m.parentBatchId
-                      delete m.parentBatchId
-                    }
-                  })
+                  data = data.filter((d) => d.data)
+                  if (data && data.length > 0) {
+                    data.map((m) => {
+                      m.data = m.data.filter((md) => md[keyCpfCnpj] === cpfcnpj)
+                      if (m.parentBatchId) {
+                        m._id = m.parentBatchId
+                        delete m.parentBatchId
+                      }
+                    })
+                  }
+
+                  templateData = data
                 }
 
-                templateData = data
-              }
-
-              if (templateData.length > 0) {
-                templateData = normalizeArraySubfields(templateData, template)
-                templateFinal.lote_data_list = templateData
-                return templateFinal
+                if (templateData.length > 0) {
+                  templateData = normalizeArraySubfields(templateData, template)
+                  templateFinal.lote_data_list = templateData
+                  return templateFinal
+                }
               }
             }
-          }
-        }))
+          })
+        )
       }
       console.timeEnd('format data')
 
-      customer.schema_list = templates.filter(t => t).sort((a, b) => moment(b.updatedAt) - moment(a.updatedAt))
+      customer.schema_list = templates.filter((t) => t).sort((a, b) => moment(b.updatedAt) - moment(a.updatedAt))
       delete customer.business_list
       delete customer.business_template_list
 
@@ -421,9 +429,9 @@ class CustomerController {
     }
   }
 
-  async getAllByCompanyPaginated (req, res) {
+  async getAllByCompanyPaginated(req, res) {
     const companyToken = req.headers.token
-    const templateId = (req.headers.templateid) ? req.headers.templateid : ''
+    const templateId = req.headers.templateid ? req.headers.templateid : ''
     let page = 0
     let limit = 10
     if (req.query.page && parseInt(req.query.page) >= 0) page = parseInt(req.query.page)
@@ -439,7 +447,8 @@ class CustomerController {
       const request = await getAllCustomersByCompanyPaginated(companyToken, page, limit, templateId)
       console.timeEnd('lista customers')
 
-      if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
+      if (request.response && request.response.status && request.response.status != 200)
+        return res.status(request.response.status).send(request.response.data)
 
       return res.status(200).send(request.data)
     } catch (err) {
@@ -448,10 +457,9 @@ class CustomerController {
     }
   }
 
-  async search (req, res) {
+  async search(req, res) {
     const companyToken = req.headers['token']
     const queryTemplateId = req.headers['templateid']
-    const templateCache = {}
 
     try {
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
@@ -465,12 +473,13 @@ class CustomerController {
       console.time('searchCustomer')
       const request = await searchCustomer(search, companyToken, company.prefix_index_elastic, queryTemplateId)
       console.timeEnd('searchCustomer')
-      
-      if (request.response && request.response.status && request.response.status !== 200) return res.status(request.response.status).send(request.response.data)
-      let customers = (Array.isArray(request.data)) ? request.data : []
+
+      if (request.response && request.response.status && request.response.status !== 200)
+        return res.status(request.response.status).send(request.response.data)
+      let customers = Array.isArray(request.data) ? request.data : []
 
       if (queryTemplateId && String(queryTemplateId).length > 0) {
-        customers = customers.filter(c => c.business_template_list && c.business_template_list.indexOf(queryTemplateId) >= 0)
+        customers = customers.filter((c) => c.business_template_list && c.business_template_list.indexOf(queryTemplateId) >= 0)
       }
 
       let customerResultList = []
@@ -492,7 +501,9 @@ class CustomerController {
       }
       console.timeEnd('searchMongo')
 
-      customerResultList = customerResultList.sort((a, b) => (a.customer_name > b.customer_name) ? 1 : ((b.customer_name > a.customer_name) ? -1 : 0))
+      customerResultList = customerResultList.sort((a, b) =>
+        a.customer_name > b.customer_name ? 1 : b.customer_name > a.customer_name ? -1 : 0
+      )
 
       return res.status(200).send(customerResultList)
     } catch (err) {
@@ -501,7 +512,7 @@ class CustomerController {
     }
   }
 
-  async searchPaginated (req, res) {
+  async searchPaginated(req, res) {
     const companyToken = req.headers['token']
     const queryTemplateId = req.headers['templateid']
 
@@ -522,13 +533,14 @@ class CustomerController {
       console.time('search customer on CRM')
       const request = await searchCustomerFormatted(search, companyToken, company.prefix_index_elastic, queryTemplateId, page, limit)
       console.timeEnd('search customer on CRM')
-      
-      if (request.response && request.response.status && request.response.status !== 200) return res.status(request.response.status).send(request.response.data)
-      let customers = (Array.isArray(request.data.customers)) ? request.data.customers : []
+
+      if (request.response && request.response.status && request.response.status !== 200)
+        return res.status(request.response.status).send(request.response.data)
+      let customers = Array.isArray(request.data.customers) ? request.data.customers : []
       const customersPagination = request.data.pagination
-      
+
       if (queryTemplateId && String(queryTemplateId).length > 0) {
-        customers = customers.filter(c => c.business_template_list && c.business_template_list.indexOf(queryTemplateId) >= 0)
+        customers = customers.filter((c) => c.business_template_list && c.business_template_list.indexOf(queryTemplateId) >= 0)
       }
 
       let customerResultList = []
@@ -548,7 +560,9 @@ class CustomerController {
         customerResultList.push(customerResult)
       }
 
-      customerResultList = customerResultList.sort((a, b) => (a.customer_name > b.customer_name) ? 1 : ((b.customer_name > a.customer_name) ? -1 : 0))
+      customerResultList = customerResultList.sort((a, b) =>
+        a.customer_name > b.customer_name ? 1 : b.customer_name > a.customer_name ? -1 : 0
+      )
 
       return res.status(200).send({ customers: customerResultList, pagination: customersPagination })
     } catch (err) {
@@ -557,5 +571,3 @@ class CustomerController {
     }
   }
 }
-
-module.exports = CustomerController

@@ -1,24 +1,24 @@
-const mongodb = require('mongodb')
+import mongodb from 'mongodb'
 
-function mongoIdIsValid (id = null) {
+export function mongoIdIsValid(id = null) {
   return mongodb.ObjectID.isValid(id)
 }
 
-function validateEmail (email) {
+export function validateEmail(email) {
   if (!email) return false
   const emailParts = email.split('.')
   if ((email.match(/@/g) || []).length > 1) return false
   if (emailParts[emailParts.length - 1].length > 3) return false
 
-  const re = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w+)+$/;
+  const re = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w+)+$/
   return re.test(String(email).trim().toLowerCase())
 }
 
-function isArrayObject (array) {
+export function isArrayObject(array) {
   let isArrayObject = true
   if (!Array.isArray(array)) isArrayObject = false
   else {
-    array.forEach(item => {
+    array.forEach((item) => {
       if (typeof item !== 'object') {
         isArrayObject = false
       }
@@ -28,11 +28,11 @@ function isArrayObject (array) {
   return isArrayObject
 }
 
-function isArrayElementSameTypes (array) {
+export function isArrayElementSameTypes(array) {
   const arrayElementTypes = typeof array[0]
   let arrayElementSameTypes = true
 
-  array.forEach(item => {
+  array.forEach((item) => {
     if (typeof item !== arrayElementTypes) {
       arrayElementSameTypes = false
     }
@@ -41,10 +41,10 @@ function isArrayElementSameTypes (array) {
   return arrayElementSameTypes
 }
 
-function isArrayOfObjects (array) {
+export function isArrayOfObjects(array) {
   let arrayOfObjects = false
 
-  array.forEach(item => {
+  array.forEach((item) => {
     if (typeof item === 'object') {
       arrayOfObjects = true
     }
@@ -53,10 +53,10 @@ function isArrayOfObjects (array) {
   return arrayOfObjects
 }
 
-function isArrayWithEmptyElement (array) {
+export function isArrayWithEmptyElement(array) {
   let hasEmptyElement = false
 
-  array.forEach(item => {
+  array.forEach((item) => {
     if (String(item).trim().length === 0) {
       hasEmptyElement = true
     }
@@ -65,13 +65,13 @@ function isArrayWithEmptyElement (array) {
   return hasEmptyElement
 }
 
-function arraysEqual (source1, source2) {
-  const cpSource1 = source1.map(s => s.trim())
-  const cpSource2 = source2.map(s => s.trim())
+export function arraysEqual(source1, source2) {
+  const cpSource1 = source1.map((s) => s.trim())
+  const cpSource2 = source2.map((s) => s.trim())
   return cpSource1.sort().toString() === cpSource2.sort().toString()
 }
 
-function arraysDiff (arr1, arr2) {
+export function arraysDiff(arr1, arr2) {
   const filteredArr1 = arr1.filter(function (ele) {
     return arr2.indexOf(ele) === -1
   })
@@ -84,10 +84,10 @@ function arraysDiff (arr1, arr2) {
   return arrDiff
 }
 
-function listElementDuplicated (arr) {
+export function listElementDuplicated(arr) {
   const counts = {}
-  arr.forEach((x) => { counts[x] = (counts[x] || 0) + 1 })
-  return Object.keys(counts).filter(k => counts[k] > 1)
+  arr.forEach((x) => {
+    counts[x] = (counts[x] || 0) + 1
+  })
+  return Object.keys(counts).filter((k) => counts[k] > 1)
 }
-
-module.exports = { mongoIdIsValid, validateEmail, isArrayObject, isArrayElementSameTypes, isArrayOfObjects, isArrayWithEmptyElement, arraysEqual, arraysDiff, listElementDuplicated }

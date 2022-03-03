@@ -1,6 +1,6 @@
-const MongoClient = require('mongodb').MongoClient
+import { MongoClient } from 'mongodb'
 
-async function connect(app, callback) {
+export async function connect(app, callback) {
   let connectionMongo = ''
   const config = { username: '', password: '', host: '', port: '', database: '', additionalParams: '' }
 
@@ -32,8 +32,7 @@ async function connect(app, callback) {
 
     const db = conn.db(config.database)
     app.locals.db = db
+    app.locals.conn = conn
     callback()
   })
 }
-
-module.exports = { connect }
