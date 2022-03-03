@@ -299,16 +299,16 @@ export default class Validator {
     const urlPartsPoint = fileUrlS3.split('.')
     if (urlPartsPoint[0] === 's3') {
       // formato antigo de URL
-      const filePathParts = filePath.split('/')
+      const filePathParts = fileUrlS3.split('/')
       fileName = filePathParts[filePathParts.length - 1]
-      dirFile = filePathParts[filePathParts.length - 2]
-      bucket = filePathParts[filePathParts.length - 3]
+      dirFile = filePathParts.slice(2, filePathParts.length - 1).join('/')
+      bucket = filePathParts[1]
     } else {
       // formato novo
       bucket = urlPartsPoint[0]
-      const filePathParts = filePath.split('/')
+      const filePathParts = fileUrlS3.split('/')
       fileName = filePathParts[filePathParts.length - 1]
-      dirFile = filePathParts[filePathParts.length - 2]
+      dirFile = filePathParts.slice(1, filePathParts.length - 1).join('/')
     }
 
     const tmpFilename = `/tmp/${md5(new Date())}.csv`
