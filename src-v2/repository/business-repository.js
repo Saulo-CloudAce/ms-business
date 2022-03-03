@@ -482,7 +482,6 @@ export default class BusinessRepository {
           'createdBy',
           'updatedBy',
           'flow_passed',
-          'activeUntil',
           'active'
         ])
         .toArray()
@@ -662,7 +661,6 @@ export default class BusinessRepository {
           'createdBy',
           'updatedBy',
           'flow_passed',
-          'activeUntil',
           'active'
         ])
         .toArray()
@@ -747,7 +745,6 @@ export default class BusinessRepository {
           'createdBy',
           'updatedBy',
           'flow_passed',
-          'activeUntil',
           'active'
         ])
         .toArray()
@@ -777,7 +774,6 @@ export default class BusinessRepository {
           'createdBy',
           'updatedBy',
           'flow_passed',
-          'activeUntil',
           'active'
         ])
         .toArray()
@@ -915,7 +911,7 @@ export default class BusinessRepository {
       const businessList = await this.db
         .collection('business')
         .find({ _id: { $in: businessIdList }, companyToken })
-        .project(['_id', 'name', 'templateId', 'createdAt', 'activeUntil'])
+        .project(['_id', 'name', 'templateId', 'createdAt', 'activeUntil', 'active'])
         .sort({ createdAt: -1 })
         .toArray()
 
