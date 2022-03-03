@@ -13,7 +13,7 @@ integration:
     - mongo:latest
   script:
     - mv .env.test .env
-    - CI=true npm install
+    - CI=true npm install --legacy-peer-deps
     - CI=true npm run clear_test
     - CI=true npm run test
   only:
