@@ -1,9 +1,13 @@
 import supertest from 'supertest'
 import nock from 'nock'
 import axios from 'axios'
+import { mockClient } from 'aws-sdk-client-mock/dist/cjs/mockClient'
+import { S3Client } from '@aws-sdk/client-s3'
 
 import adapter from 'axios/lib/adapters/http'
 axios.defaults.adapter = adapter
+
+const s3mock = mockClient(S3Client)
 
 import UploaderMock from '../utils/uploader-mock.js'
 import CRMServiceMock from '../utils/crm-service-mock.js'
@@ -151,6 +155,9 @@ async function createBusiness(templateId = '', token = '') {
 }
 
 describe('CRUD business', () => {
+  beforeEach(() => {
+    s3mock.reset()
+  })
   beforeAll(async () => {
     await new Promise((resolve, reject) => {
       connect(app, async () => {
