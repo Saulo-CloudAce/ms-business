@@ -35,29 +35,20 @@ export default class StorageService {
   }
 
   async uploadFromEncoded(dirBucket, buffer, fileName, bucket = bucketDefault, publicAccess = false) {
-    return new Promise((resolve, reject) => {
-      const params = {
-        Bucket: bucket,
-        Key: fileName,
-        Body: buffer,
-        ContentEncoding: 'utf8',
-        ContentType: 'application/json',
-        ACL: publicAccess ? 'public-read' : 'private'
-      }
-      if (dirBucket && dirBucket.length > 0) fileName = `${dirBucket}/${fileName}`
+    const params = {
+      Bucket: bucket,
+      Key: fileName,
+      Body: buffer,
+      ContentEncoding: 'utf8',
+      ContentType: 'application/json',
+      ACL: publicAccess ? 'public-read' : 'private'
+    }
+    if (dirBucket && dirBucket.length > 0) fileName = `${dirBucket}/${fileName}`
 
-      const urlFile = `https://${bucket}.s3.amazonaws.com/${fileName}`
+    const urlFile = `https://${bucket}.s3.amazonaws.com/${fileName}`
 
-      this._client
-        .send(new PutObjectCommand(params))
-        .then(() => {
-          resolve(urlFile)
-        })
-        .catch((err) => {
-          console.error(err)
-          reject(err)
-        })
-    })
+    await this._client.send(new PutObjectCommand(params))
+    return urlFile
   }
 
   async downloadFile(dirBucket = '', bucket = '', localpath = '') {
