@@ -1,4 +1,6 @@
 import { MongoClient } from 'mongodb'
+import dotenv from 'dotenv'
+dotenv.config()
 
 export async function connect(app, callback) {
   let connectionMongo = ''
@@ -26,8 +28,6 @@ export async function connect(app, callback) {
     connectionMongo = `mongodb://${config.host}:${config.port}/`
   }
   if (config.additionalParams) connectionMongo = `${connectionMongo}?${config.additionalParams}`
-
-  console.log('CONNECTION_STRING', connectionMongo)
 
   MongoClient.connect(connectionMongo, { promiseLibrary: Promise }, (err, conn) => {
     if (err) console.error(`#00000 - Falha ao conectar ao banco de dados. ${err.stack}`)
