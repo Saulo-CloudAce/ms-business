@@ -1,4 +1,5 @@
 import dotenv from 'dotenv'
+
 dotenv.config()
 
 import { runCronJob } from './src-v2/helpers/cron-job.js'
