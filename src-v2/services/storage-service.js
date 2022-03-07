@@ -35,6 +35,7 @@ export default class StorageService {
   }
 
   async uploadFromEncoded(dirBucket, buffer, fileName, bucket = bucketDefault, publicAccess = false) {
+    if (dirBucket && dirBucket.length > 0) fileName = `${dirBucket}/${fileName}`
     const params = {
       Bucket: bucket,
       Key: fileName,
@@ -43,7 +44,6 @@ export default class StorageService {
       ContentType: 'application/json',
       ACL: publicAccess ? 'public-read' : 'private'
     }
-    if (dirBucket && dirBucket.length > 0) fileName = `${dirBucket}/${fileName}`
 
     const urlFile = `https://${bucket}.s3.amazonaws.com/${fileName}`
 
