@@ -15,6 +15,7 @@ export default class Uploader {
   }
 
   async uploadContent(dir, content, filename) {
+    console.log('dir', dir)
     const bucket = process.env.BUCKET
     const publicAccess = false
     const resultLinkFile = await this._storageService.uploadFromEncoded(
