@@ -4,8 +4,9 @@ import { ObjectID } from 'mongodb'
 import { calcExpireTime } from '../helpers/util.js'
 
 export default class TemplateRepository {
-  constructor(db) {
+  constructor(db = {}, cacheService = {}) {
     this.db = db
+    this.cacheService = cacheService
   }
 
   async save(name, fields, companyToken, active, createdBy = 0) {
@@ -101,15 +102,10 @@ export default class TemplateRepository {
 
   async getById(id, companyToken) {
     try {
-      if (global.cache.templates[id]) {
-        const templateCached = global.cache.templates[id]
-        if (templateCached && templateCached.expire && calcExpireTime(new Date(), templateCached.expire) < global.cache.default_expire) {
-          console.log('TEMPLATE_CACHED')
-
-          return templateCached.data
-        } else {
-          global.cache.templates[id] = null
-        }
+      const templateCached = await this.cacheService.getTemplate(companyToken, id)
+      if (templateCached) {
+        console.log('TEMPLATE_CACHED')
+        return templateCached
       }
 
       console.log('TEMPLATE_STORED')
@@ -127,7 +123,7 @@ export default class TemplateRepository {
           'updatedBy'
         ])
 
-      global.cache.templates[id] = { data: result, expire: new Date() }
+      await this.cacheService.setTemplate(companyToken, id, result)
 
       return result
     } catch (err) {

@@ -18,12 +18,15 @@ import CompanyRepository from '../repository/company-repository.js'
 import TemplateRepository from '../repository/template-repository.js'
 import BusinessRepository from '../repository/business-repository.js'
 import Business from '../../domain-v2/business.js'
+import CacheService from '../services/cache-service.js'
 
 export default class CustomerController {
   _getInstanceRepositories(app) {
-    const businessRepository = new BusinessRepository(app.locals.db)
+    const cacheService = new CacheService(app.locals.redis)
+
+    const businessRepository = new BusinessRepository(app.locals.db, cacheService)
     const companyRepository = new CompanyRepository(app.locals.db)
-    const templateRepository = new TemplateRepository(app.locals.db)
+    const templateRepository = new TemplateRepository(app.locals.db, cacheService)
 
     return { businessRepository, companyRepository, templateRepository }
   }

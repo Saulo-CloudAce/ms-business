@@ -1,5 +1,3 @@
-// const elasticAPM = require('./elastic-apm')(process.env.APM_SERVICE_NAME, process.env.APM_SERVER_URL)
-
 import express from 'express'
 import bodyParser from 'body-parser'
 import multipart from 'connect-multiparty'
@@ -14,6 +12,7 @@ import customerRoutesV2 from '../src-v2/routes/customer.js'
 import healthRoutesV2 from '../src-v2/routes/health.js'
 
 import { connect } from '../config/mongodb.js'
+import Redis from './redis.js'
 
 const app = express()
 app.use(bodyParser.json({ limit: '5000mb' }))
@@ -33,6 +32,8 @@ healthRoutesV2(app)
 const port = process.env.PORT || 3000
 
 if (process.env.NODE_ENV !== 'test') {
+  const redisInstance = Redis.newConnection()
+  app.locals.redis = redisInstance
   connect(app, () => {
     app.listen(port, () => {
       console.log(`API is live on port ${port}`)

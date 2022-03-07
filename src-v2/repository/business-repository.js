@@ -4,10 +4,12 @@ import moment from 'moment'
 import { calcExpireTime } from '../helpers/util.js'
 import { AggregateModeType } from '../../domain-v2/aggregate-mode-enum.js'
 import QueryPredicate from './query-predicate.js'
+import CacheService from '../services/cache-service.js'
 
 export default class BusinessRepository {
-  constructor(db) {
+  constructor(db = {}, cacheService = new CacheService()) {
     this.db = db
+    this.cacheService = cacheService
   }
 
   async save(
@@ -62,6 +64,8 @@ export default class BusinessRepository {
       await this.db.collection('business').insertMany(batches)
       await this.db.collection('business_data').insertMany(businessData)
 
+      await this.cacheService.removeBusinessActivePaginatedList(business.companyToken)
+
       return business._id
     } catch (err) {
       console.error(err)
@@ -112,6 +116,9 @@ export default class BusinessRepository {
   async updateRegisterBusiness(registerId, data = {}) {
     try {
       await this.db.collection('business_data').update({ _id: registerId }, { $set: data })
+
+      await this.cacheService.removeBusinessRegister(companyToken, registerId)
+      console.log('BUSINESS_REGISTER_CACHE_INVALIDATED')
     } catch (err) {
       console.error(err)
       throw new Error(err)
@@ -364,7 +371,13 @@ export default class BusinessRepository {
   async getActivatedBatchesBasicPaginated(companyToken, page = 0, limit = 10) {
     const skipDocs = page * limit
     try {
-      console.time('select')
+      const businessPaginatedListCached = await this.cacheService.getBusinessActivePaginatedList(companyToken, page, limit)
+      if (businessPaginatedListCached) {
+        console.log('BUSINESS_ACTIVE_PAGINATED_LIST_CACHED')
+        return businessPaginatedListCached
+      }
+
+      console.time('getActivatedBatchesBasicPaginated')
       const businessList = await this.db
         .collection('business')
         .find({
@@ -406,8 +419,13 @@ export default class BusinessRepository {
         firstPage: 0,
         lastPage: Math.ceil(parseInt(businessListCount) / limit) - 1
       }
+      console.timeEnd('getActivatedBatchesBasicPaginated')
 
-      return { businessList, pagination }
+      const businessPaginated = { businessList, pagination }
+
+      await this.cacheService.setBusinessActivePaginatedList(companyToken, page, limit, businessPaginated)
+
+      return businessPaginated
     } catch (err) {
       throw new Error(err)
     }
@@ -1146,6 +1164,12 @@ export default class BusinessRepository {
 
   async getRegisterById(companyToken, businessId, registerId) {
     try {
+      const registerCached = await this.cacheService.getBusinessRegister(companyToken, registerId)
+      if (registerCached) {
+        console.log('BUSINESS_REGISTER_CACHED')
+        return registerCached
+      }
+
       const data = await this.db.collection('business_data').findOne(
         {
           companyToken: companyToken,
@@ -1161,6 +1185,9 @@ export default class BusinessRepository {
         .findOne({ _id: new ObjectID(businessId), companyToken: companyToken }, ['_id', 'name'])
 
       business.data = data
+
+      console.log('BUSINESS_REGISTER_STORED')
+      await this.cacheService.setBusinessRegister(companyToken, registerId, business)
 
       return business
     } catch (err) {

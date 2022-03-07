@@ -11,12 +11,15 @@ import { generateExcel } from '../helpers/excel-generator.js'
 import { sendEmail } from '../helpers/email-sender.js'
 import QueryPredicate from '../repository/query-predicate.js'
 import QueryPredicateError from '../repository/query-predicate-error.js'
+import CacheService from '../services/cache-service.js'
 
 export default class TemplateController {
   _getInstanceRepositories(app) {
+    const cacheService = new CacheService(app.locals.redis)
+
     const companyRepository = new CompanyRepository(app.locals.db)
-    const templateRepository = new TemplateRepository(app.locals.db)
-    const businessRepository = new BusinessRepository(app.locals.db)
+    const templateRepository = new TemplateRepository(app.locals.db, cacheService)
+    const businessRepository = new BusinessRepository(app.locals.db, cacheService)
 
     return { companyRepository, templateRepository, businessRepository }
   }

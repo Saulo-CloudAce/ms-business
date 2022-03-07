@@ -11,17 +11,20 @@ import { mongoIdIsValid } from '../helpers/validators.js'
 import { normalizeArraySubfields } from '../lib/data-transform.js'
 import { calcExpireTime } from '../helpers/util.js'
 import { AggregateModeType } from '../../domain-v2/aggregate-mode-enum.js'
+import CacheService from '../services/cache-service.js'
 
 export default class BusinessController {
-  constructor(businessService) {
+  constructor(businessService = {}) {
     this.businessService = businessService
     this.uploader = new Uploader(process.env.BUCKET)
   }
 
   _getInstanceRepositories(app) {
-    const businessRepository = new BusinessRepository(app.locals.db)
+    const cacheService = new CacheService(app.locals.redis)
+
+    const businessRepository = new BusinessRepository(app.locals.db, cacheService)
     const companyRepository = new CompanyRepository(app.locals.db)
-    const templateRepository = new TemplateRepository(app.locals.db)
+    const templateRepository = new TemplateRepository(app.locals.db, cacheService)
 
     return { businessRepository, companyRepository, templateRepository }
   }
@@ -862,7 +865,6 @@ export default class BusinessController {
     const templateId = req.headers['templateid']
     const businessId = req.params.businessId
     const registerId = req.params.registerId
-    const cacheKey = `${templateId}:${businessId}:${registerId}`
 
     try {
       const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
@@ -874,29 +876,13 @@ export default class BusinessController {
       const template = await templateRepository.getById(templateId, companyToken)
       if (!template) return res.status(400).send({ error: 'Template não identificado' })
 
-      if (global.cache.business_data[cacheKey]) {
-        const registerCached = global.cache.business_data[cacheKey]
-        if (registerCached && registerCached.expire && calcExpireTime(new Date(), registerCached.expire) < global.cache.default_expire) {
-          console.log('BUSINESS_REGISTER_CACHED')
-          return res.status(200).send(registerCached.data)
-        } else {
-          global.cache.business_data[cacheKey] = null
-        }
-      }
-
       const business = await newBusiness.getRegisterById(companyToken, businessId, registerId)
       if (!business) return res.status(400).send({ error: 'Registro não encontrado.' })
-
-      console.log('BUSINESS_REGISTER_STORED')
-      global.cache.business_data[cacheKey] = {
-        data: business,
-        expire: new Date()
-      }
 
       return res.status(200).send(business)
     } catch (err) {
       console.error(err)
-      return res.status(500).send({ error: err.message })
+      return res.status(500).send({ error: 'Ocorreu erro ao buscar o registro' })
     }
   }
 
