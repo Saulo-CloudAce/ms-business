@@ -11,6 +11,7 @@ integration:
   image: node
   services:
     - mongo:latest
+    - redis:latest
   script:
     - mv .env.test .env
     - CI=true npm install --legacy-peer-deps

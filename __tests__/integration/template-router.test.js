@@ -1,5 +1,6 @@
 import supertest from 'supertest'
 
+import Redis from '../../config/redis.js'
 import app from '../../config/server.js'
 import { connect } from '../../config/mongodb.js'
 
@@ -7,6 +8,7 @@ import CompanyModel from '../../domain-v2/company.js'
 import CompanyRepository from '../../src-v2/repository/company-repository.js'
 import TemplateRepository from '../../src-v2/repository/template-repository.js'
 import BusinessRepository from '../../src-v2/repository/business-repository.js'
+import CacheService from '../../src-v2/services/cache-service.js'
 
 let companyModel = ''
 let companyRepository = ''
@@ -311,10 +313,15 @@ describe('CRUD template', () => {
       connect(app, async () => {
         await app.locals.db.collection('business_template').remove({})
 
+        const redisInstance = Redis.newConnection()
+        app.locals.redis = redisInstance
+
+        const cacheService = new CacheService(redisInstance)
+
         companyRepository = new CompanyRepository(app.locals.db)
         companyModel = new CompanyModel(companyRepository)
-        templateRepository = new TemplateRepository(app.locals.db)
-        businessRepository = new BusinessRepository(app.locals.db)
+        templateRepository = new TemplateRepository(app.locals.db, cacheService)
+        businessRepository = new BusinessRepository(app.locals.db, cacheService)
 
         companyCreated = await createCompany()
 

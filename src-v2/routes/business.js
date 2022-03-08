@@ -11,9 +11,10 @@ import {
 } from './req-schemas/business.js'
 
 const multipartyMiddleware = multiparty()
-const businessController = new BusinessController(null)
 
-export default function businessRoute(app) {
+export default function businessRoute(app = {}) {
+  const businessController = new BusinessController(null)
+
   app.post('/api/v2/business', checkSchema(createFromFileSpec), applyRules, multipartyMiddleware, (req, res) =>
     businessController.create(req, res)
   )
