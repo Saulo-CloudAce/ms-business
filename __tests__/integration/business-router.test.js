@@ -12,6 +12,7 @@ const s3mock = mockClient(S3Client)
 import UploaderMock from '../utils/uploader-mock.js'
 import CRMServiceMock from '../utils/crm-service-mock.js'
 
+import Redis from '../../config/redis.js'
 import app from '../../config/server.js'
 import { connect } from '../../config/mongodb.js'
 
@@ -21,6 +22,8 @@ import TemplateRepository from '../../src-v2/repository/template-repository.js'
 import BusinessModel from '../../domain-v2/business.js'
 import BusinessRepository from '../../src-v2/repository/business-repository.js'
 import Validator from '../../src-v2/lib/validator.js'
+
+import CacheService from '../../src-v2/services/cache-service.js'
 
 let companyModel = ''
 let companyRepository = ''
@@ -164,10 +167,15 @@ describe('CRUD business', () => {
         await app.locals.db.collection('business').remove({})
         await app.locals.db.collection('business_data').remove({})
 
+        const redisInstance = Redis.newConnection()
+        app.locals.redis = redisInstance
+
+        const cacheService = new CacheService(redisInstance)
+
         companyRepository = new CompanyRepository(app.locals.db)
         companyModel = new CompanyModel(companyRepository)
-        templateRepository = new TemplateRepository(app.locals.db)
-        businessRepository = new BusinessRepository(app.locals.db)
+        templateRepository = new TemplateRepository(app.locals.db, cacheService)
+        businessRepository = new BusinessRepository(app.locals.db, cacheService)
         businessModel = new BusinessModel(businessRepository, new UploaderMock(), new Validator(), new CRMServiceMock())
 
         companyCreated = await createCompany()
