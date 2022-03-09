@@ -150,6 +150,8 @@ export default class BusinessRepository {
         { $set: businessUpdated },
         { multi: true }
       )
+
+      await this.cacheService.removeBusinessActivePaginatedList(companyToken)
     } catch (err) {
       throw new Error(err)
     }
@@ -170,6 +172,8 @@ export default class BusinessRepository {
         { $set: businessUpdated },
         { multi: true }
       )
+
+      await this.cacheService.removeBusinessActivePaginatedList(companyToken)
     } catch (err) {
       console.error(err)
       throw new Error(err)
