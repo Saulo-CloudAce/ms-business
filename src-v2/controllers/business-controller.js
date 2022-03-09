@@ -12,6 +12,8 @@ import { normalizeArraySubfields } from '../lib/data-transform.js'
 import { calcExpireTime } from '../helpers/util.js'
 import { AggregateModeType } from '../../domain-v2/aggregate-mode-enum.js'
 import CacheService from '../services/cache-service.js'
+import { connect } from '../../config/mongodb.js'
+import Redis from '../../config/redis.js'
 
 export default class BusinessController {
   constructor(businessService = {}) {
@@ -740,8 +742,7 @@ export default class BusinessController {
 
   async deactivateExpiredBusiness() {
     console.log('deactivateExpiredBusinessV2')
-    const app = { locals: { db: null } }
-    const { connect } = require('../../config/mongodb')
+    const app = { locals: { db: null, redis: Redis.newConnection() } }
     await new Promise((resolve, reject) => {
       connect(app, () => {
         resolve()
