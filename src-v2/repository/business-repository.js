@@ -1253,7 +1253,7 @@ export default class BusinessRepository {
     try {
       const businessList = await this.db
         .collection('business')
-        .find({ activeUntil: date, active: true })
+        .find({ activeUntil: { $lte: date }, active: true })
         .project(['_id', 'companyToken'])
         .toArray()
 
