@@ -3,6 +3,7 @@ package-*
 npm-*
 
 .env
+.env.old
 *.txt
 core
 
