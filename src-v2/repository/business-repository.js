@@ -1,7 +1,6 @@
 import { ObjectId } from 'mongodb'
 import moment from 'moment'
 
-import { calcExpireTime } from '../helpers/util.js'
 import { AggregateModeType } from '../../domain-v2/aggregate-mode-enum.js'
 import QueryPredicate from './query-predicate.js'
 import CacheService from '../services/cache-service.js'
@@ -65,6 +64,7 @@ export default class BusinessRepository {
       await this.db.collection('business_data').insertMany(businessData)
 
       await this.cacheService.removeBusinessActivePaginatedList(business.companyToken)
+      await this.cacheService.removeChildByTemplate(business.companyToken, business.templateId)
 
       return business._id
     } catch (err) {
@@ -827,14 +827,10 @@ export default class BusinessRepository {
       })
       const hash = Buffer.from(hashPayload).toString('base64')
 
-      if (global.cache.hashSearch[hash]) {
-        const queryCached = global.cache.hashSearch[hash]
-        if (queryCached && queryCached.expire && calcExpireTime(new Date(), queryCached.expire) < global.cache.default_expire) {
-          console.log('SEARCH_IN_DATA_CACHED')
-          return queryCached.data
-        } else {
-          global.cache.hashSearch[hash] = null
-        }
+      let queryCached = await this.cacheService.getChildByTemplate(companyToken, templateId, hash)
+      if (queryCached) {
+        console.log('SEARCH_IN_DATA_CACHED')
+        return queryCached
       }
 
       let businessDataList = await this.db
@@ -882,10 +878,11 @@ export default class BusinessRepository {
       })
 
       console.log('SEARCH_IN_DATA_STORED')
-      global.cache.hashSearch[hash] = {
-        data: businessList,
-        expire: new Date()
-      }
+      // global.cache.hashSearch[hash] = {
+      //   data: businessList,
+      //   expire: new Date()
+      // }
+      await this.cacheService.setChildByTemplate(companyToken, templateId, hash, businessList)
 
       return businessList
     } catch (err) {
@@ -895,7 +892,6 @@ export default class BusinessRepository {
   }
 
   async listAllByTemplateListAndKeySortedReverse(companyToken, templateIdList = [], matchParams = []) {
-    console.log(matchParams, templateIdList)
     try {
       const businessDataList = await this.db
         .collection('business_data')

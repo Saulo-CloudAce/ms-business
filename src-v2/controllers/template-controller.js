@@ -101,7 +101,7 @@ export default class TemplateController {
       return res.status(200).send(template)
     } catch (err) {
       console.log(err)
-      return res.status(500).send({ error: err.message })
+      return res.status(500).send({ error: 'Ocorreu erro ao ativar o template' })
     }
   }
 
@@ -136,8 +136,8 @@ export default class TemplateController {
 
       return res.status(200).send(template)
     } catch (err) {
-      console.log(err)
-      return res.status(500).send({ error: err.message })
+      console.error(err)
+      return res.status(500).send({ error: 'Ocorreu erro ao desativar o template' })
     }
   }
 
@@ -168,7 +168,8 @@ export default class TemplateController {
 
       return res.status(200).send(template)
     } catch (err) {
-      return res.status(500).send({ error: err.message })
+      console.error(err)
+      return res.status(500).send({ error: 'Ocorreu erro todos dados do template' })
     }
   }
 
@@ -384,8 +385,8 @@ export default class TemplateController {
 
       return res.status(200).send(templates)
     } catch (err) {
-      console.log(err)
-      return res.status(500).send({ error: err.message })
+      console.error(err)
+      return res.status(500).send({ error: 'Ocorreu erro ao listar todos templates' })
     }
   }
 
@@ -409,8 +410,8 @@ export default class TemplateController {
 
       return res.status(200).send(template)
     } catch (err) {
-      console.log(err)
-      return res.status(500).send({ error: err.message })
+      console.error(err)
+      return res.status(500).send({ error: 'Ocorreu erro ao buscar o template pelo ID' })
     }
   }
 
@@ -459,8 +460,8 @@ export default class TemplateController {
 
       return res.status(200).send(template)
     } catch (err) {
-      console.log(err)
-      return res.status(500).send({ error: err.message })
+      console.error(err)
+      return res.status(500).send({ error: 'Ocorreu erro ao atualizar o template' })
     }
   }
 }

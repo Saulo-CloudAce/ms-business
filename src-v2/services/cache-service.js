@@ -79,6 +79,84 @@ export default class CacheService {
     await Promise.all(requestsKeyDeletion)
   }
 
+  async setCustomerFormatted(companyToken = '', customerId = '', data = {}) {
+    const key = `${PREFIX_KEY}:${companyToken}:customer_formatted:${customerId}`
+    await this.redis.hset(key, 'data', JSON.stringify(data))
+
+    await this._setTTL(key)
+  }
+
+  async getCustomerFormatted(companyToken = '', customerId = '') {
+    const key = `${PREFIX_KEY}:${companyToken}:customer_formatted:${customerId}`
+    let template = await this.redis.hget(key, 'data')
+    if (template) {
+      template = JSON.parse(template)
+    }
+
+    return template
+  }
+
+  async removeCustomerFormatted(companyToken = '', customerId = '') {
+    const key = `${PREFIX_KEY}:${companyToken}:customer_formatted:${customerId}`
+
+    await this.redis.hdel(key, 'data')
+  }
+
+  async setCustomer(companyToken = '', customerId = '', data = {}) {
+    const key = `${PREFIX_KEY}:${companyToken}:customer:${customerId}`
+    await this.redis.hset(key, 'data', JSON.stringify(data))
+
+    await this._setTTL(key)
+  }
+
+  async getCustomer(companyToken = '', customerId = '') {
+    const key = `${PREFIX_KEY}:${companyToken}:customer:${customerId}`
+    let template = await this.redis.hget(key, 'data')
+    if (template) {
+      template = JSON.parse(template)
+    }
+
+    return template
+  }
+
+  async removeCustomer(companyToken = '', customerId = '') {
+    const key = `${PREFIX_KEY}:${companyToken}:customer:${customerId}`
+
+    await this.redis.hdel(key, 'data')
+  }
+
+  async setChildByTemplate(companyToken = '', templateId = '', hash = '', data = {}) {
+    const key = `${PREFIX_KEY}:${companyToken}:template:${templateId}:childs:${hash}`
+    await this.redis.hset(key, 'data', JSON.stringify(data))
+
+    await this._setTTL(key)
+  }
+
+  async getChildByTemplate(companyToken = '', templateId = '', hash = '') {
+    const key = `${PREFIX_KEY}:${companyToken}:template:${templateId}:childs:${hash}`
+    let template = await this.redis.hget(key, 'data')
+    if (template) {
+      template = JSON.parse(template)
+    }
+
+    return template
+  }
+
+  async removeChildByTemplate(companyToken = '', templateId = '') {
+    const keyPattern = `${PREFIX_KEY}:${companyToken}:template:${templateId}:childs:*`
+    const keysStored = await this.redis.keys(keyPattern)
+
+    if (keysStored.length === 0) return
+
+    const requestsKeyDeletion = []
+    for (let i = 0; i < keysStored.length; i++) {
+      const key = keysStored[i]
+      requestsKeyDeletion.push(this.redis.hdel(key, 'data'))
+    }
+
+    await Promise.all(requestsKeyDeletion)
+  }
+
   async _setTTL(key = '') {
     const ttl = process.env.REDIS_TTL ? process.env.REDIS_TTL : 10
     this.redis.expire(key, ttl)

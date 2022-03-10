@@ -10,6 +10,7 @@ import { connect } from '../../config/mongodb.js'
 
 import CompanyModel from '../../domain-v2/company.js'
 import CompanyRepository from '../../src-v2/repository/company-repository.js'
+import Redis from '../../config/redis.js'
 
 let companyModel = ''
 let companyRepository = ''
@@ -40,6 +41,9 @@ describe('Customer functions', () => {
       connect(app, async () => {
         await app.locals.db.collection('business').remove({})
         await app.locals.db.collection('business_data').remove({})
+
+        const redisInstance = Redis.newConnection()
+        app.locals.redis = redisInstance
 
         companyRepository = new CompanyRepository(app.locals.db)
         companyModel = new CompanyModel(companyRepository)

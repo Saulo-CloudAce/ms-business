@@ -13,7 +13,6 @@ import {
 } from '../services/crm-service.js'
 import { clearCPFCNPJ } from '../helpers/formatters.js'
 import { normalizeArraySubfields } from '../lib/data-transform.js'
-import { calcExpireTime } from '../helpers/util.js'
 import CompanyRepository from '../repository/company-repository.js'
 import TemplateRepository from '../repository/template-repository.js'
 import BusinessRepository from '../repository/business-repository.js'
@@ -48,28 +47,37 @@ export default class CustomerController {
         return res.status(request.response.status).send(request.response.data)
       return res.status(201).send(request.data)
     } catch (err) {
-      return res.status(500).send({ error: err.message })
+      console.error(err)
+      return res.status(500).send({ error: 'Ocorreu erro ao criar o customer' })
     }
   }
 
   async update(req, res) {
     const companyToken = req.headers['token']
+    const customerId = req.params.id
+    const content = req.body
 
     try {
+      const cacheService = new CacheService(req.app.locals.redis)
       const { companyRepository } = this._getInstanceRepositories(req.app)
 
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      const cpfcnpj = clearCPFCNPJ(req.body.customer_cpfcnpj)
+      const cpfcnpj = clearCPFCNPJ(content.customer_cpfcnpj)
       req.body.customer_cpfcnpj = cpfcnpj
 
-      const request = await updateCustomer(req.params.id, req.body, companyToken)
+      const request = await updateCustomer(customerId, content, companyToken)
       if (request.response && request.response.status && request.response.status != 200)
         return res.status(request.response.status).send(request.response.data)
+
+      await cacheService.removeCustomerFormatted(companyToken, customerId)
+      await cacheService.removeCustomer(companyToken, customerId)
+
       return res.status(200).send(request.data)
     } catch (err) {
-      return res.status(500).send({ error: err.message })
+      console.error(err)
+      return res.status(500).send({ error: 'Ocorreu um erro ao atualizar o customer' })
     }
   }
 
@@ -78,6 +86,7 @@ export default class CustomerController {
     const customerId = req.params.id
 
     try {
+      const cacheService = new CacheService(req.app.locals.redis)
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
       const businessDomain = new Business(businessRepository)
@@ -90,14 +99,10 @@ export default class CustomerController {
       if (request.response && request.response.status && request.response.status != 200)
         return res.status(request.response.status).send(request.response.data)
 
-      if (global.cache.customers[customerId]) {
-        const customerCached = global.cache.customers[customerId]
-        if (customerCached && customerCached.expire && calcExpireTime(new Date(), customerCached.expire) < global.cache.default_expire) {
-          console.log('CUSTOMER_CACHED')
-          return res.status(200).send(customerCached.data)
-        } else {
-          global.cache.customers[customerId] = null
-        }
+      const customerCached = await cacheService.getCustomer(companyToken, customerId)
+      if (customerCached) {
+        console.log('CUSTOMER_CACHED')
+        return res.status(200).send(customerCached)
       }
 
       const customer = request.data
@@ -111,7 +116,7 @@ export default class CustomerController {
       }
 
       console.log('CUSTOMER_STORED')
-      global.cache.customers[customerId] = { data: customer, expire: new Date() }
+      await cacheService.setCustomer(companyToken, customerId, customer)
 
       return res.status(200).send(customer)
     } catch (err) {
@@ -163,7 +168,7 @@ export default class CustomerController {
       return res.status(200).send(customer)
     } catch (err) {
       console.error(err)
-      return res.status(500).send({ error: 'Erro ao buscar o ' })
+      return res.status(500).send({ error: 'Erro ao buscar o customer pelo template' })
     }
   }
 
@@ -172,6 +177,7 @@ export default class CustomerController {
     const customerId = req.params.id
 
     try {
+      const cacheService = new CacheService(req.app.locals.redis)
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
       const businessDomain = new Business(businessRepository)
@@ -184,14 +190,10 @@ export default class CustomerController {
       if (request.response && request.response.status && request.response.status != 200)
         return res.status(request.response.status).send(request.response.data)
 
-      if (global.cache.customers_formatted[customerId]) {
-        const customerCached = global.cache.customers_formatted[customerId]
-        if (customerCached && customerCached.expire && calcExpireTime(new Date(), customerCached.expire) < global.cache.default_expire) {
-          console.log('CUSTOMER_FORMATTED_CACHED')
-          return res.status(200).send(customerCached.data)
-        } else {
-          global.cache.customers_formatted[customerId] = null
-        }
+      let customerCached = await cacheService.getCustomerFormatted(companyToken, customerId)
+      if (customerCached) {
+        console.log('CUSTOMER_FORMATTED_CACHED')
+        return res.status(200).send(customerCached)
       }
 
       const customer = request.data
@@ -204,7 +206,7 @@ export default class CustomerController {
       }
 
       console.log('CUSTOMER_FORMATTED_CACHED')
-      global.cache.customers_formatted[customerId] = { data: customer, expire: new Date() }
+      await cacheService.setCustomerFormatted(companyToken, customerId, customer)
 
       return res.status(200).send(customer)
     } catch (err) {
@@ -315,7 +317,7 @@ export default class CustomerController {
       return res.status(404).send()
     } catch (err) {
       console.error(err)
-      return res.status(500).send({ error: err.message })
+      return res.status(500).send({ error: 'Ocorreu erro ao buscar o customer pelo cpf/cnpj' })
     }
   }
 
@@ -343,7 +345,7 @@ export default class CustomerController {
       return res.status(404).send()
     } catch (err) {
       console.error(err)
-      return res.status(500).send({ error: err.message })
+      return res.status(500).send({ error: 'Ocorreu erro ao buscar uma lista de customer pelo cpf/cnpj' })
     }
   }
 
@@ -428,7 +430,7 @@ export default class CustomerController {
       return res.status(200).send(customer)
     } catch (err) {
       console.error(err)
-      return res.status(500).send({ error: err.message })
+      return res.status(500).send({ error: 'Ocorreu um erro ao buscar o customer pelo cpf/cnpj diretamente' })
     }
   }
 
@@ -456,7 +458,7 @@ export default class CustomerController {
       return res.status(200).send(request.data)
     } catch (err) {
       console.error(err)
-      return res.status(500).send({ error: err.message })
+      return res.status(500).send({ error: 'Ocorreu erro ao listar os customers de forma paginada' })
     }
   }
 
@@ -511,7 +513,7 @@ export default class CustomerController {
       return res.status(200).send(customerResultList)
     } catch (err) {
       console.error(err)
-      return res.status(500).send({ error: err.message })
+      return res.status(500).send({ error: 'Ocorreu erro ao pesquisar o customer' })
     }
   }
 
@@ -570,7 +572,7 @@ export default class CustomerController {
       return res.status(200).send({ customers: customerResultList, pagination: customersPagination })
     } catch (err) {
       console.error(err)
-      return res.status(500).send({ error: err.message })
+      return res.status(500).send({ error: 'Ocorreu erro ao pesquisar o customer de forma paginada' })
     }
   }
 }
