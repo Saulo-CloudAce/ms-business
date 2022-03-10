@@ -360,9 +360,9 @@ export default class Business {
     }
   }
 
-  async updateDataBusiness(businessId, register, updatedBy = 0) {
+  async updateDataBusiness(companyToken = '', businessId = '', register = {}, updatedBy = 0) {
     try {
-      await this.repository.updateRegisterBusiness(register._id, register)
+      await this.repository.updateRegisterBusiness(companyToken, register._id, register)
       return this.repository.updateDataBusiness(businessId, updatedBy)
     } catch (err) {
       return err

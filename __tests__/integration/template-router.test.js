@@ -10,6 +10,8 @@ import TemplateRepository from '../../src-v2/repository/template-repository.js'
 import BusinessRepository from '../../src-v2/repository/business-repository.js'
 import CacheService from '../../src-v2/services/cache-service.js'
 
+import { templateExample5, templateExample6, templateExample7, getMailingExample } from '../mocks/template.js'
+
 let companyModel = ''
 let companyRepository = ''
 let templateRepository = ''
@@ -29,85 +31,14 @@ async function createCompany() {
 }
 
 async function createTemplateSimples5() {
-  const t = {
-    name: 'template simples - 5',
-    fields: [
-      {
-        type: 'string',
-        column: 'name',
-        data: 'customer_name',
-        label: 'Nome',
-        key: false,
-        operator_can_view: true,
-        required: true,
-        editable: false,
-        visible: true
-      },
-      {
-        type: 'cpfcnpj',
-        column: 'cpf_cnpj',
-        data: 'customer_cpfcnpj',
-        label: 'CPF/CNPJ',
-        key: true,
-        operator_can_view: true,
-        required: true,
-        editable: false,
-        visible: true
-      },
-      {
-        type: 'string',
-        column: 'produto',
-        data: 'produto',
-        label: 'Produto',
-        key: true,
-        operator_can_view: true,
-        required: true,
-        editable: false,
-        visible: true
-      },
-      {
-        type: 'int',
-        column: 'idade',
-        data: 'idade',
-        label: 'Idade',
-        key: true,
-        operator_can_view: true,
-        required: true,
-        editable: false,
-        visible: true
-      }
-    ],
-    active: false
-  }
-  const tCreated = await templateRepository.save(t.name, t.fields, companyCreated.token, t.active)
+  const tCreated = await templateRepository.save(
+    templateExample5.name,
+    templateExample5.fields,
+    companyCreated.token,
+    templateExample5.active
+  )
 
-  const mailing = {
-    companyToken: companyCreated.token,
-    name: 'Mailing teste 1',
-    filePath: '',
-    templateId: tCreated._id.toString(),
-    quantityRows: 3,
-    fieldsData: [
-      {
-        name: 'Cliente 1',
-        cpf_cnpj: '00000000001',
-        produto: 'Alfinete',
-        idade: 10
-      },
-      {
-        name: 'Cliente 2',
-        cpf_cnpj: '00000000002',
-        produto: 'Mouse',
-        idade: 20
-      },
-      {
-        name: 'Cliente 3',
-        cpf_cnpj: '00000000003',
-        produto: 'Abóbora',
-        idade: 35
-      }
-    ]
-  }
+  const mailing = getMailingExample(companyCreated.token, tCreated._id.toString())
 
   await businessRepository.save(
     mailing.companyToken,
@@ -122,85 +53,14 @@ async function createTemplateSimples5() {
 }
 
 async function createTemplateSimples6() {
-  const t = {
-    name: 'template simples - 6',
-    fields: [
-      {
-        type: 'string',
-        column: 'name',
-        data: 'customer_name',
-        label: 'Nome',
-        key: false,
-        operator_can_view: true,
-        required: true,
-        editable: false,
-        visible: true
-      },
-      {
-        type: 'cpfcnpj',
-        column: 'cpf_cnpj',
-        data: 'customer_cpfcnpj',
-        label: 'CPF/CNPJ',
-        key: true,
-        operator_can_view: true,
-        required: true,
-        editable: false,
-        visible: true
-      },
-      {
-        type: 'string',
-        column: 'produto',
-        data: 'produto',
-        label: 'Produto',
-        key: true,
-        operator_can_view: true,
-        required: true,
-        editable: false,
-        visible: true
-      },
-      {
-        type: 'int',
-        column: 'idade',
-        data: 'idade',
-        label: 'Idade',
-        key: true,
-        operator_can_view: true,
-        required: true,
-        editable: false,
-        visible: true
-      }
-    ],
-    active: false
-  }
-  const tCreated = await templateRepository.save(t.name, t.fields, companyCreated.token, t.active)
+  const tCreated = await templateRepository.save(
+    templateExample6.name,
+    templateExample6.fields,
+    companyCreated.token,
+    templateExample6.active
+  )
 
-  const mailing = {
-    companyToken: companyCreated.token,
-    name: 'Mailing teste 1',
-    filePath: '',
-    templateId: tCreated._id.toString(),
-    quantityRows: 3,
-    fieldsData: [
-      {
-        name: 'Cliente 1',
-        cpf_cnpj: '00000000001',
-        produto: 'Alfinete',
-        idade: 10
-      },
-      {
-        name: 'Cliente 2',
-        cpf_cnpj: '00000000002',
-        produto: 'Mouse',
-        idade: 20
-      },
-      {
-        name: 'Cliente 3',
-        cpf_cnpj: '00000000003',
-        produto: 'Abóbora',
-        idade: 35
-      }
-    ]
-  }
+  const mailing = getMailingExample(companyCreated.token, tCreated._id.toString())
 
   await businessRepository.save(
     mailing.companyToken,
@@ -215,85 +75,14 @@ async function createTemplateSimples6() {
 }
 
 async function createTemplateSimples7() {
-  const t = {
-    name: 'template simples - 7',
-    fields: [
-      {
-        type: 'string',
-        column: 'name',
-        data: 'customer_name',
-        label: 'Nome',
-        key: false,
-        operator_can_view: true,
-        required: true,
-        editable: false,
-        visible: true
-      },
-      {
-        type: 'cpfcnpj',
-        column: 'cpf_cnpj',
-        data: 'customer_cpfcnpj',
-        label: 'CPF/CNPJ',
-        key: true,
-        operator_can_view: true,
-        required: true,
-        editable: false,
-        visible: true
-      },
-      {
-        type: 'string',
-        column: 'produto',
-        data: 'produto',
-        label: 'Produto',
-        key: true,
-        operator_can_view: true,
-        required: true,
-        editable: false,
-        visible: true
-      },
-      {
-        type: 'int',
-        column: 'idade',
-        data: 'idade',
-        label: 'Idade',
-        key: true,
-        operator_can_view: true,
-        required: true,
-        editable: false,
-        visible: true
-      }
-    ],
-    active: false
-  }
-  const tCreated = await templateRepository.save(t.name, t.fields, companyCreated.token, t.active)
+  const tCreated = await templateRepository.save(
+    templateExample7.name,
+    templateExample7.fields,
+    companyCreated.token,
+    templateExample7.active
+  )
 
-  const mailing = {
-    companyToken: companyCreated.token,
-    name: 'Mailing teste 1',
-    filePath: '',
-    templateId: tCreated._id.toString(),
-    quantityRows: 3,
-    fieldsData: [
-      {
-        name: 'Cliente 1',
-        cpf_cnpj: '00000000001',
-        produto: 'Alfinete',
-        idade: 10
-      },
-      {
-        name: 'Cliente 2',
-        cpf_cnpj: '00000000002',
-        produto: 'Mouse',
-        idade: 20
-      },
-      {
-        name: 'Cliente 3',
-        cpf_cnpj: '00000000003',
-        produto: 'Abóbora',
-        idade: 35
-      }
-    ]
-  }
+  const mailing = getMailingExample(companyCreated.token, tCreated._id.toString())
 
   await businessRepository.save(
     mailing.companyToken,
