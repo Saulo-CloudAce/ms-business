@@ -1,5 +1,5 @@
 import moment from 'moment'
-import { ObjectID } from 'mongodb'
+import { ObjectId } from 'mongodb'
 
 export default class CompanyRepository {
   constructor(db) {
@@ -39,7 +39,7 @@ export default class CompanyRepository {
 
   async getById(id) {
     try {
-      const result = await this.db.collection('company').findOne({ _id: new ObjectID(id) })
+      const result = await this.db.collection('company').findOne({ _id: new ObjectId(id) })
 
       return result
     } catch (err) {
@@ -70,7 +70,7 @@ export default class CompanyRepository {
     try {
       const result = await this.db
         .collection('company')
-        .update({ _id: new ObjectID(id) }, { $set: { name, callback, activated, updated_at: moment().format() } })
+        .update({ _id: new ObjectId(id) }, { $set: { name, callback, activated, updated_at: moment().format() } })
 
       return result.ops[0]
     } catch (err) {
