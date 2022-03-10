@@ -8,8 +8,6 @@ import Uploader from '../lib/uploader.js'
 import Validator from '../lib/validator.js'
 import * as crmService from '../services/crm-service.js'
 import { mongoIdIsValid } from '../helpers/validators.js'
-import { normalizeArraySubfields } from '../lib/data-transform.js'
-import { calcExpireTime } from '../helpers/util.js'
 import { AggregateModeType } from '../../domain-v2/aggregate-mode-enum.js'
 import CacheService from '../services/cache-service.js'
 import { connect } from '../../config/mongodb.js'
@@ -111,9 +109,8 @@ export default class BusinessController {
       if (invalids.length) return res.status(400).send({ businessId, invalids })
       return res.status(201).send({ businessId })
     } catch (e) {
-      const errCode = '00014'
-      console.error(`#${errCode}`, e)
-      return res.status(500).send({ error: `#${errCode}` })
+      console.error(e)
+      return res.status(500).send({ error: `Ocorreu erro ao importar o mailing` })
     }
   }
 
@@ -182,7 +179,7 @@ export default class BusinessController {
       return res.status(201).send({ businessId })
     } catch (e) {
       console.error(e)
-      return res.status(500).send({ error: e.message })
+      return res.status(500).send({ error: 'Ocorreu erro ao importar o mailing por upload de arquivo' })
     }
   }
 
@@ -252,7 +249,7 @@ export default class BusinessController {
       return res.status(201).send({ businessId })
     } catch (e) {
       console.error('CREATE BUSINESS FROM JSON ==> ', e)
-      return res.status(500).send({ error: e.message })
+      return res.status(500).send({ error: 'Ocorreu erro ao importar o mailing via API' })
     }
   }
 
@@ -339,7 +336,7 @@ export default class BusinessController {
       return res.status(201).send({ businessId, isBatch, customerId: contactIds, crmIds })
     } catch (e) {
       console.error('CREATE BUSINESS FROM JSON ==> ', e)
-      return res.status(500).send({ error: e.message })
+      return res.status(500).send({ error: 'Ocorreu erro ao criar o registro' })
     }
   }
 
@@ -395,7 +392,7 @@ export default class BusinessController {
       return res.status(200).send(businessData)
     } catch (err) {
       console.error(err)
-      return res.status(500).send({ error: err.message })
+      return res.status(500).send({ error: 'Ocorreu erro ao buscar um pool de dados' })
     }
   }
 
@@ -411,7 +408,7 @@ export default class BusinessController {
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      const { businessList, pagination } = await newBusiness.getAllBatchesBasicPaginated(companyToken, 0, 10)
+      const { businessList, pagination } = await newBusiness.getAllBatchesBasicPaginated(companyToken, page, limit)
       const business = businessList.map((b) => {
         return {
           _id: b._id,
@@ -430,7 +427,8 @@ export default class BusinessController {
 
       return res.status(200).send(business)
     } catch (e) {
-      return res.status(500).send({ error: e.message })
+      console.error(e)
+      return res.status(500).send({ error: 'Ocorreu erro ao listar todos mailings' })
     }
   }
 
@@ -463,7 +461,8 @@ export default class BusinessController {
 
       return res.status(200).send(business)
     } catch (e) {
-      return res.status(500).send({ error: e.message })
+      console.error(e)
+      return res.status(500).send({ error: 'Ocorreu erro ao listar todos mailings ativos' })
     }
   }
 
@@ -503,7 +502,7 @@ export default class BusinessController {
       return res.status(200).send(business)
     } catch (e) {
       console.error(e)
-      return res.status(500).send({ error: e.message })
+      return res.status(500).send({ error: 'Ocorreu erro ao listar todos mailings de forma paginada' })
     }
   }
 
@@ -543,7 +542,7 @@ export default class BusinessController {
       return res.status(200).send(business)
     } catch (e) {
       console.error(e)
-      return res.status(500).send({ error: e.message })
+      return res.status(500).send({ error: 'Ocorreu erro ao listar mailings ativos de forma pagindada' })
     }
   }
 
@@ -583,7 +582,7 @@ export default class BusinessController {
       return res.status(200).send(business)
     } catch (e) {
       console.error(e)
-      return res.status(500).send({ error: e.message })
+      return res.status(500).send({ error: 'Ocorreu erro ao listar mailings inativos de forma paginada' })
     }
   }
 
@@ -620,7 +619,8 @@ export default class BusinessController {
 
       return res.sendStatus(200)
     } catch (e) {
-      return res.status(500).send({ error: e.message })
+      console.error(e)
+      return res.status(500).send({ error: 'Ocorreu erro ao ativar o mailing' })
     }
   }
 
@@ -648,7 +648,8 @@ export default class BusinessController {
 
       return res.sendStatus(200)
     } catch (e) {
-      return res.status(500).send({ error: e.message })
+      console.error(e)
+      return res.status(500).send({ error: 'Ocorreu erro ao desativar o mailing' })
     }
   }
 
@@ -710,7 +711,8 @@ export default class BusinessController {
 
       return res.status(200).send(business)
     } catch (e) {
-      return res.status(500).send({ error: e.message })
+      console.error(e)
+      return res.status(500).send({ error: 'Ocorreu erro ao buscar o mailing com os dados' })
     }
   }
 
@@ -920,7 +922,7 @@ export default class BusinessController {
       return res.status(200).send(response)
     } catch (err) {
       console.error(err)
-      return res.status(500).send({ error: err.message })
+      return res.status(500).send({ error: 'Ocorreu erro ao buscar o registro do mailing pelo CPF/CNPJ' })
     }
   }
 }

@@ -1,8 +1,6 @@
 import moment from 'moment'
 import { ObjectId } from 'mongodb'
 
-import { calcExpireTime } from '../helpers/util.js'
-
 export default class TemplateRepository {
   constructor(db = {}, cacheService = {}) {
     this.db = db
