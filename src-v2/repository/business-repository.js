@@ -1,4 +1,4 @@
-import { ObjectID } from 'mongodb'
+import { ObjectId } from 'mongodb'
 import moment from 'moment'
 
 import { calcExpireTime } from '../helpers/util.js'
@@ -28,7 +28,7 @@ export default class BusinessRepository {
     aggregateMode = AggregateModeType.INCREMENT
   ) {
     const business = {
-      _id: new ObjectID(),
+      _id: new ObjectId(),
       companyToken,
       name,
       filePath,
@@ -82,7 +82,7 @@ export default class BusinessRepository {
       }
       await this.db.collection('business').update(
         {
-          $or: [{ _id: new ObjectID(businessId) }, { parentBatchId: new ObjectID(businessId) }],
+          $or: [{ _id: new ObjectId(businessId) }, { parentBatchId: new ObjectId(businessId) }],
           companyToken
         },
         { $set: businessUpdated },
@@ -102,7 +102,7 @@ export default class BusinessRepository {
       }
       await this.db.collection('business').update(
         {
-          $or: [{ _id: new ObjectID(businessId) }, { parentBatchId: new ObjectID(businessId) }],
+          $or: [{ _id: new ObjectId(businessId) }, { parentBatchId: new ObjectId(businessId) }],
           companyToken
         },
         { $set: businessUpdated },
@@ -128,7 +128,7 @@ export default class BusinessRepository {
   async updateDataBusiness(businessId, updatedBy = 0) {
     try {
       const businessUpdated = { updatedAt: moment().format(), updatedBy }
-      await this.db.collection('business').update({ _id: new ObjectID(businessId) }, { $set: businessUpdated })
+      await this.db.collection('business').update({ _id: new ObjectId(businessId) }, { $set: businessUpdated })
     } catch (err) {
       throw new Error(err)
     }
@@ -144,7 +144,7 @@ export default class BusinessRepository {
       }
       await this.db.collection('business').update(
         {
-          $or: [{ _id: new ObjectID(businessId) }, { parentBatchId: new ObjectID(businessId) }],
+          $or: [{ _id: new ObjectId(businessId) }, { parentBatchId: new ObjectId(businessId) }],
           companyToken
         },
         { $set: businessUpdated },
@@ -166,7 +166,7 @@ export default class BusinessRepository {
       }
       await this.db.collection('business').update(
         {
-          $or: [{ _id: new ObjectID(businessId) }, { parentBatchId: new ObjectID(businessId) }],
+          $or: [{ _id: new ObjectId(businessId) }, { parentBatchId: new ObjectId(businessId) }],
           companyToken
         },
         { $set: businessUpdated },
@@ -695,7 +695,7 @@ export default class BusinessRepository {
         .forEach((business) => {
           businessChildList.push(...business.childBatchesId)
           businessIndexed[business._id] = business
-          businessIdList.push(new ObjectID(business._id))
+          businessIdList.push(new ObjectId(business._id))
         })
 
       const businessChildDataList = await this.getChildBatches(businessIdList)
@@ -1043,7 +1043,7 @@ export default class BusinessRepository {
     try {
       const business = await this.db
         .collection('business')
-        .findOne({ _id: new ObjectID(id), companyToken: companyToken }, [
+        .findOne({ _id: new ObjectId(id), companyToken: companyToken }, [
           '_id',
           'name',
           'templateId',
@@ -1070,7 +1070,7 @@ export default class BusinessRepository {
 
     for (const i in searchData) {
       const data = searchData[i]
-      const businessId = new ObjectID(data.lote_id)
+      const businessId = new ObjectId(data.lote_id)
       listBusinessIdQuery.push(businessId)
       listParentBusinessIdQuery.push(businessId)
       listTemplateIdQuery.push(data.schama)
@@ -1120,7 +1120,7 @@ export default class BusinessRepository {
     try {
       const business = await this.db
         .collection('business')
-        .findOne({ _id: new ObjectID(id), companyToken: companyToken }, [
+        .findOne({ _id: new ObjectId(id), companyToken: companyToken }, [
           '_id',
           'name',
           'templateId',
@@ -1140,7 +1140,7 @@ export default class BusinessRepository {
 
       const data = await this.db
         .collection('business_data')
-        .find({ companyToken: companyToken, businessId: new ObjectID(id) })
+        .find({ companyToken: companyToken, businessId: new ObjectId(id) })
         .project({ companyToken: 0, businessId: 0, templateId: 0 })
         .toArray()
 
@@ -1156,7 +1156,7 @@ export default class BusinessRepository {
     try {
       const register = await this.db.collection('business_data').findOne({
         companyToken: companyToken,
-        businessId: new ObjectID(businessId),
+        businessId: new ObjectId(businessId),
         _id: registerId
       })
       return register
@@ -1177,7 +1177,7 @@ export default class BusinessRepository {
       const data = await this.db.collection('business_data').findOne(
         {
           companyToken: companyToken,
-          businessId: new ObjectID(businessId),
+          businessId: new ObjectId(businessId),
           _id: registerId
         },
         { fields: { companyToken: 0, businessId: 0, templateId: 0 } }
@@ -1186,7 +1186,7 @@ export default class BusinessRepository {
 
       const business = await this.db
         .collection('business')
-        .findOne({ _id: new ObjectID(businessId), companyToken: companyToken }, ['_id', 'name'])
+        .findOne({ _id: new ObjectId(businessId), companyToken: companyToken }, ['_id', 'name'])
 
       business.data = data
 
@@ -1205,11 +1205,11 @@ export default class BusinessRepository {
 
       const business = await this.db
         .collection('business')
-        .findOne({ _id: new ObjectID(businessId), companyToken }, { fields: { childBatchesId: 0, data: 0 } })
+        .findOne({ _id: new ObjectId(businessId), companyToken }, { fields: { childBatchesId: 0, data: 0 } })
 
       const businessData = await this.db
         .collection('business_data')
-        .find({ companyToken, businessId: ObjectID(businessId) })
+        .find({ companyToken, businessId: new ObjectId(businessId) })
         .project({ companyToken: 0, businessId: 0, templateId: 0 })
         .skip(skipDocs)
         .limit(limit)
@@ -1238,7 +1238,7 @@ export default class BusinessRepository {
       const businessList = await this.db
         .collection('business')
         .find({
-          $or: [{ _id: new ObjectID(businessId) }, { parentBatchId: new ObjectID(businessId) }],
+          $or: [{ _id: new ObjectId(businessId) }, { parentBatchId: new ObjectId(businessId) }],
           companyToken
         })
         .toArray()

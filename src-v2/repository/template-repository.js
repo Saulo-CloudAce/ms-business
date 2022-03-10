@@ -1,5 +1,5 @@
 import moment from 'moment'
-import { ObjectID } from 'mongodb'
+import { ObjectId } from 'mongodb'
 
 import { calcExpireTime } from '../helpers/util.js'
 
@@ -34,7 +34,7 @@ export default class TemplateRepository {
   async updateActive(templateId, active, updatedBy) {
     try {
       const templateUpdated = { active, updateAt: moment().format(), updatedBy }
-      await this.db.collection('business_template').update({ _id: new ObjectID(templateId) }, { $set: templateUpdated })
+      await this.db.collection('business_template').update({ _id: new ObjectId(templateId) }, { $set: templateUpdated })
 
       return templateId
     } catch (err) {
@@ -54,7 +54,7 @@ export default class TemplateRepository {
         updatedBy: templateUpdate.updatedBy
       }
 
-      await this.db.collection('business_template').update({ _id: new ObjectID(templateId), companyToken }, { $set: templateUpdated })
+      await this.db.collection('business_template').update({ _id: new ObjectId(templateId), companyToken }, { $set: templateUpdated })
 
       return templateUpdate
     } catch (err) {
@@ -90,7 +90,7 @@ export default class TemplateRepository {
     try {
       const result = await this.db
         .collection('business_template')
-        .find({ name, companyToken, _id: { $ne: new ObjectID(templateId) } })
+        .find({ name, companyToken, _id: { $ne: new ObjectId(templateId) } })
         .project(['_id'])
         .toArray()
 
@@ -110,18 +110,19 @@ export default class TemplateRepository {
 
       console.log('TEMPLATE_STORED')
 
-      const result = await this.db
-        .collection('business_template')
-        .findOne({ _id: new ObjectID(id), companyToken }, [
-          '_id',
-          'name',
-          'fields',
-          'active',
-          'createdAt',
-          'updatedAt',
-          'createdBy',
-          'updatedBy'
-        ])
+      const options = {
+        projection: {
+          _id: 1,
+          name: 1,
+          fields: 1,
+          active: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          updatedBy: 1,
+          createdBy: 1
+        }
+      }
+      const result = await this.db.collection('business_template').findOne({ _id: new ObjectId(id), companyToken }, options)
 
       await this.cacheService.setTemplate(companyToken, id, result)
 
@@ -134,7 +135,7 @@ export default class TemplateRepository {
 
   async getByListId(listId = [], companyToken = '') {
     try {
-      const listObjectId = listId.map((id) => new ObjectID(id))
+      const listObjectId = listId.map((id) => new ObjectId(id))
 
       const result = await this.db
         .collection('business_template')
@@ -150,7 +151,8 @@ export default class TemplateRepository {
 
   async getNameById(id, companyToken) {
     try {
-      const result = await this.db.collection('business_template').findOne({ _id: new ObjectID(id), companyToken }, ['_id', 'name'])
+      const options = { projection: { _id: 1, name: 1 } }
+      const result = await this.db.collection('business_template').findOne({ _id: new ObjectId(id), companyToken }, options)
 
       return result
     } catch (err) {
