@@ -485,6 +485,10 @@ export default class CustomerController {
 
       if (queryTemplateId && String(queryTemplateId).length > 0) {
         customers = customers.filter((c) => c.business_template_list && c.business_template_list.indexOf(queryTemplateId) >= 0)
+        customers = customers.map((c) => {
+          c.business_template_list = c.business_template_list.filter((t) => String(t) === String(queryTemplateId))
+          return c
+        })
       }
 
       let customerResultList = []
@@ -546,6 +550,10 @@ export default class CustomerController {
 
       if (queryTemplateId && String(queryTemplateId).length > 0) {
         customers = customers.filter((c) => c.business_template_list && c.business_template_list.indexOf(queryTemplateId) >= 0)
+        customers = customers.map((c) => {
+          c.business_template_list = c.business_template_list.filter((t) => String(t) === String(queryTemplateId))
+          return c
+        })
       }
 
       let customerResultList = []

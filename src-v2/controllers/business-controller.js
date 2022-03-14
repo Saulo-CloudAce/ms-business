@@ -849,7 +849,7 @@ export default class BusinessController {
       })
 
       if (dataUpdate.idCrm) {
-        await newBusiness.updateDataBusiness(businessId, register, updatedBy)
+        await newBusiness.updateDataBusiness(companyToken, businessId, register, updatedBy)
         const searchCustomerCRM = await crmService.getCustomerById(dataUpdate.idCrm, companyToken)
 
         if (!searchCustomerCRM.data) return res.status(500).send({ error: 'Os dados não foram atualizados corretamente.' })

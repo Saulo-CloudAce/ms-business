@@ -113,7 +113,7 @@ export default class BusinessRepository {
     }
   }
 
-  async updateRegisterBusiness(registerId, data = {}) {
+  async updateRegisterBusiness(companyToken = '', registerId, data = {}) {
     try {
       await this.db.collection('business_data').update({ _id: registerId }, { $set: data })
 
