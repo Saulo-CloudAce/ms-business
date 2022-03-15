@@ -248,34 +248,6 @@ export default class CustomerController {
 
       customer.business_template_list = [templateId]
 
-      // let templateFinal = {}
-      // const template = await templateRepository.getById(templateId, companyToken)
-      // if (template) {
-      //   templateFinal = { _id: template._id, name: template.name }
-      //   const fieldKey = template.fields.find(f => f.key)
-      //   if (fieldKey) {
-      //     const keyColumn = fieldKey.column
-
-      //     let keyValue = ''
-      //     if (fieldKey.data === 'customer_cpfcnpj') {
-      //       keyValue = (customer.cpfcnpj) ? customer.cpfcnpj : customer.customer_cpfcnpj
-      //     } else if (fieldKey.data === 'customer_phone' || fieldKey.data === 'customer_phone_number') {
-      //       keyValue = (customer.phone) ? customer.phone[0].number : customer.customer_phome[0].number
-      //     } else if (fieldKey.data === 'customer_email' || fieldKey.data === 'customer_email_address') {
-      //       keyValue = (customer.email) ? customer.email[0].email : customer.customer_email[0].email
-      //     } else if (fieldKey.data === 'customer_name') {
-      //       keyValue = (customer.name) ? customer.name : customer.customer_name
-      //     }
-
-      //     let templateData = await businessRepository.getLastByTemplateAndKeySortedReverse(companyToken, templateId, [keyColumn], keyValue)
-
-      //     if (templateData.length) {
-      //       templateData = normalizeArraySubfields(templateData, template)
-      //       templateFinal.lote_data_list = templateData
-      //     }
-      //   }
-      // }
-
       if (customer) {
         const mailings = await businessDomain.getLastMailingByTemplateListAndKeySortedReverse(companyToken, customer, templateRepository)
 
@@ -377,7 +349,7 @@ export default class CustomerController {
       if (templateList && templateList.length > 0) {
         templates = await Promise.all(
           templateList.map(async (templateId) => {
-            const template = await templateRepository.getById(templateId, companyToken)
+            const template = await templateRepository.getByIdWithoutTags(templateId, companyToken)
             if (template) {
               const templateFinal = { _id: template._id, name: template.name, updatedAt: template.updatedAt }
               let templateData = []

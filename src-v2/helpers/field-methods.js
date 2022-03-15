@@ -48,6 +48,10 @@ export function isTypeArray(field) {
   return field.type === 'array'
 }
 
+export function isTypeTag(field) {
+  return field.type === 'tag'
+}
+
 export function isTypeCpfCnpj(field) {
   return field.data === 'customer_cpfcnpj' || field.type === 'cpfcnpj'
 }

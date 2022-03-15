@@ -73,7 +73,7 @@ export default class BusinessController {
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: '#00010 - Company não identificada.' })
 
-      const template = await templateRepository.getById(templateId, companyToken)
+      const template = await templateRepository.getByIdWithoutTags(templateId, companyToken)
       if (!template) return res.status(400).send({ error: '#00011 - Template não identificado' })
       if (!template.active)
         return res.status(400).send({
@@ -143,7 +143,7 @@ export default class BusinessController {
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      const template = await templateRepository.getById(templateId, companyToken)
+      const template = await templateRepository.getByIdWithoutTags(templateId, companyToken)
       if (!template) return res.status(400).send({ error: 'Template não identificado' })
       if (!template.active)
         return res.status(400).send({
@@ -220,7 +220,7 @@ export default class BusinessController {
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      const template = await templateRepository.getById(templateId, companyToken)
+      const template = await templateRepository.getByIdWithoutTags(templateId, companyToken)
       if (!template) return res.status(400).send({ error: 'Template não identificado' })
       if (!template.active)
         return res.status(400).send({
@@ -295,7 +295,7 @@ export default class BusinessController {
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      const template = await templateRepository.getById(templateId, companyToken)
+      const template = await templateRepository.getByIdWithoutTags(templateId, companyToken)
       if (!template) return res.status(400).send({ error: 'Template não identificado' })
       if (!template.active)
         return res.status(400).send({
@@ -666,7 +666,7 @@ export default class BusinessController {
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      const template = await templateRepository.getById(templateId, companyToken)
+      const template = await templateRepository.getByIdWithoutTags(templateId, companyToken)
       if (!template) return res.status(400).send({ error: 'Template não identificado' })
 
       const allowedColumnType = ['string', 'text', 'cpfcnpj', 'email', 'phone_number', 'cep']
@@ -801,7 +801,7 @@ export default class BusinessController {
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      const template = await templateRepository.getById(templateId, companyToken)
+      const template = await templateRepository.getByIdWithoutTags(templateId, companyToken)
       if (!template) return res.status(400).send({ error: 'Template não identificado' })
 
       let fieldEditableList = template.fields.filter((f) => f.editable)
@@ -876,7 +876,7 @@ export default class BusinessController {
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      const template = await templateRepository.getById(templateId, companyToken)
+      const template = await templateRepository.getByIdWithoutTags(templateId, companyToken)
       if (!template) return res.status(400).send({ error: 'Template não identificado' })
 
       const business = await newBusiness.getRegisterById(companyToken, businessId, registerId)
@@ -903,7 +903,7 @@ export default class BusinessController {
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      const template = await templateRepository.getById(templateId, companyToken)
+      const template = await templateRepository.getByIdWithoutTags(templateId, companyToken)
       if (!template) return res.status(400).send({ error: 'Template não identificado' })
 
       const fieldCPFCNPJ = template.fields.find((f) => f.data === 'customer_cpfcnpj')

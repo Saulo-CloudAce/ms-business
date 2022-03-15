@@ -1,5 +1,6 @@
 import moment from 'moment'
 import { ObjectId } from 'mongodb'
+import { isTypeTag } from '../helpers/field-methods.js'
 
 export default class TemplateRepository {
   constructor(db = {}, cacheService = {}) {
@@ -123,6 +124,41 @@ export default class TemplateRepository {
       const result = await this.db.collection('business_template').findOne({ _id: new ObjectId(id), companyToken }, options)
 
       await this.cacheService.setTemplate(companyToken, id, result)
+
+      return result
+    } catch (err) {
+      console.error(err)
+      throw new Error(err)
+    }
+  }
+
+  async getByIdWithoutTags(id, companyToken) {
+    try {
+      const options = {
+        projection: {
+          _id: 1,
+          name: 1,
+          fields: 1,
+          active: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          updatedBy: 1,
+          createdBy: 1
+        }
+      }
+      const result = await this.db.collection('business_template').findOne({ _id: new ObjectId(id), companyToken }, options)
+
+      if (result && result.fields) {
+        const fields = []
+        for (const field of result.fields) {
+          if (isTypeTag(field)) {
+            fields.push(...field.fields)
+          } else {
+            fields.push(field)
+          }
+        }
+        result.fields = fields
+      }
 
       return result
     } catch (err) {
