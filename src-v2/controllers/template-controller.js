@@ -197,7 +197,7 @@ export default class TemplateController {
         return res.status(400).send({ error: 'Company não identificada.' })
       }
 
-      const template = await templateRepository.getById(templateId, companyToken)
+      const template = await templateRepository.getByIdWithoutTags(templateId, companyToken)
       if (!template) {
         return res.status(400).send({ error: 'Template não identificado' })
       }
@@ -249,7 +249,7 @@ export default class TemplateController {
         return res.status(400).send({ error: 'Company não identificada.' })
       }
 
-      const template = await templateRepository.getById(templateId, companyToken)
+      const template = await templateRepository.getByIdWithoutTags(templateId, companyToken)
       if (!template) {
         return res.status(400).send({ error: 'Template não identificado' })
       }
@@ -412,6 +412,31 @@ export default class TemplateController {
     } catch (err) {
       console.error(err)
       return res.status(500).send({ error: 'Ocorreu erro ao buscar o template pelo ID' })
+    }
+  }
+
+  async getByIdWithoutTags(req, res) {
+    const companyToken = req.headers['token']
+    const templateId = req.params.id
+
+    try {
+      const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
+
+      if (!mongoIdIsValid(templateId)) {
+        return res.status(400).send({ error: 'ID não válido' })
+      }
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) {
+        return res.status(400).send({ error: 'Company não identificada.' })
+      }
+
+      const template = await templateRepository.getByIdWithoutTags(templateId, companyToken)
+
+      return res.status(200).send(template)
+    } catch (err) {
+      console.error(err)
+      return res.status(500).send({ error: 'Ocorreu erro ao buscar o template pelo ID sem os campos de tag' })
     }
   }
 

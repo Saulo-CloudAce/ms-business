@@ -381,7 +381,7 @@ export default class Business {
 
       if (templateList) {
         for (const templateId of templateList) {
-          const template = await templateRepository.getById(templateId, companyToken)
+          const template = await templateRepository.getByIdWithoutTags(templateId, companyToken)
           if (template) {
             const templateFinal = {
               _id: template._id,
@@ -443,7 +443,7 @@ export default class Business {
 
       if (templateList) {
         for (const templateId of templateList) {
-          const template = await templateRepository.getById(templateId, companyToken)
+          const template = await templateRepository.getByIdWithoutTags(templateId, companyToken)
           if (template) {
             const templateFinal = {
               _id: template._id,
