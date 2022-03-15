@@ -45,7 +45,7 @@ export function validateKey(fields) {
   return keys.length > 0
 }
 
-function formatField(f = {}) {
+function formatField(f = {}, namesColumn = {}, namesData = {}) {
   if (f.type) f.type = f.type.toLowerCase()
   f.key = String(f.key) === 'true'
   f.unique = String(f.unique) === 'true'
@@ -60,25 +60,48 @@ function formatField(f = {}) {
   f.label = f.label ? String(f.label) : String(f.column)
   f.column = clearString(f.column.toLowerCase())
 
+  if (namesColumn[f.column]) {
+    const index = Object.keys(namesColumn).length
+    f.column = `${f.column}_${index}`
+  }
+  namesColumn[f.column] = f.column
+
+  if (namesData[f.data] && !supportedKeys.includes(f.data)) {
+    const index = Object.keys(namesData).length
+    f.data = `${f.data}_${index}`
+  }
+  namesData[f.data] = f.data
+
   if (isTypeArray(f) && f.fields) {
     f.fields.map((ff) => {
-      return formatField(ff)
+      const result = formatField(ff, namesColumn, namesData)
+      namesColumn = result.namesColumn
+      namesData = result.namesData
+      return result.field
     })
   } else if (isTypeTag(f) && f.fields) {
     f.fields.map((ff) => {
-      return formatField(ff)
+      const result = formatField(ff, namesColumn, namesData)
+      namesColumn = result.namesColumn
+      namesData = result.namesData
+      return result.field
     })
   } else if (isTypeDocument(f) || isTypeListDocument(f)) {
     f.has_expiration_date = String(f.has_expiration_date) === 'true'
     f.has_issue_date = String(f.has_issue_date) === 'true'
   }
 
-  return f
+  return { field: f, namesColumn, namesData }
 }
 
 function formatFieldsOptions(fields) {
+  let namesColumn = {}
+  let namesData = {}
   return fields.map((f) => {
-    return formatField(f)
+    const result = formatField(f, namesColumn, namesData)
+    namesColumn = result.namesColumn
+    namesData = result.namesData
+    return result.field
   })
 }
 
