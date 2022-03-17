@@ -4,6 +4,8 @@ npm-*
 
 .env
 .env.old
+.env.homol
+.env.prod
 *.txt
 core
 
