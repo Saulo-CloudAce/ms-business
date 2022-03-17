@@ -886,7 +886,8 @@ export default class BusinessController {
 
   _getFieldEditedButNotEditable(dataUpdate = {}, fieldEditableMap = {}) {
     const fields = []
-    for (const column of Object.keys(dataUpdate)) {
+    const columns = Object.keys(dataUpdate).filter((k) => k !== 'idCrm')
+    for (const column of columns) {
       if (!fieldEditableMap[column]) {
         fields.push(column)
       }
