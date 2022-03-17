@@ -804,28 +804,21 @@ export default class BusinessController {
       const template = await templateRepository.getByIdWithoutTags(templateId, companyToken)
       if (!template) return res.status(400).send({ error: 'Template não identificado' })
 
-      let fieldEditableList = template.fields.filter((f) => f.editable)
-      if (!Array.isArray(fieldEditableList)) fieldEditableList = []
+      const fieldEditableMap = this._getMapFieldsEditables(template.fields)
 
-      if (fieldEditableList.length === 0) return res.status(400).send({ error: 'Este template não possui campos editáveis' })
+      if (Object.keys(fieldEditableMap).length === 0) return res.status(400).send({ error: 'Este template não possui campos editáveis' })
+
+      const fieldNotEditable = this._getFieldEditedButNotEditable(dataUpdate, fieldEditableMap)
+      if (fieldNotEditable.length) return res.status(400).send({ error: `Os campos ${fieldNotEditable.join(',')} não são editáveis` })
 
       const businessList = await businessRepository.getDataByIdAndChildReference(companyToken, businessId)
       if (!businessList) return res.status(400).send({ error: 'Business não identificado.' })
 
-      const register = await businessRepository.getRegisterByBusinessAndId(companyToken, businessId, registerId)
+      let register = await businessRepository.getRegisterByBusinessAndId(companyToken, businessId, registerId)
       if (!register) return res.status(404).send({ error: 'Registro não encontrado' })
 
-      fieldEditableList.forEach((f) => {
-        if (dataUpdate[f.column] && String(dataUpdate[f.column]).length > 0) {
-          if ((f.type === 'array' || f.type === 'options') && !Array.isArray(dataUpdate[f.column])) {
-            register[f.column] = [dataUpdate[f.column]]
-          } else {
-            register[f.column] = dataUpdate[f.column]
-          }
-
-          register.businessUpdatedAt = moment().format()
-        }
-      })
+      const fieldEditableList = Object.values(fieldEditableMap)
+      register = this._updateDataRegister(register, dataUpdate, fieldEditableList)
 
       const objCRM = {}
       template.fields.forEach((data) => {
@@ -848,19 +841,74 @@ export default class BusinessController {
         }
       })
 
+      await newBusiness.updateDataBusiness(companyToken, businessId, register, updatedBy)
+
       if (dataUpdate.idCrm) {
-        await newBusiness.updateDataBusiness(companyToken, businessId, register, updatedBy)
         const searchCustomerCRM = await crmService.getCustomerById(dataUpdate.idCrm, companyToken)
 
         if (!searchCustomerCRM.data) return res.status(500).send({ error: 'Os dados não foram atualizados corretamente.' })
         await crmService.updateCustomer(searchCustomerCRM.data.id, objCRM, companyToken)
       }
 
+      register = await businessRepository.getRegisterByBusinessAndId(companyToken, businessId, registerId)
+
       return res.status(200).send(register)
     } catch (err) {
       console.error(err)
       return res.status(500).send({ error: 'Ocorreu erro ao atualizar o registro' })
     }
+  }
+
+  _checkIfFieldIsEditable(field = {}, editables = []) {
+    if (field.editable) {
+      editables.push(field)
+    } else if (field.type === 'array' && field.fields && field.fields.length) {
+      for (const f of field.fields) {
+        editables = this._checkIfFieldIsEditable(f, editables)
+      }
+    }
+    return editables
+  }
+
+  _getMapFieldsEditables(fields = []) {
+    let editables = []
+    for (const field of fields) {
+      editables = this._checkIfFieldIsEditable(field, editables)
+    }
+
+    const indexed = {}
+    for (let field of editables) {
+      indexed[field.column] = field
+    }
+
+    return indexed
+  }
+
+  _getFieldEditedButNotEditable(dataUpdate = {}, fieldEditableMap = {}) {
+    const fields = []
+    for (const column of Object.keys(dataUpdate)) {
+      if (!fieldEditableMap[column]) {
+        fields.push(column)
+      }
+    }
+
+    return fields
+  }
+
+  _updateDataRegister(register = {}, dataUpdate = {}, fieldsEditables = []) {
+    for (const f of fieldsEditables) {
+      if (dataUpdate[f.column] && String(dataUpdate[f.column]).length > 0) {
+        if ((f.type === 'array' || f.type === 'options') && !Array.isArray(dataUpdate[f.column])) {
+          register[f.column] = [dataUpdate[f.column]]
+        } else {
+          register[f.column] = dataUpdate[f.column]
+        }
+
+        register.businessUpdatedAt = moment().format()
+      }
+    }
+
+    return register
   }
 
   async getBusinessRegisterById(req, res) {
