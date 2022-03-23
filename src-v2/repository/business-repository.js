@@ -559,7 +559,8 @@ export default class BusinessRepository {
           $project: {
             companyToken: 0,
             templateId: 0,
-            businessId: 0
+            businessCreatedAt: 0,
+            businessUpdatedAt: 0
           }
         }
       ])
@@ -567,6 +568,12 @@ export default class BusinessRepository {
       .skip(offset)
       .limit(limit)
       .toArray()
+
+    businessDataList = businessDataList.map((b) => {
+      b.business_id = b.businessId
+      delete b.businessId
+      return b
+    })
 
     const countRows = await this.db
       .collection('business_data')
@@ -646,7 +653,6 @@ export default class BusinessRepository {
             _id: 0,
             companyToken: 0,
             templateId: 0,
-            businessId: 0,
             businessCreatedAt: 0,
             businessUpdatedAt: 0
           }
@@ -654,6 +660,12 @@ export default class BusinessRepository {
       ])
       .sort(sortCriteria)
       .toArray()
+
+    businessDataList = businessDataList.map((b) => {
+      b.business_id = b.businessId
+      delete b.businessId
+      return b
+    })
 
     return businessDataList
   }
