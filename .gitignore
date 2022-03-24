@@ -6,6 +6,7 @@ npm-*
 .env.old
 .env.homol
 .env.prod
+.env.local
 *.txt
 core
 

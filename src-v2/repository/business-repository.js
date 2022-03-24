@@ -654,18 +654,13 @@ export default class BusinessRepository {
             companyToken: 0,
             templateId: 0,
             businessCreatedAt: 0,
-            businessUpdatedAt: 0
+            businessUpdatedAt: 0,
+            businessId: 0
           }
         }
       ])
       .sort(sortCriteria)
       .toArray()
-
-    businessDataList = businessDataList.map((b) => {
-      b.business_id = b.businessId
-      delete b.businessId
-      return b
-    })
 
     return businessDataList
   }
