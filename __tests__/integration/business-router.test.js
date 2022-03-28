@@ -56,12 +56,18 @@ const businessDocument = {
     {
       name: 'Pessoa 1',
       cpf_cnpj: '11122233344',
-      rg: { name: 'arq_rg.png', url: 'http://radioimprensa.com.br/wp-content/uploads/2019/08/rg-novo.jpg' }
+      rg: {
+        name: 'arq_rg.png',
+        url: 'http://radioimprensa.com.br/wp-content/uploads/2019/08/rg-novo.jpg'
+      }
     },
     {
       name: 'Pessoa 2',
       cpf_cnpj: '21122233344',
-      rg: { name: 'arq_rg.png', url: 'http://radioimprensa.com.br/wp-content/uploads/2019/08/rg-novo.jpg' }
+      rg: {
+        name: 'arq_rg.png',
+        url: 'http://radioimprensa.com.br/wp-content/uploads/2019/08/rg-novo.jpg'
+      }
     }
   ]
 }
@@ -304,7 +310,7 @@ describe('CRUD business', () => {
         expect(bResult).toHaveProperty('active')
         expect(bResult).toHaveProperty('createdAt')
         expect(bResult).toHaveProperty('updatedAt')
-        expect(bResult).toHaveProperty('flow_passed')
+        expect(bResult).toHaveProperty('flowPassed')
 
         done()
       })
@@ -457,7 +463,13 @@ describe('CRUD business', () => {
     const register = businessCreated.valids[0]
 
     const paramsRequest = {
-      data: [{ schama: `${templateCreated._id}`, lote_id: `${businessCreated.businessId}`, item_id: register._id }],
+      data: [
+        {
+          schama: `${templateCreated._id}`,
+          lote_id: `${businessCreated.businessId}`,
+          item_id: register._id
+        }
+      ],
       fields: ['name']
     }
 
@@ -503,7 +515,7 @@ describe('CRUD business', () => {
         expect(fResult).toHaveProperty('_id')
         expect(fResult).toHaveProperty('name')
         expect(fResult).toHaveProperty('activeUntil')
-        expect(fResult).toHaveProperty('flow_passed')
+        expect(fResult).toHaveProperty('flowPassed')
         expect(fResult).toHaveProperty('active')
         expect(fResult).toHaveProperty('createdAt')
         expect(fResult).toHaveProperty('updatedAt')
@@ -570,7 +582,7 @@ describe('CRUD business', () => {
         expect(bResult).toHaveProperty('active')
         expect(bResult).toHaveProperty('createdAt')
         expect(bResult).toHaveProperty('updatedAt')
-        expect(bResult).toHaveProperty('flow_passed')
+        expect(bResult).toHaveProperty('flowPassed')
 
         expect(pagination).toHaveProperty('numRows')
         expect(pagination).toHaveProperty('page')

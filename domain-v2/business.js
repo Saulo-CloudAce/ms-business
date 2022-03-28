@@ -1,8 +1,9 @@
 import { hasFieldUnique, hasCustomerFields } from '../src-v2/lib/template-validator.js'
 import { AggregateModeType } from '../domain-v2/aggregate-mode-enum.js'
+import BusinessRepository from '../src-v2/repository/business-repository.js'
 
 export default class Business {
-  constructor(repository, uploader, validator, crmService) {
+  constructor(repository = new BusinessRepository(), uploader, validator, crmService) {
     this.repository = repository
     this.uploader = uploader
     this.validator = validator

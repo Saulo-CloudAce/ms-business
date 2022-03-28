@@ -421,7 +421,9 @@ export default class BusinessController {
           createdBy: b.createdBy ? b.createdBy : 0,
           updatedBy: b.updatedBy ? b.updatedBy : 0,
           dataAmount: b.quantityRows,
-          templateId: b.templateId
+          templateId: b.templateId,
+          flowPassed: b.flow_passed || b.flowPassed,
+          flowPassed: b.flow_passed || b.flowPassed ? true : false
         }
       })
 
@@ -455,7 +457,8 @@ export default class BusinessController {
           createdBy: b.createdBy ? b.createdBy : 0,
           updatedBy: b.updatedBy ? b.updatedBy : 0,
           dataAmount: b.quantityRows,
-          templateId: b.templateId
+          templateId: b.templateId,
+          flowPassed: b.flow_passed || b.flowPassed ? true : false
         }
       })
 
@@ -495,6 +498,7 @@ export default class BusinessController {
           createdBy: b.createdBy ? b.createdBy : 0,
           updatedBy: b.updatedBy ? b.updatedBy : 0,
           dataAmount: b.quantityRows,
+          flowPassed: b.flow_passed || b.flowPassed ? true : false,
           templateId: b.templateId
         }
       })
@@ -535,7 +539,8 @@ export default class BusinessController {
           createdBy: b.createdBy ? b.createdBy : 0,
           updatedBy: b.updatedBy ? b.updatedBy : 0,
           dataAmount: b.quantityRows,
-          templateId: b.templateId
+          templateId: b.templateId,
+          flowPassed: b.flow_passed || b.flowPassed ? true : false
         }
       })
 
@@ -575,7 +580,8 @@ export default class BusinessController {
           createdBy: b.createdBy ? b.createdBy : 0,
           updatedBy: b.updatedBy ? b.updatedBy : 0,
           dataAmount: b.quantityRows,
-          templateId: b.templateId
+          templateId: b.templateId,
+          flowPassed: b.flow_passed || b.flowPassed ? true : false
         }
       })
 
@@ -972,6 +978,52 @@ export default class BusinessController {
     } catch (err) {
       console.error(err)
       return res.status(500).send({ error: 'Ocorreu erro ao buscar o registro do mailing pelo CPF/CNPJ' })
+    }
+  }
+
+  async markBusinessFlowPassed(req, res) {
+    const companyToken = req.headers['token']
+
+    const businessId = req.params.id
+    if (!mongoIdIsValid(businessId)) return res.status(500).send({ error: 'Código do lote inválido' })
+
+    try {
+      const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
+
+      const business = await businessRepository.getById(companyToken, businessId)
+      if (!business) return res.status(400).send({ error: 'Business não identificado' })
+
+      await businessRepository.markFlowPassed(companyToken, businessId)
+
+      return res.sendStatus(200)
+    } catch (e) {
+      return res.status(500).send({ error: e.message })
+    }
+  }
+
+  async unmarkBusinessFlowPassed(req, res) {
+    const companyToken = req.headers['token']
+
+    const businessId = req.params.id
+    if (!mongoIdIsValid(businessId)) return res.status(500).send({ error: 'Código do lote inválido' })
+
+    try {
+      const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
+
+      const business = await businessRepository.getById(companyToken, businessId)
+      if (!business) return res.status(400).send({ error: 'Business não identificado' })
+
+      await businessRepository.unmarkFlowPassed(companyToken, businessId)
+
+      return res.sendStatus(200)
+    } catch (e) {
+      return res.status(500).send({ error: e.message })
     }
   }
 }

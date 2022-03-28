@@ -39,6 +39,8 @@ export default function businessRoute(app = {}) {
     businessController.activateBusiness(req, res)
   )
   app.put('/api/v2/business/:id/deactivate', (req, res) => businessController.deactivateBusiness(req, res))
+  app.put('/api/v2/business/:id/mark_flow_passed', (req, res) => businessController.markBusinessFlowPassed(req, res))
+  app.put('/api/v2/business/:id/unmark_flow_passed', (req, res) => businessController.unmarkBusinessFlowPassed(req, res))
   app.put('/api/v2/business/:businessId/data/:registerId', (req, res) => businessController.updateBusinessRegisterById(req, res))
   app.post('/api/v2/business/full_search', (req, res) => businessController.searchDataInBusiness(req, res))
 }
