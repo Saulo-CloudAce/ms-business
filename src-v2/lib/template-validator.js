@@ -56,6 +56,7 @@ function formatField(f = {}, namesColumn = {}, namesData = {}) {
   f.visible = String(f.visible) === 'true'
   f.has_tab = String(f.has_tab) === 'true'
   f.quick_search = String(f.quick_search) === 'true'
+  f.is_priority = String(f.is_priority) === 'true'
 
   f.label = f.label ? String(f.label) : String(f.column)
   f.column = clearString(f.column.toLowerCase())
