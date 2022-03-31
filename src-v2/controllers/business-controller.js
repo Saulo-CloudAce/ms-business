@@ -798,6 +798,7 @@ export default class BusinessController {
     let updatedBy = 0
     if (req.body.updated_by && !isNaN(req.body.updated_by)) {
       updatedBy = parseInt(req.body.updated_by)
+      delete dataUpdate.updated_by
     }
 
     try {
@@ -813,9 +814,6 @@ export default class BusinessController {
       const fieldEditableMap = this._getMapFieldsEditables(template.fields)
 
       if (Object.keys(fieldEditableMap).length === 0) return res.status(400).send({ error: 'Este template não possui campos editáveis' })
-
-      const fieldNotEditable = this._getFieldEditedButNotEditable(dataUpdate, fieldEditableMap)
-      if (fieldNotEditable.length) return res.status(400).send({ error: `Os campos ${fieldNotEditable.join(',')} não são editáveis` })
 
       const businessList = await businessRepository.getDataByIdAndChildReference(companyToken, businessId)
       if (!businessList) return res.status(400).send({ error: 'Business não identificado.' })

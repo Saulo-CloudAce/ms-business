@@ -1,3 +1,3 @@
 export default function healthRoute(app) {
-  app.get('/api/v2/health', (req, res) => res.json({ status: 'Ok' }))
+  app.get('/api/v1/health', (req, res) => res.json({ status: 'Ok' }))
 }
