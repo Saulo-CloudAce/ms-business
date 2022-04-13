@@ -675,8 +675,17 @@ export default class BusinessController {
       const template = await templateRepository.getByIdWithoutTags(templateId, companyToken)
       if (!template) return res.status(400).send({ error: 'Template não identificado' })
 
-      const allowedColumnType = ['string', 'text', 'cpfcnpj', 'email', 'phone_number', 'cep']
-      const keyColumnList = template.fields.filter((f) => allowedColumnType.includes(f.type)).map((f) => f.column)
+      const allowedColumnType = ['string', 'text', 'cpfcnpj', 'email', 'phone_number', 'cep', 'array']
+      const keyColumnList = []
+      const fieldsAllowed = template.fields.filter((f) => allowedColumnType.includes(f.type))
+
+      fieldsAllowed.forEach((f) => {
+        if (f.type === 'array') {
+          keyColumnList.push(...this._serializeColumn(f.column, f))
+        } else {
+          keyColumnList.push(f.column)
+        }
+      })
 
       const searchParams = req.body.search_params
       let searchParamsValues = []
@@ -698,6 +707,28 @@ export default class BusinessController {
       console.error(e)
       return res.status(500).send({ error: 'Ocorreu um erro ao pesquisar os clientes.' })
     }
+  }
+
+  _serializeColumn(prefix = '', field = {}) {
+    const columns = []
+    if (field.type !== 'array') {
+      columns.push(`${prefix}.${field.column}`)
+      return columns
+    }
+
+    for (let i = 0; i < field.fields.length; i++) {
+      const f = field.fields[i]
+      const subcolumns = []
+      if (f.type === 'array') {
+        const columnsArray = this._serializeColumn(`${prefix}.${f.column}`, f)
+        subcolumns.push(...columnsArray)
+      } else {
+        subcolumns.push(`${prefix}.${f.column}`)
+      }
+      columns.push(...subcolumns)
+    }
+
+    return columns
   }
 
   async getByIdWithData(req, res) {
