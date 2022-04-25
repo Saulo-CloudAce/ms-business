@@ -125,6 +125,20 @@ export default class CacheService {
     await this.redis.hdel(key, 'data')
   }
 
+  async removeAllCustomer(companyToken = '') {
+    const keyPattern = `${PREFIX_KEY}:${companyToken}:customer:*`
+    const keysStored = await this.redis.keys(keyPattern)
+
+    if (keysStored.length === 0) return
+
+    const requestsKeyDeletion = []
+    for (let i = 0; i < keysStored.length; i++) {
+      const key = keysStored[i]
+      requestsKeyDeletion.push(this.redis.hdel(key, 'data'))
+    }
+    await Promise.all(requestsKeyDeletion)
+  }
+
   async setChildByTemplate(companyToken = '', templateId = '', hash = '', data = {}) {
     const key = `${PREFIX_KEY}:${companyToken}:template:${templateId}:childs:${hash}`
     await this.redis.hset(key, 'data', JSON.stringify(data))

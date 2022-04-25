@@ -177,6 +177,7 @@ export default class BusinessRepository {
       )
 
       await this.cacheService.removeBusinessActivePaginatedList(companyToken)
+      await this.cacheService.removeAllCustomer(companyToken)
     } catch (err) {
       throw new Error(err)
     }
@@ -204,6 +205,7 @@ export default class BusinessRepository {
       )
 
       await this.cacheService.removeBusinessActivePaginatedList(companyToken)
+      await this.cacheService.removeAllCustomer(companyToken)
     } catch (err) {
       console.error(err)
       throw new Error(err)
