@@ -345,6 +345,14 @@ export default class Business {
     }
   }
 
+  async getInvalidsFromBusinessById(companyToken, id) {
+    try {
+      return this.repository.getInvalidsFromBusinessById(companyToken, id)
+    } catch (err) {
+      return err
+    }
+  }
+
   async getRegisterById(companyToken, businessId, registerId) {
     try {
       return this.repository.getRegisterById(companyToken, businessId, registerId)

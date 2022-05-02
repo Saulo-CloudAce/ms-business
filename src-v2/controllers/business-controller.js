@@ -1,4 +1,5 @@
 import moment from 'moment'
+import fs from 'fs'
 
 import Business from '../../domain-v2/business.js'
 import BusinessRepository from '../repository/business-repository.js'
@@ -11,6 +12,8 @@ import { mongoIdIsValid } from '../helpers/validators.js'
 import { AggregateModeType } from '../../domain-v2/aggregate-mode-enum.js'
 import CacheService from '../services/cache-service.js'
 import { connect } from '../../config/mongodb.js'
+import { generateExcel } from '../helpers/excel-generator.js'
+import { sendEmailBussinessError } from '../helpers/email-sender.js'
 import Redis from '../../config/redis.js'
 
 export default class BusinessController {
@@ -751,6 +754,105 @@ export default class BusinessController {
       console.error(e)
       return res.status(500).send({ error: 'Ocorreu erro ao buscar o mailing com os dados' })
     }
+  }
+
+  async exportErrorsBusinessById(req, res) {
+    const companyToken = req.headers['token']
+    const businessId = req.params.id
+
+    const email = req.query.email
+    if (!email) {
+      return res.status(400).send({
+        error: 'Informe um e-mail para enviar o arquivo com os dados'
+      })
+    }
+
+    try {
+      const { companyRepository } = this._getInstanceRepositories(req.app)
+      const newBusiness = this._getInstanceBusiness(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
+
+      const business = await newBusiness.getInvalidsFromBusinessById(companyToken, businessId)
+      await this._exportSheetBusinessErrors(business, email)
+
+      return res
+        .status(200)
+        .send({ warn: `Em instantes será enviado um e-mail para ${email} contendo uma planilha com o resultado da busca.` })
+    } catch (e) {
+      console.error(e)
+      return res.status(500).send({ error: 'Ocorreu erro ao buscar o mailing com os dados' })
+    }
+  }
+
+  async _exportSheetBusinessErrors(business = {}, email = '') {
+    const errorsByLine = await this._indexErrorsByLine(business.invalids)
+    const errors = this._flatErrorsIndexed(Object.values(errorsByLine))
+    await this._generateSheetBusinessErrors(business, errors, email)
+  }
+
+  async _generateSheetBusinessErrors(business = {}, errors = [], email = '') {
+    const header = [
+      { key: 'line', header: 'Linha' },
+      { key: 'column', header: 'Campo' },
+      { key: 'error', header: 'Erro' },
+      { key: 'current_value', header: 'Valor enviado' }
+    ]
+
+    const filename = `${business.name}_errors.xlsx`
+    const filepath = `/tmp/${filename}`
+
+    generateExcel(header, errors, filepath).then(
+      setTimeout(() => {
+        const result = sendEmailBussinessError(email, filepath, filename)
+        if (result.error) {
+          console.error('Ocorreu erro ao enviar o e-mail com o arquivo gerado.')
+        } else {
+          console.log('E-mail enviado com CSV gerado.')
+        }
+        fs.unlink(filepath, (err) => {
+          if (err) console.error('Ocorreu erro ao excluir o CSV gerado.')
+          else console.log('Arquivo CSV excluido.')
+        })
+      }, 5000)
+    )
+  }
+
+  _flatErrorsIndexed(errorsByLine = []) {
+    const errors = []
+    for (let i = 0; i < errorsByLine.length; i++) {
+      errors.push(...errorsByLine[i])
+    }
+
+    return errors
+  }
+
+  async _indexErrorsByLine(lines = {}) {
+    const indexed = {}
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]
+      const lineNumber = line.line
+      const errors = line.errors
+      if (!indexed[lineNumber]) {
+        indexed[lineNumber] = []
+      }
+
+      indexed[lineNumber].push(...this._formatLineErrors(lineNumber, errors))
+    }
+
+    return indexed
+  }
+
+  _formatLineErrors(lineNumber = 0, errors = {}) {
+    const lines = []
+    for (let i = 0; i < errors.length; i++) {
+      const error = errors[i]
+      const lineError = { line: lineNumber, column: error.column, error: error.error, current_value: error.current_value }
+      lines.push(lineError)
+    }
+
+    return lines
   }
 
   async getByIdWithDataPaginated(req, res) {

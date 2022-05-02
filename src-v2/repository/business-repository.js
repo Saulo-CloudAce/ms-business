@@ -1210,6 +1210,23 @@ export default class BusinessRepository {
     }
   }
 
+  async getInvalidsFromBusinessById(companyToken, id) {
+    try {
+      const options = {
+        projection: {
+          _id: 1,
+          name: 1,
+          invalids: 1
+        }
+      }
+      const business = await this.db.collection('business').findOne({ _id: new ObjectId(id), companyToken: companyToken }, options)
+
+      return business
+    } catch (err) {
+      throw new Error(err)
+    }
+  }
+
   async getRegisterByBusinessAndId(companyToken, businessId, registerId) {
     try {
       const register = await this.db.collection('business_data').findOne({
