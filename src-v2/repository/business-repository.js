@@ -978,7 +978,7 @@ export default class BusinessRepository {
 
       const businessList = await this.db
         .collection('business')
-        .find({ _id: { $in: businessIdList }, companyToken, active: true })
+        .find({ _id: { $in: businessIdList }, companyToken })
         .project(['_id', 'name', 'templateId', 'createdAt', 'activeUntil', 'active', 'flowPassed'])
         .sort({ createdAt: -1 })
         .toArray()
