@@ -219,7 +219,7 @@ export default class BusinessRepository {
         .find({
           companyToken: companyToken,
           templateId,
-          name: { $regex: new RegExp(businessName, 'i') }
+          name: businessName
         })
         .project([
           '_id',
