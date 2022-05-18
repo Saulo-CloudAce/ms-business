@@ -42,6 +42,10 @@ export default class Business {
       return { businessId: null, invalids }
     }
 
+    if (aggregateMode === AggregateModeType.REPLACE) {
+      await this.repository.deactivateAllByTemplate(companyToken, templateId)
+    }
+
     const filePath = await this.uploader.upload(file)
     console.time('save mongodb')
     const businessId = await this.repository.save(
@@ -106,6 +110,10 @@ export default class Business {
       return { businessId: null, invalids }
     }
 
+    if (aggregateMode === AggregateModeType.REPLACE) {
+      await this.repository.deactivateAllByTemplate(companyToken, templateId)
+    }
+
     const businessId = await this.repository.save(
       companyToken,
       name,
@@ -161,6 +169,10 @@ export default class Business {
 
     const uploadContentRequestBody = requestBody
     uploadContentRequestBody.invalids = invalids
+
+    if (aggregateMode === AggregateModeType.REPLACE) {
+      await this.repository.deactivateAllByTemplate(companyToken, templateId)
+    }
 
     const filename = `${name}.json`
     const filePath = await this.uploader.uploadContent(companyToken, uploadContentRequestBody, filename)

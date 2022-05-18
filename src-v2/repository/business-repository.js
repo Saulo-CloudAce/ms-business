@@ -212,6 +212,30 @@ export default class BusinessRepository {
     }
   }
 
+  async deactivateAllByTemplate(companyToken, templateId, updatedBy = 0) {
+    try {
+      const businessUpdated = {
+        active: false,
+        updatedAt: moment().format(),
+        updatedBy
+      }
+      await this.db.collection('business').update(
+        {
+          templateId,
+          companyToken
+        },
+        { $set: businessUpdated },
+        { multi: true }
+      )
+
+      await this.cacheService.removeBusinessActivePaginatedList(companyToken)
+      await this.cacheService.removeAllCustomer(companyToken)
+    } catch (err) {
+      console.error(err)
+      throw new Error(err)
+    }
+  }
+
   async getByNameAndTemplateId(companyToken, businessName, templateId) {
     try {
       let businessList = await this.db
