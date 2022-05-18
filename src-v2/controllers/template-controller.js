@@ -256,11 +256,13 @@ export default class TemplateController {
 
       const queryPredicate = new QueryPredicate(filterRules, template)
 
-      const templateData = await businessRepository.listDataByTemplateAndFilterByColumns(companyToken, templateId, queryPredicate, sortBy)
+      let templateData = await businessRepository.listDataByTemplateAndFilterByColumns(companyToken, templateId, queryPredicate, sortBy)
 
       if (templateData.length === 0) {
         return res.status(404).send({ error: 'Não há dados para serem exportados' })
       }
+
+      templateData = this._formatDataToExport(templateData, template.fields)
 
       const templateFieldsIndexed = {}
       for (let i = 0; i < template.fields.length; i++) {
@@ -297,6 +299,79 @@ export default class TemplateController {
       console.error(err)
       return res.status(500).send({ error: 'Ocorreu erro ao exportar os registros do template informado' })
     }
+  }
+
+  _formatDataToExport(data = [], fields = []) {
+    data = this._formatDataFromFieldArray(data, fields)
+
+    return data
+  }
+
+  _formatDataFromFieldArray(data = [], fields = []) {
+    const fieldIndexed = {}
+    for(let i = 0; i < fields.length; i++) {
+      const f = fields[i]
+      if (f.fields) {
+        fieldIndexed[f.column] = this._indexFieldArray(f.fields)
+      }
+    }
+
+    for(let i = 0; i < data.length; i++) {
+      let linha = data[i]
+      linha = this._formatRowWithArray(linha, fieldIndexed)
+    }
+
+    return data
+  }
+
+  _indexFieldArray(fields = []) {
+    const fieldIndexed = {}
+    for(let i = 0; i < fields.length; i++) {
+      const f = fields[i]
+      fieldIndexed[f.column] = f.label
+    }
+
+    return fieldIndexed
+  }
+
+
+
+  _formatRowWithArray(row = {}, fieldIndexed = {}) {
+    const fields = Object.keys(fieldIndexed)
+    for(let i = 0; i < fields.length; i++) {
+      const field = fields[i]
+      let data = row[field]
+      
+      if (Array.isArray(data) && data.length) {
+        data = this._formatListDataFieldArray(data, fieldIndexed[field])
+        row[field] = data
+      } else {
+        row[field] = ''
+      }
+    }
+
+    return row
+  }
+
+  _formatListDataFieldArray(list = [], fieldArray = {}) {
+    const fields = Object.keys(fieldArray)
+    const items = []
+    
+    for(let x = 0; x < list.length; x++) {
+      const item = list[x]
+      const s = fields.map(f => {
+        const label = fieldArray[f]
+        if (item[f]) {
+          return `${label}: ${item[f]}`
+        }
+        
+        return `${label}: -`
+      })
+      items.push(s.join(', '))
+    }
+
+    return items.join(' | ')
+    
   }
 
   async exportDataByTemplateId(req, res) {
