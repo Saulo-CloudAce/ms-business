@@ -236,6 +236,7 @@ export default class TemplateController {
 
     const sortBy = req.body.sort_by ? req.body.sort_by : []
     const filterRules = req.body.filter_rules ? req.body.filter_rules : []
+    const fields = req.body.fields ? req.body.fields : []
 
     try {
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
@@ -264,10 +265,24 @@ export default class TemplateController {
 
       templateData = this._formatDataToExport(templateData, template.fields)
 
-      const templateFieldsIndexed = {}
+      templateData = this._showJustFieldRequested(templateData, fields)
+
+      let templateFieldsIndexed = {}
+      const allFieldsIndexed = {}
       for (let i = 0; i < template.fields.length; i++) {
         const field = template.fields[i]
-        templateFieldsIndexed[field.column] = field.label
+        allFieldsIndexed[field.column] = field.label
+      }
+
+      if (fields.length) {
+        for (let i = 0; i < fields.length; i++) {
+          const f = fields[i]
+          if (allFieldsIndexed[f]) {
+            templateFieldsIndexed[f] = allFieldsIndexed[f]
+          }
+        }
+      } else {
+        templateFieldsIndexed = allFieldsIndexed
       }
 
       const header = Object.keys(templateData[0]).map((k) => {
@@ -301,6 +316,32 @@ export default class TemplateController {
     }
   }
 
+  _showJustFieldRequested(data = [], fields = []) {
+    if (fields.length === 0) {
+      return data
+    }
+
+    const dataFormatted = []
+
+    for (let i = 0; i < data.length; i++) {
+      const row = data[i]
+      const rowFormatted = {}
+
+      for (let x = 0; x < fields.length; x++) {
+        const f = fields[x]
+        if (row[f]) {
+          rowFormatted[f] = row[f]
+        } else {
+          rowFormatted[f] = ''
+        }
+      }
+
+      dataFormatted.push(rowFormatted)
+    }
+
+    return dataFormatted
+  }
+
   _formatDataToExport(data = [], fields = []) {
     data = this._formatDataFromFieldArray(data, fields)
 
@@ -309,14 +350,14 @@ export default class TemplateController {
 
   _formatDataFromFieldArray(data = [], fields = []) {
     const fieldIndexed = {}
-    for(let i = 0; i < fields.length; i++) {
+    for (let i = 0; i < fields.length; i++) {
       const f = fields[i]
       if (f.fields) {
         fieldIndexed[f.column] = this._indexFieldArray(f.fields)
       }
     }
 
-    for(let i = 0; i < data.length; i++) {
+    for (let i = 0; i < data.length; i++) {
       let linha = data[i]
       linha = this._formatRowWithArray(linha, fieldIndexed)
     }
@@ -326,7 +367,7 @@ export default class TemplateController {
 
   _indexFieldArray(fields = []) {
     const fieldIndexed = {}
-    for(let i = 0; i < fields.length; i++) {
+    for (let i = 0; i < fields.length; i++) {
       const f = fields[i]
       fieldIndexed[f.column] = f.label
     }
@@ -334,14 +375,12 @@ export default class TemplateController {
     return fieldIndexed
   }
 
-
-
   _formatRowWithArray(row = {}, fieldIndexed = {}) {
     const fields = Object.keys(fieldIndexed)
-    for(let i = 0; i < fields.length; i++) {
+    for (let i = 0; i < fields.length; i++) {
       const field = fields[i]
       let data = row[field]
-      
+
       if (Array.isArray(data) && data.length) {
         data = this._formatListDataFieldArray(data, fieldIndexed[field])
         row[field] = data
@@ -356,22 +395,21 @@ export default class TemplateController {
   _formatListDataFieldArray(list = [], fieldArray = {}) {
     const fields = Object.keys(fieldArray)
     const items = []
-    
-    for(let x = 0; x < list.length; x++) {
+
+    for (let x = 0; x < list.length; x++) {
       const item = list[x]
-      const s = fields.map(f => {
+      const s = fields.map((f) => {
         const label = fieldArray[f]
         if (item[f]) {
           return `${label}: ${item[f]}`
         }
-        
+
         return `${label}: -`
       })
       items.push(s.join(', '))
     }
 
     return items.join(' | ')
-    
   }
 
   async exportDataByTemplateId(req, res) {
