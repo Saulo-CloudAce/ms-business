@@ -333,6 +333,14 @@ export default class Business {
     }
   }
 
+  async getAllBasic(companyToken = '') {
+    try {
+      return this.repository.getAllBasic(companyToken)
+    } catch (err) {
+      return err
+    }
+  }
+
   async getActivatedBatchesBasicPaginated(companyToken, page = 0, limit = 10) {
     try {
       return this.repository.getActivatedBatchesBasicPaginated(companyToken, page, limit)

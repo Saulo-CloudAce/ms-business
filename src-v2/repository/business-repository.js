@@ -385,6 +385,23 @@ export default class BusinessRepository {
     }
   }
 
+  async getAllBasic(companyToken = '') {
+    try {
+      console.time('select_all_basic')
+      const businessList = await this.db
+        .collection('business')
+        .find({ companyToken: companyToken, parentBatchId: { $exists: false } })
+        .project(['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy'])
+        .sort({ createdAt: -1 })
+        .toArray()
+      console.timeEnd('select_all_basic')
+
+      return businessList
+    } catch (err) {
+      throw new Error(err)
+    }
+  }
+
   async getAllBatchesBasicPaginated(companyToken, page = 0, limit = 10) {
     const skipDocs = page * limit
     try {
