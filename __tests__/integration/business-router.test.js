@@ -279,7 +279,6 @@ describe('CRUD business', () => {
         expect(result).toHaveProperty('name')
         expect(result).toHaveProperty('activeUntil')
         expect(result).toHaveProperty('active')
-        expect(result).toHaveProperty('dataAmount')
         expect(result).toHaveProperty('createdAt')
         expect(result).toHaveProperty('updatedAt')
 
