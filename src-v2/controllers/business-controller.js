@@ -401,7 +401,7 @@ export default class BusinessController {
 
   async getAll(req, res) {
     const page = 0
-    const limit = 20
+    const limit = 100
     const companyToken = req.headers['token']
 
     try {
@@ -418,15 +418,11 @@ export default class BusinessController {
           name: b.name,
           activeUntil: b.activeUntil,
           active: b.active,
-          aggregateMode: b.aggregateMode ? b.aggregateMode : AggregateModeType.INCREMENT,
           createdAt: b.createdAt,
           updatedAt: b.updatedAt,
           createdBy: b.createdBy ? b.createdBy : 0,
           updatedBy: b.updatedBy ? b.updatedBy : 0,
-          dataAmount: b.quantityRows,
-          templateId: b.templateId,
-          flowPassed: b.flow_passed || b.flowPassed,
-          flowPassed: b.flow_passed || b.flowPassed ? true : false
+          templateId: b.templateId
         }
       })
 
