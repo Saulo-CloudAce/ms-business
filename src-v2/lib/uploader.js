@@ -6,7 +6,7 @@ export default class Uploader {
     this._storageService = new StorageService()
   }
 
-  async upload(file) {
+  async upload(file, dir) {
     const filename = file.name.replace(/\s/g, '')
     const bucket = process.env.BUCKET
     const publicAccess = false

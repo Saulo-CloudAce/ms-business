@@ -46,7 +46,7 @@ export default class Business {
       await this.repository.deactivateAllByTemplate(companyToken, templateId)
     }
 
-    const filePath = await this.uploader.upload(file)
+    const filePath = await this.uploader.upload(file, companyToken)
     console.time('save mongodb')
     const businessId = await this.repository.save(
       companyToken,
