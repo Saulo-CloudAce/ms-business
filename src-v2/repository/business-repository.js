@@ -65,6 +65,7 @@ export default class BusinessRepository {
 
       await this.cacheService.removeBusinessActivePaginatedList(business.companyToken)
       await this.cacheService.removeChildByTemplate(business.companyToken, business.templateId)
+      await this.cacheService.removeAllBusinessActivatedList(business.companyToken)
 
       return business._id
     } catch (err) {
@@ -93,6 +94,8 @@ export default class BusinessRepository {
         { $set: businessUpdated },
         { multi: true }
       )
+
+      await this.cacheService.removeAllBusinessActivatedList(companyToken)
     } catch (err) {
       throw new Error(err)
     }
@@ -118,6 +121,8 @@ export default class BusinessRepository {
         { $set: businessUpdated },
         { multi: true }
       )
+
+      await this.cacheService.removeAllBusinessActivatedList(companyToken)
     } catch (err) {
       throw new Error(err)
     }
@@ -178,6 +183,7 @@ export default class BusinessRepository {
 
       await this.cacheService.removeBusinessActivePaginatedList(companyToken)
       await this.cacheService.removeAllCustomer(companyToken)
+      await this.cacheService.removeAllBusinessActivatedList(companyToken)
     } catch (err) {
       throw new Error(err)
     }
@@ -206,6 +212,7 @@ export default class BusinessRepository {
 
       await this.cacheService.removeBusinessActivePaginatedList(companyToken)
       await this.cacheService.removeAllCustomer(companyToken)
+      await this.cacheService.removeAllBusinessActivatedList(companyToken)
     } catch (err) {
       console.error(err)
       throw new Error(err)
@@ -230,6 +237,7 @@ export default class BusinessRepository {
 
       await this.cacheService.removeBusinessActivePaginatedList(companyToken)
       await this.cacheService.removeAllCustomer(companyToken)
+      await this.cacheService.removeAllBusinessActivatedList(companyToken)
     } catch (err) {
       console.error(err)
       throw new Error(err)
@@ -355,6 +363,13 @@ export default class BusinessRepository {
 
   async getActivatedBatchesBasic(companyToken) {
     try {
+      const allActivated = await this.cacheService.getAllBusinessActivatedList(companyToken)
+      if (allActivated) {
+        console.log('ALL_BUSINESS_ACTIVATED_CACHED')
+        return allActivated
+      }
+
+      console.time('getActivatedBatchesBasic')
       const businessList = await this.db
         .collection('business')
         .find({
@@ -378,6 +393,9 @@ export default class BusinessRepository {
         ])
         .sort({ createdAt: -1 })
         .toArray()
+      console.timeEnd('getActivatedBatchesBasic')
+
+      await this.cacheService.setAllBusinessActivatedList(companyToken, businessList)
 
       return businessList
     } catch (err) {

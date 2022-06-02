@@ -171,6 +171,30 @@ export default class CacheService {
     await Promise.all(requestsKeyDeletion)
   }
 
+  // List All Business Activated
+
+  async setAllBusinessActivatedList(companyToken = '', data = {}) {
+    const key = `${PREFIX_KEY}:${companyToken}:business_all_activated`
+    await this.redis.hset(key, 'data', JSON.stringify(data))
+
+    await this._setTTL(key)
+  }
+
+  async getAllBusinessActivatedList(companyToken = '') {
+    const key = `${PREFIX_KEY}:${companyToken}:business_all_activated`
+    let template = await this.redis.hget(key, 'data')
+    if (template) {
+      template = JSON.parse(template)
+    }
+
+    return template
+  }
+
+  async removeAllBusinessActivatedList(companyToken = '') {
+    const keyPattern = `${PREFIX_KEY}:${companyToken}:business_all_activated`
+    await this.redis.hdel(keyPattern, 'data')
+  }
+
   async _setTTL(key = '') {
     const ttl = process.env.REDIS_TTL ? process.env.REDIS_TTL : 10
     this.redis.expire(key, ttl)
