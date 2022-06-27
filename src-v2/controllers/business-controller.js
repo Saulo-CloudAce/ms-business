@@ -15,6 +15,7 @@ import { connect } from '../../config/mongodb.js'
 import { generateExcel } from '../helpers/excel-generator.js'
 import { sendEmail, sendEmailBussinessError } from '../helpers/email-sender.js'
 import Redis from '../../config/redis.js'
+import { clearFilename } from '../helpers/formatters.js'
 
 export default class BusinessController {
   constructor(businessService = {}) {
@@ -1177,7 +1178,7 @@ export default class BusinessController {
         return res.status(404).send({ error: 'Não foi encontrado um business com este ID' })
       }
 
-      const template = await templateRepository.getById(business.templateId, companyToken)
+      const template = await templateRepository.getByIdWithoutTags(business.templateId, companyToken)
 
       const businessData = this._formatDataToExport(business.data, template.fields)
 
@@ -1201,7 +1202,7 @@ export default class BusinessController {
         return { key: `${k}`, header: `${templateFieldsIndexed[k]}` }
       })
 
-      const filename = `${business.name}_exported_${moment().format('YYYYMMDDHHMMSS')}.xlsx`
+      const filename = `${clearFilename(business.name)}_exported_${moment().format('YYYYMMDDHHMMSS')}.xlsx`
       const filepath = `/tmp/${filename}`
 
       generateExcel(header, businessData, filepath).then(
@@ -1219,9 +1220,7 @@ export default class BusinessController {
         }, 5000)
       )
 
-      return res
-        .status(200)
-        .send({ warn: `Em instantes será enviado um e-mail para ${email} contendo uma planilha com o resultado da busca.` })
+      return res.status(200).send({ warn: `Em instantes será enviado um e-mail para ${email} contendo o mailing solicitado.` })
     } catch (err) {
       console.error(err)
       return res.status(500).send({ error: 'Ocorreu erro ao exportar os dados do business' })
