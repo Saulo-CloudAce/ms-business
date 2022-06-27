@@ -25,6 +25,7 @@ export default function businessRoute(app = {}) {
   app.post('/api/v2/business_single_register', checkSchema(createSingleRegisterSpec), applyRules, (req, res) =>
     businessController.createSingleRegisterBusiness(req, res)
   )
+  app.post('/api/v2/business/:id/data/export', (req, res) => businessController.exportBusiness(req, res))
   app.get('/api/v2/business_all_activated', (req, res) => businessController.getAllActivated(req, res))
   app.get('/api/v2/business/activated', (req, res) => businessController.getAllActivatedPaginated(req, res))
   app.get('/api/v2/business/inactivated', (req, res) => businessController.getAllInactivatedPaginated(req, res))

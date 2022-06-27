@@ -13,7 +13,7 @@ import { AggregateModeType } from '../../domain-v2/aggregate-mode-enum.js'
 import CacheService from '../services/cache-service.js'
 import { connect } from '../../config/mongodb.js'
 import { generateExcel } from '../helpers/excel-generator.js'
-import { sendEmailBussinessError } from '../helpers/email-sender.js'
+import { sendEmail, sendEmailBussinessError } from '../helpers/email-sender.js'
 import Redis from '../../config/redis.js'
 
 export default class BusinessController {
@@ -1152,5 +1152,149 @@ export default class BusinessController {
     } catch (e) {
       return res.status(500).send({ error: e.message })
     }
+  }
+
+  async exportBusiness(req, res) {
+    const companyToken = req.headers['token']
+    const businessId = req.params.id
+    const email = req.query.email
+    if (!email) {
+      return res.status(400).send({
+        error: 'Informe um e-mail para enviar o arquivo com os dados'
+      })
+    }
+
+    try {
+      const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
+      const newBusiness = this._getInstanceBusiness(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
+
+      const business = await newBusiness.getDataByIdToExport(companyToken, businessId)
+
+      if (!business) {
+        return res.status(404).send({ error: 'Não foi encontrado um business com este ID' })
+      }
+
+      const template = await templateRepository.getById(business.templateId, companyToken)
+
+      const businessData = this._formatDataToExport(business.data, template.fields)
+
+      let templateFieldsIndexed = {}
+      const allFieldsIndexed = {}
+      for (let i = 0; i < template.fields.length; i++) {
+        const field = template.fields[i]
+        allFieldsIndexed[field.column] = field.label
+      }
+
+      const fields = template.fields.map((f) => f.column)
+
+      for (let i = 0; i < fields.length; i++) {
+        const f = fields[i]
+        if (allFieldsIndexed[f]) {
+          templateFieldsIndexed[f] = allFieldsIndexed[f]
+        }
+      }
+
+      const header = Object.keys(businessData[0]).map((k) => {
+        return { key: `${k}`, header: `${templateFieldsIndexed[k]}` }
+      })
+
+      const filename = `${business.name}_exported_${moment().format('YYYYMMDDHHMMSS')}.xlsx`
+      const filepath = `/tmp/${filename}`
+
+      generateExcel(header, businessData, filepath).then(
+        setTimeout(() => {
+          const result = sendEmail(email, filepath, filename)
+          if (result.error) {
+            console.error('Ocorreu erro ao enviar o e-mail com o arquivo gerado.')
+          } else {
+            console.log('E-mail enviado com CSV gerado.')
+          }
+          fs.unlink(filepath, (err) => {
+            if (err) console.error('Ocorreu erro ao excluir o CSV gerado.')
+            else console.log('Arquivo CSV excluido.')
+          })
+        }, 5000)
+      )
+
+      return res
+        .status(200)
+        .send({ warn: `Em instantes será enviado um e-mail para ${email} contendo uma planilha com o resultado da busca.` })
+    } catch (err) {
+      console.error(err)
+      return res.status(500).send({ error: 'Ocorreu erro ao exportar os dados do business' })
+    }
+  }
+
+  _formatDataToExport(data = [], fields = []) {
+    data = this._formatDataFromFieldArray(data, fields)
+
+    return data
+  }
+
+  _formatDataFromFieldArray(data = [], fields = []) {
+    const fieldIndexed = {}
+    for (let i = 0; i < fields.length; i++) {
+      const f = fields[i]
+      if (f.fields) {
+        fieldIndexed[f.column] = this._indexFieldArray(f.fields)
+      }
+    }
+
+    for (let i = 0; i < data.length; i++) {
+      let linha = data[i]
+      linha = this._formatRowWithArray(linha, fieldIndexed)
+    }
+
+    return data
+  }
+
+  _indexFieldArray(fields = []) {
+    const fieldIndexed = {}
+    for (let i = 0; i < fields.length; i++) {
+      const f = fields[i]
+      fieldIndexed[f.column] = f.label
+    }
+
+    return fieldIndexed
+  }
+
+  _formatRowWithArray(row = {}, fieldIndexed = {}) {
+    const fields = Object.keys(fieldIndexed)
+    for (let i = 0; i < fields.length; i++) {
+      const field = fields[i]
+      let data = row[field]
+
+      if (Array.isArray(data) && data.length) {
+        data = this._formatListDataFieldArray(data, fieldIndexed[field])
+        row[field] = data
+      } else {
+        row[field] = ''
+      }
+    }
+
+    return row
+  }
+
+  _formatListDataFieldArray(list = [], fieldArray = {}) {
+    const fields = Object.keys(fieldArray)
+    const items = []
+
+    for (let x = 0; x < list.length; x++) {
+      const item = list[x]
+      const s = fields.map((f) => {
+        const label = fieldArray[f]
+        if (item[f]) {
+          return `${label}: ${item[f]}`
+        }
+
+        return `${label}: -`
+      })
+      items.push(s.join(', '))
+    }
+
+    return items.join(' | ')
   }
 }

@@ -365,6 +365,14 @@ export default class Business {
     }
   }
 
+  async getDataByIdToExport(companyToken, id) {
+    try {
+      return this.repository.getDataByIdToExport(companyToken, id)
+    } catch (err) {
+      return err
+    }
+  }
+
   async getInvalidsFromBusinessById(companyToken, id) {
     try {
       return this.repository.getInvalidsFromBusinessById(companyToken, id)

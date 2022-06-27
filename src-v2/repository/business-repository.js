@@ -1269,6 +1269,26 @@ export default class BusinessRepository {
     }
   }
 
+  async getDataByIdToExport(companyToken, id) {
+    try {
+      const business = await this.db
+        .collection('business')
+        .findOne({ _id: new ObjectId(id), companyToken: companyToken }, ['_id', 'name', 'templateId'])
+
+      const data = await this.db
+        .collection('business_data')
+        .find({ companyToken: companyToken, businessId: new ObjectId(id) })
+        .project({ companyToken: 0, businessId: 0, templateId: 0, _id: 0, businessCreatedAt: 0, businessUpdatedAt: 0 })
+        .toArray()
+
+      business.data = data
+
+      return business
+    } catch (err) {
+      throw new Error(err)
+    }
+  }
+
   async getInvalidsFromBusinessById(companyToken, id) {
     try {
       const options = {
