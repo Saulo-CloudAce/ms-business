@@ -33,11 +33,41 @@ export default class QueryPredicate {
 
   _indexTemplateFields(template = {}) {
     const templateFields = {}
+    const indexes = []
+    
     template.fields.forEach((field) => {
-      templateFields[field.column] = field
+      indexes.push(...this._getTemplateFields(field))
+    })
+    indexes.forEach((f) => {
+      const k = Object.keys(f)[0]
+      templateFields[k] = f[k]
     })
 
     return templateFields
+  }
+
+  _getTemplateFields(field = {}, prefix = '') {
+    const indexes = []
+    if (field.fields) {
+      if (prefix.length === 0) {
+        prefix = field.column
+      } else {
+        prefix += `.${field.prefix}`
+      }
+      field.fields.forEach((f) => {
+        indexes.push(...this._getTemplateFields(f, prefix))
+      })
+    } else {
+      const idx = {}
+      if (prefix) {
+        idx[`${prefix}.${field.column}`] = field
+      } else {
+        idx[field.column] = field
+      }
+      
+      indexes.push(idx)
+    }
+    return indexes
   }
 
   _validateRulesGroup(rulesGroup = [], templateFields = {}) {
