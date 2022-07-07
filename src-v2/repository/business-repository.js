@@ -138,6 +138,8 @@ export default class BusinessRepository {
       )
 
       await this.cacheService.removeBusinessRegister(companyToken, registerId)
+      await this.cacheService.removeAllCustomerFormatted(companyToken)
+      await this.cacheService.removeAllCustomer(companyToken)
       console.log('BUSINESS_REGISTER_CACHE_INVALIDATED')
     } catch (err) {
       console.error(err)
@@ -183,6 +185,7 @@ export default class BusinessRepository {
 
       await this.cacheService.removeBusinessActivePaginatedList(companyToken)
       await this.cacheService.removeAllCustomer(companyToken)
+      await this.cacheService.removeAllCustomerFormatted(companyToken)
       await this.cacheService.removeAllBusinessActivatedList(companyToken)
     } catch (err) {
       throw new Error(err)
@@ -212,6 +215,7 @@ export default class BusinessRepository {
 
       await this.cacheService.removeBusinessActivePaginatedList(companyToken)
       await this.cacheService.removeAllCustomer(companyToken)
+      await this.cacheService.removeAllCustomerFormatted(companyToken)
       await this.cacheService.removeAllBusinessActivatedList(companyToken)
     } catch (err) {
       console.error(err)
@@ -237,6 +241,7 @@ export default class BusinessRepository {
 
       await this.cacheService.removeBusinessActivePaginatedList(companyToken)
       await this.cacheService.removeAllCustomer(companyToken)
+      await this.cacheService.removeAllCustomerFormatted(companyToken)
       await this.cacheService.removeAllBusinessActivatedList(companyToken)
     } catch (err) {
       console.error(err)
