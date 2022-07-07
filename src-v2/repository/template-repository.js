@@ -55,6 +55,8 @@ export default class TemplateRepository {
 
       await this.db.collection('business_template').update({ _id: new ObjectId(templateId), companyToken }, { $set: templateUpdated })
 
+      await this.cacheService.removeTemplate(companyToken, templateId)
+
       return templateUpdate
     } catch (err) {
       throw new Error(err)
