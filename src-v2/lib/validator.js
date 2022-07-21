@@ -645,16 +645,22 @@ export default class Validator {
   }
 
   _validateFieldArray(rules, fieldData, errors) {
-    if (!Array.isArray(fieldData) && rules.required) {
+    if (!isTypeArray(rules)) {
+      errors = this._validateField(rules, fieldData, { errors })
+
+      return errors
+    }
+
+    if (!Array.isArray(fieldData)) {
+      errors.push({
+        column: rules.column,
+        error: 'Este campo, caso seja preenchido, deve conter um array',
+        current_value: fieldData
+      })
+    } else if (!Array.isArray(fieldData) && rules.required) {
       errors.push({
         column: rules.column,
         error: 'Este campo é um array e é obrigatório, logo precisa ser preenchido',
-        current_value: fieldData
-      })
-    } else if (!this.validateArray(rules, fieldData) && rules.required) {
-      errors.push({
-        column: rules.column,
-        error: 'O array de dados fornecido é invalido.',
         current_value: fieldData
       })
     } else if (Object.keys(rules).includes('fields') && !isArrayObject(fieldData)) {
@@ -663,12 +669,38 @@ export default class Validator {
         error: 'Este campo aceita somente array de objetos',
         current_value: fieldData
       })
-    } else if (!Object.keys(rules).includes('fields') && isArrayObject(fieldData)) {
+    } else if (!Object.keys(rules).includes('fields') && fieldData.length > 0 && isArrayObject(fieldData)) {
       errors.push({
         column: rules.column,
         error: 'Este campo aceita somente array simples',
         current_value: fieldData
       })
+    }
+
+    if (Object.keys(rules).includes('fields') && isArrayObject(fieldData)) {
+      let serrors = []
+      const rcolumns = rules.fields.map((f) => f.column)
+      for (let i = 0; i < rules.fields.length; i++) {
+        const rfield = rules.fields[i]
+        for (let x = 0; x < fieldData.length; x++) {
+          const scolumns = Object.keys(fieldData[x])
+          const diffcolumns = arraysDiff(rcolumns, scolumns)
+          if (diffcolumns.length > 0) {
+            serrors.push({
+              column: rules.column,
+              error: 'Este array tem campo diferentes dos definidos no template',
+              fields_diff: diffcolumns
+            })
+            return serrors
+          }
+          const sfield = fieldData[x][rfield.column]
+
+          const errs = this._validateFieldArray(rfield, sfield, [])
+          serrors.push(...errs)
+        }
+      }
+
+      errors.push(...serrors)
     }
 
     return errors
@@ -766,80 +798,134 @@ export default class Validator {
     const lineNumberOnFile = lineNumber + 1
     const lineErrors = { line: lineNumberOnFile, errors: [] }
 
-    const fieldsWithoutRules = Object.keys(data).filter((k) => typeof data[k].rules !== 'object')
+    const fieldsWithoutRules = Object.keys(data)
 
     if (fieldsWithoutRules.length) {
       const fieldsColumnsTemplate = fields.map((f) => f.column)
       const fieldsColumnsReceived = Object.keys(data)
       const fieldsDiff = arraysDiff(fieldsColumnsTemplate, fieldsColumnsReceived)
 
-      lineErrors.errors.push({
-        error: 'Tem campos diferentes do que os definidos no template',
-        fields_list_unkown: fieldsDiff
-      })
-      return { valid: false, lineErrors }
+      if (fieldsDiff.length > 0) {
+        lineErrors.errors.push({
+          error: 'Tem campos diferentes do que os definidos no template',
+          fields_list_unkown: fieldsDiff
+        })
+        return { valid: false, lineErrors }
+      }
     }
 
     Object.keys(data).forEach((k) => {
       const el = data[k].value
       const rules = data[k].rules
 
-      if (isRequired(rules)) {
-        lineErrors.errors = this._validateFieldRequired(rules, el, lineErrors.errors)
-      }
-      if (isKey(rules) && this._isRequiredOrFill(rules, el)) {
-        lineErrors.errors = this._validateFieldKey(rules, el, lineErrors.errors)
-      }
-      if (isUnique(rules) && this._isRequiredOrFill(rules, el)) {
-        lineErrors.errors = this._validateFieldUnique(rules, el, lineErrors.errors, listBatches)
-      }
-      if (isTypeDate(rules) && this._isRequiredOrFill(rules, el)) {
-        lineErrors.errors = this._validateFieldDate(rules, el, lineErrors.errors)
-      }
-      if (isTypeInt(rules) && this._isRequiredOrFill(rules, el)) {
-        lineErrors.errors = this._validateFieldInt(rules, el, lineErrors.errors)
-      }
-      if (isTypeOptions(rules) && this._isRequiredOrFill(rules, el)) {
-        lineErrors.errors = this._validateFieldOptions(rules, el, lineErrors.errors)
-      }
-      if (isTypeMultipleOptions(rules) && this._isRequiredOrFill(rules, el)) {
-        lineErrors.errors = this._validateFieldMultipleOptions(rules, el, lineErrors.errors)
-      }
-      if (isTypeDecimal(rules) && this._isRequiredOrFill(rules, el)) {
-        lineErrors.errors = this._validateFieldDecimal(rules, el, lineErrors.errors)
-      }
-      if (isTypeCep(rules) && this._isRequiredOrFill(rules, el)) {
-        lineErrors.errors = this._validateFieldCep(rules, el, lineErrors.errors)
-      }
-      if (isTypeBoolean(rules) && this._isRequiredOrFill(rules, el)) {
-        lineErrors.errors = this._validateFieldBoolean(rules, el, lineErrors.errors)
-      }
-      if (isTypeEmail(rules) && this._isRequiredOrFill(rules, el)) {
-        lineErrors.errors = this._validateFieldEmail(rules, el, lineErrors.errors)
-      }
-      if (isTypePhoneNumber(rules) && this._isRequiredOrFill(rules, el)) {
-        lineErrors.errors = this._validateFieldPhoneNumber(rules, el, lineErrors.errors)
-      }
-      if (isTypeArray(rules) && this._isRequiredOrFill(rules, el)) {
-        lineErrors.errors = this._validateFieldArray(rules, el, lineErrors.errors)
-      }
-      if (isTypeCpfCnpj(rules) && this._isRequiredOrFill(rules, el)) {
-        lineErrors.errors = this._validateFieldCpfCnpj(rules, el, lineErrors.errors)
-      }
-      if (isTypeDocument(rules) && this._isRequiredOrFill(rules, el)) {
-        lineErrors.errors = this._validateFieldDocument(rules, el, lineErrors.errors)
-      }
+      lineErrors.errors = this._validateField(rules, el, lineErrors)
 
-      if (isTypeListDocument(rules) && this._isRequiredOrFill(rules, el)) {
-        lineErrors.errors = this._validateFieldListDocument(rules, el, lineErrors.errors)
-      }
+      // if (isRequired(rules)) {
+      //   lineErrors.errors = this._validateFieldRequired(rules, el, lineErrors.errors)
+      // }
+      // if (isKey(rules) && this._isRequiredOrFill(rules, el)) {
+      //   lineErrors.errors = this._validateFieldKey(rules, el, lineErrors.errors)
+      // }
+      // if (isUnique(rules) && this._isRequiredOrFill(rules, el)) {
+      //   lineErrors.errors = this._validateFieldUnique(rules, el, lineErrors.errors, listBatches)
+      // }
+      // if (isTypeDate(rules) && this._isRequiredOrFill(rules, el)) {
+      //   lineErrors.errors = this._validateFieldDate(rules, el, lineErrors.errors)
+      // }
+      // if (isTypeInt(rules) && this._isRequiredOrFill(rules, el)) {
+      //   lineErrors.errors = this._validateFieldInt(rules, el, lineErrors.errors)
+      // }
+      // if (isTypeOptions(rules) && this._isRequiredOrFill(rules, el)) {
+      //   lineErrors.errors = this._validateFieldOptions(rules, el, lineErrors.errors)
+      // }
+      // if (isTypeMultipleOptions(rules) && this._isRequiredOrFill(rules, el)) {
+      //   lineErrors.errors = this._validateFieldMultipleOptions(rules, el, lineErrors.errors)
+      // }
+      // if (isTypeDecimal(rules) && this._isRequiredOrFill(rules, el)) {
+      //   lineErrors.errors = this._validateFieldDecimal(rules, el, lineErrors.errors)
+      // }
+      // if (isTypeCep(rules) && this._isRequiredOrFill(rules, el)) {
+      //   lineErrors.errors = this._validateFieldCep(rules, el, lineErrors.errors)
+      // }
+      // if (isTypeBoolean(rules) && this._isRequiredOrFill(rules, el)) {
+      //   lineErrors.errors = this._validateFieldBoolean(rules, el, lineErrors.errors)
+      // }
+      // if (isTypeEmail(rules) && this._isRequiredOrFill(rules, el)) {
+      //   lineErrors.errors = this._validateFieldEmail(rules, el, lineErrors.errors)
+      // }
+      // if (isTypePhoneNumber(rules) && this._isRequiredOrFill(rules, el)) {
+      //   lineErrors.errors = this._validateFieldPhoneNumber(rules, el, lineErrors.errors)
+      // }
+      // if (isTypeArray(rules) && this._isRequiredOrFill(rules, el)) {
+      //   lineErrors.errors = this._validateFieldArray(rules, el, lineErrors.errors)
+      // }
+      // if (isTypeCpfCnpj(rules) && this._isRequiredOrFill(rules, el)) {
+      //   lineErrors.errors = this._validateFieldCpfCnpj(rules, el, lineErrors.errors)
+      // }
+      // if (isTypeDocument(rules) && this._isRequiredOrFill(rules, el)) {
+      //   lineErrors.errors = this._validateFieldDocument(rules, el, lineErrors.errors)
+      // }
+
+      // if (isTypeListDocument(rules) && this._isRequiredOrFill(rules, el)) {
+      //   lineErrors.errors = this._validateFieldListDocument(rules, el, lineErrors.errors)
+      // }
     })
     return { valid: lineErrors.errors.length === 0, lineErrors }
   }
 
+  _validateField(rules, el, lineErrors = { errors: [] }) {
+    if (isRequired(rules)) {
+      lineErrors.errors = this._validateFieldRequired(rules, el, lineErrors.errors)
+    }
+    if (isKey(rules) && this._isRequiredOrFill(rules, el)) {
+      lineErrors.errors = this._validateFieldKey(rules, el, lineErrors.errors)
+    }
+    if (isTypeDate(rules) && this._isRequiredOrFill(rules, el)) {
+      lineErrors.errors = this._validateFieldDate(rules, el, lineErrors.errors)
+    }
+    if (isTypeInt(rules) && this._isRequiredOrFill(rules, el)) {
+      lineErrors.errors = this._validateFieldInt(rules, el, lineErrors.errors)
+    }
+    if (isTypeOptions(rules) && this._isRequiredOrFill(rules, el)) {
+      lineErrors.errors = this._validateFieldOptions(rules, el, lineErrors.errors)
+    }
+    if (isTypeMultipleOptions(rules) && this._isRequiredOrFill(rules, el)) {
+      lineErrors.errors = this._validateFieldMultipleOptions(rules, el, lineErrors.errors)
+    }
+    if (isTypeDecimal(rules) && this._isRequiredOrFill(rules, el)) {
+      lineErrors.errors = this._validateFieldDecimal(rules, el, lineErrors.errors)
+    }
+    if (isTypeCep(rules) && this._isRequiredOrFill(rules, el)) {
+      lineErrors.errors = this._validateFieldCep(rules, el, lineErrors.errors)
+    }
+    if (isTypeBoolean(rules) && this._isRequiredOrFill(rules, el)) {
+      lineErrors.errors = this._validateFieldBoolean(rules, el, lineErrors.errors)
+    }
+    if (isTypeEmail(rules) && this._isRequiredOrFill(rules, el)) {
+      lineErrors.errors = this._validateFieldEmail(rules, el, lineErrors.errors)
+    }
+    if (isTypePhoneNumber(rules) && this._isRequiredOrFill(rules, el)) {
+      lineErrors.errors = this._validateFieldPhoneNumber(rules, el, lineErrors.errors)
+    }
+    if (isTypeArray(rules) && this._isRequiredOrFill(rules, el)) {
+      lineErrors.errors = this._validateFieldArray(rules, el, lineErrors.errors)
+    }
+    if (isTypeCpfCnpj(rules) && this._isRequiredOrFill(rules, el)) {
+      lineErrors.errors = this._validateFieldCpfCnpj(rules, el, lineErrors.errors)
+    }
+    if (isTypeDocument(rules) && this._isRequiredOrFill(rules, el)) {
+      lineErrors.errors = this._validateFieldDocument(rules, el, lineErrors.errors)
+    }
+
+    if (isTypeListDocument(rules) && this._isRequiredOrFill(rules, el)) {
+      lineErrors.errors = this._validateFieldListDocument(rules, el, lineErrors.errors)
+    }
+
+    return lineErrors.errors
+  }
+
   validateArray(rules, el) {
-    const valid = true
-    return valid
+    return true
   }
 
   _formatFieldCpfCnpj(fieldData) {
