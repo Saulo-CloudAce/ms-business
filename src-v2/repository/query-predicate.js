@@ -34,7 +34,7 @@ export default class QueryPredicate {
   _indexTemplateFields(template = {}) {
     const templateFields = {}
     const indexes = []
-    
+
     template.fields.forEach((field) => {
       indexes.push(...this._getTemplateFields(field))
     })
@@ -52,7 +52,7 @@ export default class QueryPredicate {
       if (prefix.length === 0) {
         prefix = field.column
       } else {
-        prefix += `.${field.prefix}`
+        prefix += `.${field.column}`
       }
       field.fields.forEach((f) => {
         indexes.push(...this._getTemplateFields(f, prefix))
@@ -64,7 +64,7 @@ export default class QueryPredicate {
       } else {
         idx[field.column] = field
       }
-      
+
       indexes.push(idx)
     }
     return indexes
