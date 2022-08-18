@@ -677,31 +677,31 @@ export default class Validator {
       })
     }
 
-    if (Object.keys(rules).includes('fields') && isArrayObject(fieldData)) {
-      let serrors = []
-      const rcolumns = rules.fields.map((f) => f.column)
-      for (let i = 0; i < rules.fields.length; i++) {
-        const rfield = rules.fields[i]
-        for (let x = 0; x < fieldData.length; x++) {
-          const scolumns = Object.keys(fieldData[x])
-          const diffcolumns = arraysDiff(rcolumns, scolumns)
-          if (diffcolumns.length > 0) {
-            serrors.push({
-              column: rules.column,
-              error: 'Este array tem campo diferentes dos definidos no template',
-              fields_diff: diffcolumns
-            })
-            return serrors
-          }
-          const sfield = fieldData[x][rfield.column]
+    // if (Object.keys(rules).includes('fields') && isArrayObject(fieldData)) {
+    //   let serrors = []
+    //   const rcolumns = rules.fields.map((f) => f.column)
+    //   for (let i = 0; i < rules.fields.length; i++) {
+    //     const rfield = rules.fields[i]
+    //     for (let x = 0; x < fieldData.length; x++) {
+    //       const scolumns = Object.keys(fieldData[x])
+    //       const diffcolumns = arraysDiff(rcolumns, scolumns)
+    //       if (diffcolumns.length > 0) {
+    //         serrors.push({
+    //           column: rules.column,
+    //           error: 'Este array tem campo diferentes dos definidos no template',
+    //           fields_diff: diffcolumns
+    //         })
+    //         return serrors
+    //       }
+    //       const sfield = fieldData[x][rfield.column]
 
-          const errs = this._validateFieldArray(rfield, sfield, [])
-          serrors.push(...errs)
-        }
-      }
+    //       const errs = this._validateFieldArray(rfield, sfield, [])
+    //       serrors.push(...errs)
+    //     }
+    //   }
 
-      errors.push(...serrors)
-    }
+    //   errors.push(...serrors)
+    // }
 
     return errors
   }
