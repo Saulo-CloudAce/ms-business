@@ -455,7 +455,7 @@ export default class TemplateController {
       }
 
       res.status(200).send({
-        message: 'Estamos processando os dados e enviaremos uma planilha para o e-mail informado.'
+        message: `Estamos processando os dados e enviaremos uma planilha para o seu e-mail (${email}).`
       })
 
       let businessData = await businessRepository.listAllBatchesAndChildsByTemplateId(companyToken, templateId)
