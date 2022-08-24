@@ -2,6 +2,22 @@ import sgMail from '@sendgrid/mail'
 sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 import fs from 'fs'
 
+export async function sendSimpleEmail(emailTo = '', subject = '', message = '') {
+  try {
+    const msg = {
+      to: emailTo,
+      from: process.env.SENDGRID_SENDER_EMAIL, // Change to your verified sender
+      subject,
+      html: message
+    }
+
+    await sgMail.send(msg)
+  } catch (err) {
+    console.error(err.response.body)
+    return { error: 'Ocorreu erro ao enviar o e-mail.' }
+  }
+}
+
 export async function sendEmail(emailTo = '', filepath = '', filename = '') {
   const pathAttachment = filepath
   const attachment = fs.readFileSync(pathAttachment).toString('base64')
