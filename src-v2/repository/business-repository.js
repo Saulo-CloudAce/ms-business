@@ -833,32 +833,37 @@ export default class BusinessRepository {
 
   async listAllBatchesAndChildsByTemplateId(companyToken, templateId) {
     try {
+      console.time(`List all data template ${templateId} from company ${companyToken}`)
       const businessDataList = await this.db
         .collection('business_data')
-        .aggregate([
-          {
-            $match: {
-              companyToken: companyToken,
-              templateId: templateId
+        .aggregate(
+          [
+            {
+              $match: {
+                companyToken: companyToken,
+                templateId: templateId
+              }
+            },
+            {
+              $group: {
+                _id: '$businessId',
+                data: { $push: '$$ROOT' }
+              }
+            },
+            {
+              $project: {
+                'data.companyToken': 0,
+                'data.templateId': 0,
+                'data.businessId': 0,
+                'data.businessCreatedAt': 0,
+                'data.businessUpdatedAt': 0
+              }
             }
-          },
-          {
-            $group: {
-              _id: '$businessId',
-              data: { $push: '$$ROOT' }
-            }
-          },
-          {
-            $project: {
-              'data.companyToken': 0,
-              'data.templateId': 0,
-              'data.businessId': 0,
-              'data.businessCreatedAt': 0,
-              'data.businessUpdatedAt': 0
-            }
-          }
-        ])
+          ],
+          { allowDiskUse: true }
+        )
         .toArray()
+      console.timeEnd(`List all data template ${templateId} from company ${companyToken}`)
 
       return businessDataList
     } catch (err) {

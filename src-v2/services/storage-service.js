@@ -3,6 +3,7 @@ import fs from 'fs'
 import S3 from '../../config/s3.js'
 
 import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3'
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import moment from 'moment'
 
 const bucketDefault = process.env.BUCKET
@@ -21,7 +22,7 @@ export default class StorageService {
       const params = {
         Bucket: bucket,
         ACL: publicAccess ? 'public-read' : 'private',
-        Body: dirFile,
+        Body: fs.createReadStream(dirFile),
         Key: fileKey
       }
 
@@ -77,5 +78,18 @@ export default class StorageService {
           reject(err)
         })
     })
+  }
+
+  async getSignedUrl(urlPrivate = '', bucket = bucketDefault) {
+    const urlParts = urlPrivate.split('/')
+    const key = urlParts.slice(-4).join('/')
+    const params = {
+      Bucket: bucket,
+      Key: key,
+      Expires: 36000
+    }
+    const command = new GetObjectCommand(params)
+    const url = await getSignedUrl(this._client, command, { expiresIn: 36000 })
+    return url
   }
 }

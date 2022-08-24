@@ -4,24 +4,23 @@ import CompanyRepository from '../repository/company-repository.js'
 import TemplateRepository from '../repository/template-repository.js'
 import BusinessRepository from '../repository/business-repository.js'
 import { mongoIdIsValid } from '../helpers/validators.js'
-import { isTypeArray } from '../helpers/field-methods.js'
-import { isArrayObject } from '../helpers/validators.js'
-import { generateCSV } from '../helpers/csv-generator.js'
 import { generateExcel } from '../helpers/excel-generator.js'
-import { sendEmail } from '../helpers/email-sender.js'
+import { sendEmail, sendSimpleEmail } from '../helpers/email-sender.js'
 import QueryPredicate from '../repository/query-predicate.js'
 import QueryPredicateError from '../repository/query-predicate-error.js'
 import CacheService from '../services/cache-service.js'
+import StorageService from '../services/storage-service.js'
 
 export default class TemplateController {
   _getInstanceRepositories(app) {
     const cacheService = new CacheService(app.locals.redis)
+    const storageService = new StorageService()
 
     const companyRepository = new CompanyRepository(app.locals.db)
     const templateRepository = new TemplateRepository(app.locals.db, cacheService)
     const businessRepository = new BusinessRepository(app.locals.db, cacheService)
 
-    return { companyRepository, templateRepository, businessRepository }
+    return { companyRepository, templateRepository, businessRepository, storageService }
   }
 
   async create(req, res) {
@@ -292,20 +291,19 @@ export default class TemplateController {
       const filename = `${template.name}_search_result.xlsx`
       const filepath = `/tmp/${filename}`
 
-      generateExcel(header, templateData, filepath).then(
-        setTimeout(() => {
-          const result = sendEmail(email, filepath, filename)
-          if (result.error) {
-            console.error('Ocorreu erro ao enviar o e-mail com o arquivo gerado.')
-          } else {
-            console.log('E-mail enviado com CSV gerado.')
-          }
-          fs.unlink(filepath, (err) => {
-            if (err) console.error('Ocorreu erro ao excluir o CSV gerado.')
-            else console.log('Arquivo CSV excluido.')
-          })
-        }, 5000)
-      )
+      generateExcel(header, templateData, filepath).then
+      setTimeout(() => {
+        const result = sendEmail(email, filepath, filename)
+        if (result.error) {
+          console.error('Ocorreu erro ao enviar o e-mail com o arquivo gerado.')
+        } else {
+          console.log('E-mail enviado com CSV gerado.')
+        }
+        fs.unlink(filepath, (err) => {
+          if (err) console.error('Ocorreu erro ao excluir o CSV gerado.')
+          else console.log('Arquivo CSV excluido.')
+        })
+      }, 5000)
 
       return res
         .status(200)
@@ -369,7 +367,11 @@ export default class TemplateController {
     const fieldIndexed = {}
     for (let i = 0; i < fields.length; i++) {
       const f = fields[i]
-      fieldIndexed[f.column] = f.label
+      if (f.fields) {
+        fieldIndexed[f.column] = this._indexFieldArray(f.fields)
+      } else {
+        fieldIndexed[f.column] = f.label
+      }
     }
 
     return fieldIndexed
@@ -400,8 +402,21 @@ export default class TemplateController {
       const item = list[x]
       const s = fields.map((f) => {
         const label = fieldArray[f]
+
         if (item[f]) {
-          return `${label}: ${item[f]}`
+          if (typeof label === 'object') {
+            console.log(label)
+            const rowData = this._formatListDataFieldArray(item[f], label)
+            const text = `${f}: ${rowData}`
+            return text
+          } else {
+            return `${label}: ${item[f]}`
+          }
+        } else if (!item[f]) {
+          if (typeof label === 'object') {
+            return `${f}: -`
+          }
+          return `${label}: -`
         }
 
         return `${label}: -`
@@ -423,7 +438,7 @@ export default class TemplateController {
     }
 
     try {
-      const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
+      const { companyRepository, templateRepository, businessRepository, storageService } = this._getInstanceRepositories(req.app)
 
       if (!mongoIdIsValid(templateId)) {
         return res.status(400).send({ error: 'ID não válido' })
@@ -434,7 +449,7 @@ export default class TemplateController {
         return res.status(400).send({ error: 'Company não identificada.' })
       }
 
-      const template = await templateRepository.getNameById(templateId, companyToken)
+      const template = await templateRepository.getById(templateId, companyToken)
       if (!template) {
         return res.status(400).send({ error: 'Template não identificado' })
       }
@@ -443,40 +458,53 @@ export default class TemplateController {
         message: 'Estamos processando os dados e enviaremos uma planilha para o e-mail informado.'
       })
 
-      const businessData = await businessRepository.listAllBatchesAndChildsByTemplateId(companyToken, templateId)
+      let businessData = await businessRepository.listAllBatchesAndChildsByTemplateId(companyToken, templateId)
 
-      const records = []
+      let records = []
       businessData.forEach((bd) => {
         const data = bd.data && Array.isArray(bd.data) ? bd.data : []
         records.push(...data)
       })
+
+      records = this._formatDataToExport(records, template.fields)
 
       if (records.length === 0) {
         console.log('Template sem dados para exportar')
         return
       }
 
+      let templateFieldsIndexed = {}
+      const allFieldsIndexed = { _id: 'ID' }
+      for (let i = 0; i < template.fields.length; i++) {
+        const field = template.fields[i]
+        allFieldsIndexed[field.column] = field.label
+      }
+
+      templateFieldsIndexed = allFieldsIndexed
+
       const header = Object.keys(records[0]).map((k) => {
-        return { id: `${k}`, title: `${k}` }
+        return { key: `${k}`, header: `${templateFieldsIndexed[k]}` }
       })
 
-      const filename = `${template.name}.csv`
+      const filename = `${template.name}.xlsx`
       const filepath = `/tmp/${filename}`
 
-      generateCSV(header, records, filepath).then(
+      generateExcel(header, records, filepath).then(async () => {
+        const urlPrivate = await storageService.upload(companyToken, filepath, filename)
+        const url = await storageService.getSignedUrl(urlPrivate)
         setTimeout(() => {
-          const result = sendEmail(email, filepath, filename)
+          const subject = `Dados do template ${template.name}`
+          const message = `Segue em anexo o arquivo com os dados do template ${template.name}. <br>
+          Faça o download do arquivo pelo link abaixo: <br>
+          <a href='${url}'>Baixar arquivo</a>`
+          const result = sendSimpleEmail(email, subject, message)
           if (result.error) {
             console.error('Ocorreu erro ao enviar o e-mail com o arquivo gerado.')
           } else {
             console.log('E-mail enviado com CSV gerado.')
           }
-          fs.unlink(filepath, (err) => {
-            if (err) console.error('Ocorreu erro ao excluir o CSV gerado.')
-            else console.log('Arquivo CSV excluido.')
-          })
         }, 5000)
-      )
+      })
     } catch (err) {
       console.error(err)
       return res.status(500).send({ error: 'Ocorreu erro ao exportar os dados para arquivo CSV.' })
