@@ -449,7 +449,7 @@ export default class TemplateController {
         return res.status(400).send({ error: 'Company não identificada.' })
       }
 
-      const template = await templateRepository.getById(templateId, companyToken)
+      const template = await templateRepository.getByIdWithoutTags(templateId, companyToken)
       if (!template) {
         return res.status(400).send({ error: 'Template não identificado' })
       }
