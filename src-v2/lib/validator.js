@@ -802,7 +802,9 @@ export default class Validator {
       const el = data[k].value
       const rules = data[k].rules
 
-      lineErrors.errors = this._validateField(rules, el, lineErrors)
+      if (rules != undefined) {
+        lineErrors.errors = this._validateField(rules, el, lineErrors)
+      }
     })
     return { valid: lineErrors.errors.length === 0, lineErrors }
   }
@@ -974,6 +976,10 @@ export default class Validator {
       const fieldRules = rules[fieldKey]
 
       let elText = el
+      if (!fieldRules) {
+        console.log(fieldKey, el, fieldRules, rules)
+      }
+
       if (isTypeCpfCnpj(fieldRules)) {
         elText = this._formatFieldCpfCnpj(elText)
       } else if (isTypePhoneNumber(fieldRules)) {

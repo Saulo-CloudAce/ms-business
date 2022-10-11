@@ -183,7 +183,7 @@ export default class QueryPredicate {
       rule.condition === comparatorConditions.EQUAL &&
       (isTypeString(field) || isTypeCep(field) || isTypeEmail(field) || isTypePhoneNumber(field))
     ) {
-      rule.value = { $regex: rule.value, $options: 'i' }
+      rule.value = { $regex: rule.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' }
     }
 
     return rule
