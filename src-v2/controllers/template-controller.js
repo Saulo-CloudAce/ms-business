@@ -11,6 +11,9 @@ import QueryPredicateError from '../repository/query-predicate-error.js'
 import CacheService from '../services/cache-service.js'
 import StorageService from '../services/storage-service.js'
 
+import uploadFileFTP from '../helpers/upload-ftp.js'
+import { generateCSV } from '../helpers/csv-generator.js'
+
 export default class TemplateController {
   _getInstanceRepositories(app) {
     const cacheService = new CacheService(app.locals.redis)
@@ -284,26 +287,37 @@ export default class TemplateController {
         templateFieldsIndexed = allFieldsIndexed
       }
 
-      const header = Object.keys(templateData[0]).map((k) => {
-        return { key: `${k}`, header: `${templateFieldsIndexed[k]}` }
-      })
-
-      const filename = `${template.name}_search_result.xlsx`
-      const filepath = `/tmp/${filename}`
-
-      generateExcel(header, templateData, filepath).then
-      setTimeout(() => {
-        const result = sendEmail(email, filepath, filename)
-        if (result.error) {
-          console.error('Ocorreu erro ao enviar o e-mail com o arquivo gerado.')
-        } else {
-          console.log('E-mail enviado com CSV gerado.')
-        }
-        fs.unlink(filepath, (err) => {
-          if (err) console.error('Ocorreu erro ao excluir o CSV gerado.')
-          else console.log('Arquivo CSV excluido.')
+      if (companyToken === process.env.UPLOAD_FTP_COMPANY_TOKEN) {
+        const header = Object.keys(templateData[0]).map((k) => {
+          return { id: `${k}`, title: `${templateFieldsIndexed[k]}` }
         })
-      }, 5000)
+        const filename = `${template.name.trim()}_search_result.csv`
+        const filepath = `/tmp/${filename}`
+        await generateCSV(header, templateData, filepath)
+        await uploadFileFTP(filepath, filename)
+      } else {
+        const header = Object.keys(templateData[0]).map((k) => {
+          return { key: `${k}`, header: `${templateFieldsIndexed[k]}` }
+        })
+
+        const filename = `${template.name.trim()}_search_result.xlsx`
+        const filepath = `/tmp/${filename}`
+
+        generateExcel(header, templateData, filepath).then
+        setTimeout(async () => {
+          const result = sendEmail(email, filepath, filename)
+          if (result.error) {
+            console.error('Ocorreu erro ao enviar o e-mail com o arquivo gerado.')
+          } else {
+            console.log('E-mail enviado com CSV gerado.')
+          }
+
+          fs.unlink(filepath, (err) => {
+            if (err) console.error('Ocorreu erro ao excluir o CSV gerado.')
+            else console.log('Arquivo CSV excluido.')
+          })
+        }, 5000)
+      }
 
       return res
         .status(200)
@@ -405,7 +419,6 @@ export default class TemplateController {
 
         if (item[f]) {
           if (typeof label === 'object') {
-            console.log(label)
             const rowData = this._formatListDataFieldArray(item[f], label)
             const text = `${f}: ${rowData}`
             return text
