@@ -551,7 +551,7 @@ describe('CRUD template', () => {
     request
       .post(`/api/v2/templates/${templateId}/data/paginated?page=0&limit=1`)
       .set('token', companyCreated.token)
-      .send({ sort_by: [{ name: 'desc' }] })
+      .send({ sort_by: [{ name: 'asc' }] })
       .end((err, res) => {
         if (err) done(err)
 
@@ -561,7 +561,7 @@ describe('CRUD template', () => {
         expect(res.body).toHaveProperty('pagination')
 
         const data = res.body.data[0]
-        expect(data.cpf_cnpj).toBe('00000000003')
+        expect(data.cpf_cnpj).toBe('00000000001')
 
         done()
       })
