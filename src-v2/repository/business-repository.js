@@ -666,7 +666,7 @@ export default class BusinessRepository {
           }
         }
       ])
-      .sort(sortCriteria)
+      // .sort(sortCriteria)
       .skip(offset)
       .limit(limit)
       .toArray()
@@ -761,7 +761,9 @@ export default class BusinessRepository {
           }
         }
       ])
-      .sort(sortCriteria)
+      // .skip(1)
+      // .limit(1)
+      // .sort(sortCriteria)
       .toArray()
 
     return businessDataList

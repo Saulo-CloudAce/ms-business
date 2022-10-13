@@ -21,8 +21,6 @@ app.use(multipart())
 app.use(helmet())
 app.use(cors())
 
-app.use(morgan('combined'))
-
 businessRoutesV2(app)
 companyRoutesV2(app)
 templateRoutesV2(app)

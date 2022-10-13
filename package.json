@@ -41,7 +41,8 @@
     "node-fetch": "3.2.0",
     "object-to-csv": "1.0.5",
     "read-chunk": "4.0.2",
-    "run.env": "1.1.0"
+    "run.env": "1.1.0",
+    "ssh2-sftp-client": "^9.0.4"
   },
   "devDependencies": {
     "aws-sdk-client-mock": "0.6.0",
