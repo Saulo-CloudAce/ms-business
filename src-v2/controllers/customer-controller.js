@@ -447,8 +447,8 @@ export default class CustomerController {
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       const search = req.query.search
-      if (search.trim().length < 5)
-        return res.status(400).send({ warn: 'Para realizar a pesquisa é necessário informar ao menos 5 caracteres' })
+      if (search.trim().length < 3)
+        return res.status(400).send({ warn: 'Para realizar a pesquisa é necessário informar ao menos 3 caracteres' })
       console.time('searchCustomer')
       const request = await searchCustomer(search, companyToken, company.prefix_index_elastic, queryTemplateId)
       console.timeEnd('searchCustomer')
