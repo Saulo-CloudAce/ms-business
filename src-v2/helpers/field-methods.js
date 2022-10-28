@@ -52,6 +52,10 @@ export function isTypeTag(field) {
   return field.type === 'tag'
 }
 
+export function isTypeResponsible(field) {
+  return field.type === 'responsible'
+}
+
 export function isTypeCpfCnpj(field) {
   return field.data === 'customer_cpfcnpj' || field.type === 'cpfcnpj'
 }

@@ -28,7 +28,8 @@ const supportedTypes = [
   'multiple_options',
   'document',
   'list_document',
-  'tag'
+  'tag',
+  'responsible'
 ]
 const supportedKeys = ['customer_cpfcnpj', 'customer_name', 'customer_phone_number', 'customer_email', 'customer_email_address']
 
