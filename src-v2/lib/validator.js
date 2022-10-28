@@ -20,7 +20,8 @@ import {
   isTypeMultipleOptions,
   isValidDate,
   isTypeDocument,
-  isTypeListDocument
+  isTypeListDocument,
+  isTypeResponsible
 } from '../helpers/field-methods.js'
 
 import StorageService from '../services/storage-service.js'
@@ -598,6 +599,18 @@ export default class Validator {
     return errors
   }
 
+  _validateFieldResponsible(rules, fieldData, errors) {
+    if (isNaN(fieldData)) {
+      errors.push({
+        column: rules.column,
+        error: 'Este campo deve ser um inteiro',
+        current_value: fieldData
+      })
+    }
+
+    return errors
+  }
+
   _validateFieldEmail(rules, fieldData, errors) {
     if (!validateEmail(fieldData))
       errors.push({
@@ -804,6 +817,8 @@ export default class Validator {
 
       if (rules != undefined) {
         lineErrors.errors = this._validateField(rules, el, lineErrors)
+      } else {
+        lineErrors.errors.push({ column: k, error: 'Este campo não está definido no template' })
       }
     })
     return { valid: lineErrors.errors.length === 0, lineErrors }
@@ -855,6 +870,10 @@ export default class Validator {
 
     if (isTypeListDocument(rules) && this._isRequiredOrFill(rules, el)) {
       lineErrors.errors = this._validateFieldListDocument(rules, el, lineErrors.errors)
+    }
+
+    if (isTypeResponsible(rules) && this._isRequiredOrFill(rules, el)) {
+      lineErrors.errors = this._validateFieldResponsible(rules, el, lineErrors.errors)
     }
 
     return lineErrors.errors
@@ -977,7 +996,7 @@ export default class Validator {
 
       let elText = el
       if (!fieldRules) {
-        console.log(fieldKey, el, fieldRules, rules)
+        // console.log(fieldKey, el, fieldRules, rules)
       }
 
       if (isTypeCpfCnpj(fieldRules)) {
