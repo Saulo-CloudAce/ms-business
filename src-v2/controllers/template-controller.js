@@ -263,7 +263,7 @@ export default class TemplateController {
 
       // let templateData = await businessRepository.listDataByTemplateAndFilterByColumns(companyToken, templateId, queryPredicate, sortBy)
       let page = 0
-      const limit = 1000
+      const limit = 100
       let templateData = []
       console.time('getDataPaginatedFiltered')
       const initData = await businessRepository.listPaginatedDataByTemplateAndFilterByColumns(
@@ -279,7 +279,7 @@ export default class TemplateController {
         return res.status(404).send({ error: 'Não há dados para serem exportados' })
       }
 
-      // res.status(200).send({ warn: `Em instantes será enviado um e-mail para ${email} contendo uma planilha com o resultado da busca.` })
+      res.status(200).send({ warn: `Em instantes será enviado um e-mail para ${email} contendo uma planilha com o resultado da busca.` })
 
       const filename = `${template.name.trim().replace(/ /g, '_')}_search_result.xlsx`
       const filepath = `/tmp/${filename}`
@@ -435,9 +435,9 @@ export default class TemplateController {
       //   }, 120000)
       // }
 
-      return res
-        .status(200)
-        .send({ warn: `Em instantes será enviado um e-mail para ${email} contendo uma planilha com o resultado da busca.` })
+      // return res
+      //   .status(200)
+      //   .send({ warn: `Em instantes será enviado um e-mail para ${email} contendo uma planilha com o resultado da busca.` })
     } catch (err) {
       console.error(err)
       return res.status(500).send({ error: 'Ocorreu erro ao exportar os registros do template informado' })
