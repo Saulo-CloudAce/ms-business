@@ -59,6 +59,36 @@ export default class StorageService {
     return urlFile
   }
 
+  async uploadFromStream(dirBucket, buffer, fileName, bucket = bucketDefault, publicAccess = false) {
+    return new Promise((resolve, reject) => {
+      const currentDate = moment().format('YYYY-MM-DD')
+      fileName = `${currentDate}/${fileName}`
+      if (dirBucket && dirBucket.length > 0) fileName = `${dirBucket}/${fileName}`
+      if (dirMs) fileName = `${dirMs}/${fileName}`
+      const params = {
+        Bucket: bucket,
+        Key: fileName,
+        Body: buffer,
+        ContentEncoding: 'utf8',
+        // ContentType: 'application/json',
+        ACL: publicAccess ? 'public-read' : 'private'
+      }
+
+      // const urlFile = `https://${bucket}.s3.amazonaws.com/${fileName}`
+
+      // await this._client.send(new PutObjectCommand(params))
+      this._client
+        .send(new PutObjectCommand(params))
+        .then(() => {
+          resolve(`https://${bucket}.s3.amazonaws.com/${fileName}`)
+        })
+        .catch((err) => {
+          console.error(err)
+          reject(err)
+        })
+    })
+  }
+
   async downloadFile(dirBucket = '', bucket = '', localpath = '') {
     return new Promise((resolve, reject) => {
       const params = {
