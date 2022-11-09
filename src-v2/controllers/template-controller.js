@@ -5,7 +5,7 @@ import TemplateRepository from '../repository/template-repository.js'
 import BusinessRepository from '../repository/business-repository.js'
 import { mongoIdIsValid } from '../helpers/validators.js'
 import { generateExcel } from '../helpers/excel-generator.js'
-import { sendEmail, sendSimpleEmail } from '../helpers/email-sender.js'
+import { sendSimpleEmail } from '../helpers/email-sender.js'
 import QueryPredicate from '../repository/query-predicate.js'
 import QueryPredicateError from '../repository/query-predicate-error.js'
 import CacheService from '../services/cache-service.js'
@@ -241,7 +241,7 @@ export default class TemplateController {
     const fields = req.body.fields ? req.body.fields : []
 
     try {
-      const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
+      const { companyRepository, templateRepository, businessRepository, storageService } = this._getInstanceRepositories(req.app)
 
       if (!mongoIdIsValid(templateId)) {
         return res.status(400).send({ error: 'ID não válido' })
@@ -300,23 +300,25 @@ export default class TemplateController {
           return { key: `${k}`, header: `${templateFieldsIndexed[k]}` }
         })
 
-        const filename = `${template.name.trim()}_search_result.xlsx`
+        const filename = `${template.name.trim().replace(/ /g, '_')}_search_result.xlsx`
         const filepath = `/tmp/${filename}`
 
         generateExcel(header, templateData, filepath).then
         setTimeout(async () => {
-          const result = sendEmail(email, filepath, filename)
+          const urlPrivate = await storageService.upload(companyToken, filepath, filename)
+          const url = await storageService.getSignedUrl(urlPrivate)
+
+          const subject = `Relatório de dados do CRM`
+          const message = `Segue em anexo o relatório de dados do CRM. <br>
+          Faça o download do arquivo pelo link abaixo: <br>
+          <a href='${url}'>Baixar arquivo</a>`
+          const result = sendSimpleEmail(email, subject, message)
           if (result.error) {
             console.error('Ocorreu erro ao enviar o e-mail com o arquivo gerado.')
           } else {
             console.log('E-mail enviado com CSV gerado.')
           }
-
-          fs.unlink(filepath, (err) => {
-            if (err) console.error('Ocorreu erro ao excluir o CSV gerado.')
-            else console.log('Arquivo CSV excluido.')
-          })
-        }, 5000)
+        }, 120000)
       }
 
       return res
