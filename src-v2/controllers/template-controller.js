@@ -259,7 +259,39 @@ export default class TemplateController {
 
       const queryPredicate = new QueryPredicate(filterRules, template)
 
-      let templateData = await businessRepository.listDataByTemplateAndFilterByColumns(companyToken, templateId, queryPredicate, sortBy)
+      // let templateData = await businessRepository.listDataByTemplateAndFilterByColumns(companyToken, templateId, queryPredicate, sortBy)
+      let page = 0
+      const limit = 1000
+      let templateData = []
+      console.time('getDataPaginatedFiltered')
+      const initData = await businessRepository.listPaginatedDataByTemplateAndFilterByColumns(
+        companyToken,
+        templateId,
+        queryPredicate,
+        [],
+        limit,
+        page
+      )
+      console.log('initData', initData.pagination)
+      if (initData.data.length) {
+        templateData.push(...initData.data)
+        page += 1
+        while (page <= initData.pagination.lastPage) {
+          console.time('getPage')
+          let pageData = await businessRepository.listSkippedDataByTemplateAndFilterByColumns(
+            companyToken,
+            templateId,
+            queryPredicate,
+            [],
+            limit,
+            page
+          )
+          console.timeEnd('getPage')
+          templateData.push(...pageData)
+          page += 1
+        }
+      }
+      console.timeEnd('getDataPaginatedFiltered')
 
       if (templateData.length === 0) {
         return res.status(404).send({ error: 'Não há dados para serem exportados' })

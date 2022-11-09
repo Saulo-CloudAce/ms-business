@@ -616,6 +616,70 @@ export default class BusinessRepository {
     }
   }
 
+  async listSkippedDataByTemplateAndFilterByColumns(
+    companyToken = '',
+    templateId = '',
+    queryPredicate = new QueryPredicate(),
+    sortColumns = [],
+    limit = 10,
+    page = 0
+  ) {
+    const offset = page * limit
+    let matchParams = []
+    if (queryPredicate.isEmpty()) {
+      matchParams.push({ templateId })
+    } else {
+      matchParams = queryPredicate.generateMongoQuery()
+    }
+
+    const businessIdActives = await this.getBusinessActiveId(companyToken, templateId)
+
+    const sortCriteria = {}
+    for (let criteria of sortColumns) {
+      const column = Object.keys(criteria)[0]
+      const sortType = Object.values(criteria)[0]
+      if (column && sortType) {
+        sortCriteria[column] = sortType === 'asc' ? 1 : -1
+      }
+    }
+    if (Object.keys(sortCriteria).length === 0) {
+      sortCriteria['businessCreatedAt'] = -1
+    }
+
+    let businessDataList = await this.db
+      .collection('business_data')
+      .aggregate([
+        {
+          $match: {
+            $and: matchParams,
+            companyToken: companyToken,
+            templateId: templateId,
+            businessId: { $in: businessIdActives }
+          }
+        },
+        {
+          $project: {
+            companyToken: 0,
+            templateId: 0,
+            businessCreatedAt: 0,
+            businessUpdatedAt: 0
+          }
+        }
+      ])
+      // .sort(sortCriteria)
+      .skip(offset)
+      .limit(limit)
+      .toArray()
+
+    businessDataList = businessDataList.map((b) => {
+      b.business_id = b.businessId
+      delete b.businessId
+      return b
+    })
+
+    return businessDataList
+  }
+
   async listPaginatedDataByTemplateAndFilterByColumns(
     companyToken = '',
     templateId = '',
