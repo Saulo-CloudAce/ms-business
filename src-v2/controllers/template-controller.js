@@ -261,7 +261,6 @@ export default class TemplateController {
 
       const queryPredicate = new QueryPredicate(filterRules, template)
 
-      // let templateData = await businessRepository.listDataByTemplateAndFilterByColumns(companyToken, templateId, queryPredicate, sortBy)
       let page = 0
       const limit = 100
       let templateData = []
@@ -284,10 +283,7 @@ export default class TemplateController {
       const filename = `${template.name.trim().replace(/ /g, '_')}_search_result.xlsx`
       const filepath = `/tmp/${filename}`
 
-      const stream = new Stream.PassThrough()
-
       const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
-        // stream
         filename: filepath
       })
       const worksheet = workbook.addWorksheet('Dados')
@@ -375,69 +371,6 @@ export default class TemplateController {
           console.log('E-mail enviado com CSV gerado.')
         }
       }, 10000)
-
-      // await workbook1.xlsx.writeFile(filepath)
-      // await workbook.xlsx.write(stream)
-
-      // templateData = this._formatDataToExport(templateData, template.fields)
-
-      // templateData = this._showJustFieldRequested(templateData, fields)
-
-      // let templateFieldsIndexed = {}
-      // const allFieldsIndexed = {}
-      // for (let i = 0; i < template.fields.length; i++) {
-      //   const field = template.fields[i]
-      //   allFieldsIndexed[field.column] = field.label
-      // }
-
-      // if (fields.length) {
-      //   for (let i = 0; i < fields.length; i++) {
-      //     const f = fields[i]
-      //     if (allFieldsIndexed[f]) {
-      //       templateFieldsIndexed[f] = allFieldsIndexed[f]
-      //     }
-      //   }
-      // } else {
-      //   templateFieldsIndexed = allFieldsIndexed
-      // }
-
-      // if (companyToken === process.env.UPLOAD_FTP_COMPANY_TOKEN) {
-      //   const header = Object.keys(templateData[0]).map((k) => {
-      //     return { id: `${k}`, title: `${templateFieldsIndexed[k]}` }
-      //   })
-      //   const filename = `${template.name.trim()}_search_result.csv`
-      //   const filepath = `/tmp/${filename}`
-      //   await generateCSV(header, templateData, filepath)
-      //   await uploadFileFTP(filepath, filename)
-      // } else {
-      //   const header = Object.keys(templateData[0]).map((k) => {
-      //     return { key: `${k}`, header: `${templateFieldsIndexed[k]}` }
-      //   })
-
-      //   const filename = `${template.name.trim().replace(/ /g, '_')}_search_result.xlsx`
-      //   const filepath = `/tmp/${filename}`
-
-      //   generateExcel(header, templateData, filepath).then
-      //   setTimeout(async () => {
-      //     const urlPrivate = await storageService.upload(companyToken, filepath, filename)
-      //     const url = await storageService.getSignedUrl(urlPrivate)
-
-      //     const subject = `Relatório de dados do CRM`
-      //     const message = `Segue em anexo o relatório de dados do CRM. <br>
-      //     Faça o download do arquivo pelo link abaixo: <br>
-      //     <a href='${url}'>Baixar arquivo</a>`
-      //     const result = sendSimpleEmail(email, subject, message)
-      //     if (result.error) {
-      //       console.error('Ocorreu erro ao enviar o e-mail com o arquivo gerado.')
-      //     } else {
-      //       console.log('E-mail enviado com CSV gerado.')
-      //     }
-      //   }, 120000)
-      // }
-
-      // return res
-      //   .status(200)
-      //   .send({ warn: `Em instantes será enviado um e-mail para ${email} contendo uma planilha com o resultado da busca.` })
     } catch (err) {
       console.error(err)
       return res.status(500).send({ error: 'Ocorreu erro ao exportar os registros do template informado' })
