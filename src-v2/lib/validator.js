@@ -216,7 +216,15 @@ export default class Validator {
       listLineData.forEach((line) => {
         columnsArray.forEach((col) => {
           const lineFilled = line[col.column].filter(
-            (l) => Object.keys(l).filter((lk) => String(l[lk]).length > 0 && firstLineData[col.column][0][lk] !== l[lk]).length > 0
+            (l) =>
+              Object.keys(l).filter(
+                (lk) =>
+                  String(l[lk]).length > 0 &&
+                  firstLineData[col.column] &&
+                  Array.isArray(firstLineData[col.column]) &&
+                  firstLineData[col.column].length > 0 &&
+                  firstLineData[col.column][0][lk] !== l[lk]
+              ).length > 0
           )
           if (lineFilled.length) firstLineData[col.column] = firstLineData[col.column].concat(lineFilled)
         })
@@ -258,7 +266,15 @@ export default class Validator {
       listLineData.forEach((line) => {
         columnsArray.forEach((col) => {
           const lineFilled = line[col.data].filter(
-            (l) => Object.keys(l).filter((lk) => String(l[lk]).length > 0 && firstLineData[col.data][0][lk] !== l[lk]).length > 0
+            (l) =>
+              Object.keys(l).filter(
+                (lk) =>
+                  String(l[lk]).length > 0 &&
+                  firstLineData[col.data] &&
+                  Array.isArray(firstLineData[col.data]) &&
+                  firstLineData[col.data].length > 0 &&
+                  firstLineData[col.data][0][lk] !== l[lk]
+              ).length > 0
           )
           if (lineFilled.length) firstLineData[col.data] = firstLineData[col.data].concat(lineFilled)
         })
