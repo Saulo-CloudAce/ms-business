@@ -21,7 +21,7 @@ export default class RabbitMQ {
         if (err) {
           console.error(`Global connection with rabbitmq failed with error: ${err.message}`)
           return setTimeout(function () {
-            RabbitMQ.newConnection(io)
+            RabbitMQ.newConnection()
           }, 1000)
         }
         conn.on('error', function (err) {
@@ -34,7 +34,7 @@ export default class RabbitMQ {
           console.error(`Global Connection with rabbitmq was close, restart api to try reconnect`)
           return setTimeout(function () {
             global._connRabbitGlobal = false
-            RabbitMQ.newConnection(io)
+            RabbitMQ.newConnection()
           }, 1000)
         })
 
