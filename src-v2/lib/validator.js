@@ -27,6 +27,7 @@ import {
 
 import StorageService from '../services/storage-service.js'
 import { getGeolocationDataFromCEPs } from '../helpers/geolocation-getter.js'
+import { ObjectId } from 'mongodb'
 
 const storageService = new StorageService()
 
@@ -54,28 +55,33 @@ export default class Validator {
     const lineInvalids = []
     const lineValids = []
     const lineValidsCustomer = []
+    const validsPostProcess = []
     const rulesByColumn = this._indexTemplateFieldsByColumn(fields)
+
+    const templateHasCepDistance = this._templateHasCepDistanceField(fields)
 
     for (let i in data) {
       const line = data[i]
-      // data.forEach((line, i) => {
       const lineWithRulesFields = this._mapLineDataToLineDataWithRules(line, rulesByColumn)
 
       const { valid, lineErrors } = this.validate(lineWithRulesFields, i, listBatches, fields)
       if (valid) {
         const lineFormatted = await this.format(line, rulesByColumn)
         lineValids.push(lineFormatted)
+        if (templateHasCepDistance) {
+          validsPostProcess.push(lineFormatted)
+        }
         lineValidsCustomer.push(this.formatCustomer(line, rulesByColumn))
       } else {
         lineInvalids.push(lineErrors)
       }
-      //})
     }
 
     return {
       invalids: lineInvalids,
       valids: lineValids,
-      validsCustomer: lineValidsCustomer
+      validsCustomer: lineValidsCustomer,
+      validsPostProcess
     }
   }
 
@@ -392,30 +398,12 @@ export default class Validator {
               }
             } else {
               lines.push({ data: line, lineNumber: lineno - 1 })
-              // const data = line.split(dataSeparator)
-              // const jsonData = self._convertFileDataToJSONData(data, fileColumnsName, fields)
-              // const lineWithRulesFields = self._mapLineDataToLineDataWithRules(jsonData, rulesByColumn)
-              // const lineNumberAtFile = lineno - 1
-              // const { valid, lineErrors } = self.validate(lineWithRulesFields, lineNumberAtFile, listBatches, fields)
-
-              // if (valid) {
-              //   const dataFormatted = await self.format(jsonData, rulesByColumn)
-              //   lineValids.push(dataFormatted)
-              //   lineValidsCustomer.push(self.formatCustomer(jsonData, rulesByColumn))
-              // } else {
-              //   lineInvalids.push(lineErrors)
-              // }
             }
           }
         })
         .on('close', function () {
           console.log('READ_FILE_CLOSED', filePath)
           resolve()
-          // return resolve({
-          //   invalids: lineInvalids,
-          //   valids: lineValids,
-          //   validsCustomer: lineValidsCustomer
-          // })
         })
         .on('error', function (err) {
           console.error('READ_FILE_URL', err)
@@ -424,17 +412,15 @@ export default class Validator {
         .on('end', () => {
           console.log('READ_FILE_FINISHED', filePath)
           resolve()
-          // return resolve({
-          //   invalids: lineInvalids,
-          //   valids: lineValids,
-          //   validsCustomer: lineValidsCustomer
-          // })
         })
     })
 
     const invalids = []
     let valids = []
     let validsCustomer = []
+    const validsPostProcess = []
+
+    const templateHasCepDistance = self._templateHasCepDistanceField(fields)
 
     for (let line of lines) {
       const data = line.data.split(dataSeparator)
@@ -445,13 +431,14 @@ export default class Validator {
       if (valid) {
         const dataFormatted = await self.format(jsonData, rulesByColumn)
         valids.push(dataFormatted)
+        if (templateHasCepDistance) {
+          validsPostProcess.push(dataFormatted)
+        }
         validsCustomer.push(self.formatCustomer(jsonData, rulesByColumn))
       } else {
         invalids.push(lineErrors)
       }
     }
-
-    // let { invalids, valids, validsCustomer } = data
 
     if (valids.length) {
       valids = this._joinDataBatch(valids, fields)
@@ -462,8 +449,21 @@ export default class Validator {
     return {
       invalids,
       valids,
-      validsCustomer
+      validsCustomer,
+      validsPostProcess
     }
+  }
+
+  _templateHasCepDistanceField(fields = []) {
+    for (let f of fields) {
+      if (isTypeCepDistance(f)) {
+        return true
+      } else if (f.fields && Array.isArray(f.fields)) {
+        return this._templateHasCepDistanceField(f.fields)
+      }
+    }
+
+    return false
   }
 
   _isRequiredOrFill(rules, fieldData) {
@@ -1001,17 +1001,6 @@ export default class Validator {
         lat_target: 0,
         long_target: 0,
         distance_in_km: 0
-      }
-    }
-
-    if (ceps.length === 2) {
-      const geoData = await getGeolocationDataFromCEPs(...ceps)
-      if (!geoData.error) {
-        cepDistanceData.coordinates.lat_source = geoData.lat_source
-        cepDistanceData.coordinates.long_source = geoData.long_source
-        cepDistanceData.coordinates.lat_target = geoData.lat_target
-        cepDistanceData.coordinates.long_target = geoData.long_target
-        cepDistanceData.coordinates.distance_in_km = geoData.distance_in_km
       }
     }
 
