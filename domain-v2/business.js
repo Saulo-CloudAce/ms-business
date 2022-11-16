@@ -1,6 +1,7 @@
 import { hasFieldUnique, hasCustomerFields } from '../src-v2/lib/template-validator.js'
 import { AggregateModeType } from '../domain-v2/aggregate-mode-enum.js'
 import BusinessRepository from '../src-v2/repository/business-repository.js'
+import { sendToQueuePostProcess } from '../src-v2/helpers/rabbit-helper.js'
 
 export default class Business {
   constructor(repository = new BusinessRepository(), uploader, validator, crmService) {
@@ -98,7 +99,7 @@ export default class Business {
     //   listBatches = await this.listAllByTemplateId(companyToken, templateId)
     // }
 
-    const { invalids, valids, validsCustomer } = await this.validator.validateAndFormatFromUrlFile(
+    const { invalids, valids, validsCustomer, validsPostProcess } = await this.validator.validateAndFormatFromUrlFile(
       filepath,
       fields,
       jumpFirstLine,
@@ -140,6 +141,18 @@ export default class Business {
         })
     }
 
+    if (validsPostProcess.length) {
+      validsPostProcess.forEach((data) => {
+        const obj = {
+          data,
+          templateId,
+          businessId,
+          companyToken
+        }
+        sendToQueuePostProcess(obj)
+      })
+    }
+
     return { businessId, invalids }
   }
 
@@ -161,7 +174,11 @@ export default class Business {
     //   listBatches = await this.listAllByTemplateId(companyToken, templateId)
     // }
 
-    const { invalids, valids, validsCustomer } = await this.validator.validateAndFormatFromJson(data, fields, listBatches)
+    const { invalids, valids, validsCustomer, validsPostProcess } = await this.validator.validateAndFormatFromJson(
+      data,
+      fields,
+      listBatches
+    )
 
     if (valids.length === 0) {
       return { businessId: null, invalids }
@@ -202,6 +219,18 @@ export default class Business {
         })
     }
 
+    if (validsPostProcess.length) {
+      validsPostProcess.forEach((data) => {
+        const obj = {
+          data,
+          templateId,
+          businessId,
+          companyToken
+        }
+        sendToQueuePostProcess(obj)
+      })
+    }
+
     return { businessId, invalids, valids }
   }
 
@@ -224,7 +253,11 @@ export default class Business {
     //   listBatches = await this.listAllByTemplateId(companyToken, templateId)
     // }
 
-    const { invalids, valids, validsCustomer } = await this.validator.validateAndFormatFromJson(data, fields, listBatches)
+    const { invalids, valids, validsCustomer, validsPostProcess } = await this.validator.validateAndFormatFromJson(
+      data,
+      fields,
+      listBatches
+    )
 
     if (valids.length === 0) {
       return { businessId: null, invalids }
@@ -264,6 +297,18 @@ export default class Business {
         aggregateMode
       )
       if (responseSendData.data && responseSendData.data.contact_ids) contactIdList = responseSendData.data.contact_ids
+    }
+
+    if (validsPostProcess.length) {
+      validsPostProcess.forEach((data) => {
+        const obj = {
+          data,
+          templateId,
+          businessId,
+          companyToken
+        }
+        sendToQueuePostProcess(obj)
+      })
     }
 
     return { businessId, invalids, contactIds: contactIdList, valids }

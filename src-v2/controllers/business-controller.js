@@ -16,6 +16,9 @@ import { generateExcel } from '../helpers/excel-generator.js'
 import { sendEmail, sendEmailBussinessError } from '../helpers/email-sender.js'
 import Redis from '../../config/redis.js'
 import { clearFilename } from '../helpers/formatters.js'
+import { getGeolocationDataFromCEPs } from '../helpers/geolocation-getter.js'
+import { sendToQueuePostProcess } from '../helpers/rabbit-helper.js'
+import { isTypeCepDistance } from '../helpers/field-methods.js'
 
 export default class BusinessController {
   constructor(businessService = {}) {
@@ -976,6 +979,15 @@ export default class BusinessController {
       })
 
       await newBusiness.updateDataBusiness(companyToken, businessId, register, updatedBy)
+      if (this._templateHasCepDistanceField(template.fields)) {
+        const obj = {
+          templateId,
+          businessId,
+          companyToken,
+          data: register
+        }
+        sendToQueuePostProcess(obj)
+      }
 
       if (dataUpdate.idCrm) {
         const searchCustomerCRM = await crmService.getCustomerById(dataUpdate.idCrm, companyToken)
@@ -991,6 +1003,18 @@ export default class BusinessController {
       console.error(err)
       return res.status(500).send({ error: 'Ocorreu erro ao atualizar o registro' })
     }
+  }
+
+  _templateHasCepDistanceField(fields = []) {
+    for (let f of fields) {
+      if (isTypeCepDistance(f)) {
+        return true
+      } else if (f.fields && Array.isArray(f.fields)) {
+        return this._templateHasCepDistanceField(f.fields)
+      }
+    }
+
+    return false
   }
 
   _checkIfFieldIsEditable(field = {}, editables = []) {
@@ -1035,6 +1059,17 @@ export default class BusinessController {
       if (dataUpdate[f.column] && String(dataUpdate[f.column]).length > 0) {
         if ((f.type === 'array' || f.type === 'options') && !Array.isArray(dataUpdate[f.column])) {
           register[f.column] = [dataUpdate[f.column]]
+        } else if (isTypeCepDistance(f)) {
+          register[f.column] = {
+            value: dataUpdate[f.column],
+            coordinates: {
+              lat_source: 0,
+              long_source: 0,
+              lat_target: 0,
+              long_target: 0,
+              distance_in_km: 0
+            }
+          }
         } else {
           register[f.column] = dataUpdate[f.column]
         }
@@ -1295,5 +1330,67 @@ export default class BusinessController {
     }
 
     return items.join(' | ')
+  }
+
+  async queuePostProcess(conn = {}, app = {}) {
+    const { templateRepository, businessRepository } = this._getInstanceRepositories(app)
+    conn.createChannel((err, ch) => {
+      if (err) console.log('Erro ao criar fila => ', err)
+
+      const queueName = `msbusiness:post_process`
+
+      ch.assertQueue(queueName, { durable: true })
+      ch.prefetch(1)
+      ch.consume(
+        queueName,
+        (msg) => {
+          const obj = JSON.parse(msg.content.toString())
+          this.processData(templateRepository, businessRepository, obj).then(() => {
+            ch.ack(msg, false)
+          })
+        },
+        { noAck: false }
+      )
+    })
+  }
+
+  async processData(templateRepository = {}, businessRepository = {}, obj = {}) {
+    const template = await templateRepository.getByIdWithoutTags(obj.templateId, obj.companyToken)
+    const cepDistancePathField = this._getPathFieldCepDistance(template.fields)
+    const data = await businessRepository.getRegisterByBusinessAndId(obj.companyToken, obj.businessId, obj.data['_id'])
+    const geoData = data[cepDistancePathField[0]]
+    if (geoData && geoData.value) {
+      const ceps = geoData.value.split(':')
+      if (ceps.length === 2) {
+        const geoDataResult = await getGeolocationDataFromCEPs(...ceps)
+        if (!geoDataResult.error) {
+          geoData.coordinates.lat_source = geoDataResult.lat_source
+          geoData.coordinates.long_source = geoDataResult.long_source
+          geoData.coordinates.lat_target = geoDataResult.lat_target
+          geoData.coordinates.long_target = geoDataResult.long_target
+          geoData.coordinates.distance_in_km = geoDataResult.distance_in_km
+        } else {
+          console.error(geoDataResult.error)
+        }
+        data[cepDistancePathField[0]] = geoData
+      }
+    }
+
+    await businessRepository.updateAllRegisterBusiness(obj.companyToken, data['_id'], data)
+  }
+
+  _getPathFieldCepDistance(fields = []) {
+    let path = []
+    for (let f of fields) {
+      if (f.type === 'cep_distance') {
+        path.push(f.column)
+        return path
+      } else if (f.fields && Array.isArray(f.fields)) {
+        const subpath = this._getPathFieldCepDistance(f.fields)
+        path.push(...subpath)
+      }
+    }
+
+    return path
   }
 }

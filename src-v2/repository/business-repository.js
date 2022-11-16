@@ -128,9 +128,22 @@ export default class BusinessRepository {
     }
   }
 
+  async updateAllRegisterBusiness(companyToken = '', registerId = '', data = {}) {
+    try {
+      await this.db.collection('business_data').updateOne({ _id: registerId }, { $set: data })
+
+      await this.cacheService.removeBusinessRegister(companyToken, registerId)
+      await this.cacheService.removeAllCustomerFormatted(companyToken)
+      await this.cacheService.removeAllCustomer(companyToken)
+    } catch (err) {
+      console.error(err)
+      throw new Error(err)
+    }
+  }
+
   async updateRegisterBusiness(companyToken = '', registerId, data = {}) {
     try {
-      await this.db.collection('business_data').update(
+      await this.db.collection('business_data').updateOne(
         { _id: registerId },
         {
           $set: data
