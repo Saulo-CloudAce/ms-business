@@ -21,10 +21,12 @@ import {
   isValidDate,
   isTypeDocument,
   isTypeListDocument,
-  isTypeResponsible
+  isTypeResponsible,
+  isTypeCepDistance
 } from '../helpers/field-methods.js'
 
 import StorageService from '../services/storage-service.js'
+import { getGeolocationDataFromCEPs } from '../helpers/geolocation-getter.js'
 
 const storageService = new StorageService()
 
@@ -54,18 +56,21 @@ export default class Validator {
     const lineValidsCustomer = []
     const rulesByColumn = this._indexTemplateFieldsByColumn(fields)
 
-    data.forEach((line, i) => {
+    for (let i in data) {
+      const line = data[i]
+      // data.forEach((line, i) => {
       const lineWithRulesFields = this._mapLineDataToLineDataWithRules(line, rulesByColumn)
 
       const { valid, lineErrors } = this.validate(lineWithRulesFields, i, listBatches, fields)
       if (valid) {
-        const lineFormatted = this.format(line, rulesByColumn)
+        const lineFormatted = await this.format(line, rulesByColumn)
         lineValids.push(lineFormatted)
         lineValidsCustomer.push(this.formatCustomer(line, rulesByColumn))
       } else {
         lineInvalids.push(lineErrors)
       }
-    })
+      //})
+    }
 
     return {
       invalids: lineInvalids,
@@ -346,14 +351,17 @@ export default class Validator {
 
     const self = this
 
+    const lines = []
+
+    const lineInvalids = []
+    const lineValids = []
+    const lineValidsCustomer = []
+    let fileColumnsName = []
+
     const data = await new Promise((resolve, reject) => {
-      const lineInvalids = []
-      const lineValids = []
-      const lineValidsCustomer = []
-      let fileColumnsName = []
       console.log('START_PROCESS_FILE', filePath)
       reader
-        .on('line', function (line, lineno = lineCounter()) {
+        .on('line', async function (line, lineno = lineCounter()) {
           if (String(line).length) {
             if (lineno === firstLine) {
               line = line.toLowerCase()
@@ -383,29 +391,31 @@ export default class Validator {
                 // reader.removeAllListeners()
               }
             } else {
-              const data = line.split(dataSeparator)
-              const jsonData = self._convertFileDataToJSONData(data, fileColumnsName, fields)
-              const lineWithRulesFields = self._mapLineDataToLineDataWithRules(jsonData, rulesByColumn)
-              const lineNumberAtFile = lineno - 1
-              const { valid, lineErrors } = self.validate(lineWithRulesFields, lineNumberAtFile, listBatches, fields)
+              lines.push({ data: line, lineNumber: lineno - 1 })
+              // const data = line.split(dataSeparator)
+              // const jsonData = self._convertFileDataToJSONData(data, fileColumnsName, fields)
+              // const lineWithRulesFields = self._mapLineDataToLineDataWithRules(jsonData, rulesByColumn)
+              // const lineNumberAtFile = lineno - 1
+              // const { valid, lineErrors } = self.validate(lineWithRulesFields, lineNumberAtFile, listBatches, fields)
 
-              if (valid) {
-                const dataFormatted = self.format(jsonData, rulesByColumn)
-                lineValids.push(dataFormatted)
-                lineValidsCustomer.push(self.formatCustomer(jsonData, rulesByColumn))
-              } else {
-                lineInvalids.push(lineErrors)
-              }
+              // if (valid) {
+              //   const dataFormatted = await self.format(jsonData, rulesByColumn)
+              //   lineValids.push(dataFormatted)
+              //   lineValidsCustomer.push(self.formatCustomer(jsonData, rulesByColumn))
+              // } else {
+              //   lineInvalids.push(lineErrors)
+              // }
             }
           }
         })
         .on('close', function () {
           console.log('READ_FILE_CLOSED', filePath)
-          return resolve({
-            invalids: lineInvalids,
-            valids: lineValids,
-            validsCustomer: lineValidsCustomer
-          })
+          resolve()
+          // return resolve({
+          //   invalids: lineInvalids,
+          //   valids: lineValids,
+          //   validsCustomer: lineValidsCustomer
+          // })
         })
         .on('error', function (err) {
           console.error('READ_FILE_URL', err)
@@ -413,15 +423,35 @@ export default class Validator {
         })
         .on('end', () => {
           console.log('READ_FILE_FINISHED', filePath)
-          return resolve({
-            invalids: lineInvalids,
-            valids: lineValids,
-            validsCustomer: lineValidsCustomer
-          })
+          resolve()
+          // return resolve({
+          //   invalids: lineInvalids,
+          //   valids: lineValids,
+          //   validsCustomer: lineValidsCustomer
+          // })
         })
     })
 
-    let { invalids, valids, validsCustomer } = data
+    const invalids = []
+    let valids = []
+    let validsCustomer = []
+
+    for (let line of lines) {
+      const data = line.data.split(dataSeparator)
+      const jsonData = self._convertFileDataToJSONData(data, fileColumnsName, fields)
+      const lineWithRulesFields = self._mapLineDataToLineDataWithRules(jsonData, rulesByColumn)
+      const lineNumberAtFile = line.lineNumber
+      const { valid, lineErrors } = self.validate(lineWithRulesFields, lineNumberAtFile, listBatches, fields)
+      if (valid) {
+        const dataFormatted = await self.format(jsonData, rulesByColumn)
+        valids.push(dataFormatted)
+        validsCustomer.push(self.formatCustomer(jsonData, rulesByColumn))
+      } else {
+        invalids.push(lineErrors)
+      }
+    }
+
+    // let { invalids, valids, validsCustomer } = data
 
     if (valids.length) {
       valids = this._joinDataBatch(valids, fields)
@@ -571,6 +601,37 @@ export default class Validator {
         error: 'O valor informado não é um número válido',
         current_value: fieldData
       })
+
+    return errors
+  }
+
+  _validateFieldCepDistance(rules, fieldData, errors) {
+    if (typeof fieldData === 'string') {
+      const ceps = fieldData.split(':')
+      for (let cep of ceps) {
+        let elText = cep.replace(' ', '')
+        elText = elText.replace('-', '')
+        if (isNaN(elText)) {
+          errors.push({
+            column: rules.column,
+            error: 'O valor informado não é um CEP',
+            current_value: cep
+          })
+        } else if (elText.length !== 8) {
+          errors.push({
+            column: rules.column,
+            error: 'O CEP informado é inválido',
+            current_value: cep
+          })
+        }
+      }
+    } else {
+      errors.push({
+        column: rules.column,
+        error: 'O valor informado não é uma string com número de CEP',
+        current_value: fieldData
+      })
+    }
 
     return errors
   }
@@ -865,6 +926,9 @@ export default class Validator {
     if (isTypeCep(rules) && this._isRequiredOrFill(rules, el)) {
       lineErrors.errors = this._validateFieldCep(rules, el, lineErrors.errors)
     }
+    if (isTypeCepDistance(rules) && this._isRequiredOrFill(rules, el)) {
+      lineErrors.errors = this._validateFieldCepDistance(rules, el, lineErrors.errors)
+    }
     if (isTypeBoolean(rules) && this._isRequiredOrFill(rules, el)) {
       lineErrors.errors = this._validateFieldBoolean(rules, el, lineErrors.errors)
     }
@@ -921,6 +985,37 @@ export default class Validator {
 
   _formatFieldCep(fieldData) {
     return fieldData.replace(/-/g, '')
+  }
+
+  async _formatFieldCepDistance(fieldData) {
+    const ceps = fieldData.split(':').map((cep) => {
+      return this._formatFieldCep(cep)
+    })
+
+    const cepsStr = ceps.join(':')
+    const cepDistanceData = {
+      value: cepsStr,
+      coordinates: {
+        lat_source: 0,
+        long_source: 0,
+        lat_target: 0,
+        long_target: 0,
+        distance_in_km: 0
+      }
+    }
+
+    if (ceps.length === 2) {
+      const geoData = await getGeolocationDataFromCEPs(...ceps)
+      if (!geoData.error) {
+        cepDistanceData.coordinates.lat_source = geoData.lat_source
+        cepDistanceData.coordinates.long_source = geoData.long_source
+        cepDistanceData.coordinates.lat_target = geoData.lat_target
+        cepDistanceData.coordinates.long_target = geoData.long_target
+        cepDistanceData.coordinates.distance_in_km = geoData.distance_in_km
+      }
+    }
+
+    return cepDistanceData
   }
 
   _formatFieldDecimal(fieldData) {
@@ -1000,7 +1095,7 @@ export default class Validator {
     return fieldData.map((f) => this._formatFieldDocument(fieldRules, f))
   }
 
-  format(data, rules) {
+  async format(data, rules) {
     const formatted = {}
     const fieldKeyList = Object.keys(data)
 
@@ -1019,6 +1114,8 @@ export default class Validator {
         elText = this._formatFieldCpfCnpj(elText)
       } else if (isTypePhoneNumber(fieldRules)) {
         elText = this._formatFieldPhoneNumber(elText)
+      } else if (isTypeCepDistance(fieldRules)) {
+        elText = await this._formatFieldCepDistance(elText)
       } else if (isTypeCep(fieldRules)) {
         elText = this._formatFieldCep(elText)
       } else if (isTypeDecimal(fieldRules)) {

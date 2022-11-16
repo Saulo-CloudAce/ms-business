@@ -32,6 +32,10 @@ export function isTypeCep(field) {
   return field.type === 'cep'
 }
 
+export function isTypeCepDistance(field) {
+  return field.type === 'cep_distance'
+}
+
 export function isTypeBoolean(field) {
   return field.type === 'boolean'
 }
