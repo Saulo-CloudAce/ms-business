@@ -31,7 +31,8 @@ const supportedTypes = [
   'list_document',
   'tag',
   'responsible',
-  'cep_distance'
+  'cep_distance',
+  'register_active'
 ]
 const supportedKeys = ['customer_cpfcnpj', 'customer_name', 'customer_phone_number', 'customer_email', 'customer_email_address']
 

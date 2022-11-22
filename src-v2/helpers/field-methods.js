@@ -56,6 +56,10 @@ export function isTypeArray(field) {
   return field.type === 'array'
 }
 
+export function isTypeRegisterActive(field) {
+  return field.type === 'register_active'
+}
+
 export function isTypeTag(field) {
   return field.type === 'tag'
 }
