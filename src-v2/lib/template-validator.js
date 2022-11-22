@@ -24,6 +24,7 @@ const supportedTypes = [
   'options',
   'date',
   'timestamp',
+  'time',
   'table',
   'multiple_options',
   'document',

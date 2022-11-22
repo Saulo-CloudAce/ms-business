@@ -22,7 +22,9 @@ import {
   isTypeDocument,
   isTypeListDocument,
   isTypeResponsible,
-  isTypeCepDistance
+  isTypeCepDistance,
+  isTypeTime,
+  isValidTime
 } from '../helpers/field-methods.js'
 
 import StorageService from '../services/storage-service.js'
@@ -543,6 +545,25 @@ export default class Validator {
     return errors
   }
 
+  _validateFieldTime(rules, fieldData, errors) {
+    if (fieldData) {
+      const time = fieldData.trim()
+      if (!isValidTime(time, rules.mask))
+        errors.push({
+          column: rules.column,
+          error: 'O valor informado não é uma hora válida',
+          current_value: time
+        })
+    } else {
+      errors.push({
+        column: rules.column,
+        error: 'O valor informado para hora está vazio',
+        current_value: fieldData
+      })
+    }
+    return errors
+  }
+
   _validateFieldMultipleOptions(rules, fieldData, errors) {
     if (!Array.isArray(fieldData)) fieldData = [fieldData]
     const fieldDataValues = {}
@@ -910,6 +931,9 @@ export default class Validator {
     }
     if (isTypeDate(rules) && this._isRequiredOrFill(rules, el)) {
       lineErrors.errors = this._validateFieldDate(rules, el, lineErrors.errors)
+    }
+    if (isTypeTime(rules) && this._isRequiredOrFill(rules, el)) {
+      lineErrors.errors = this._validateFieldTime(rules, el, lineErrors.errors)
     }
     if (isTypeInt(rules) && this._isRequiredOrFill(rules, el)) {
       lineErrors.errors = this._validateFieldInt(rules, el, lineErrors.errors)
