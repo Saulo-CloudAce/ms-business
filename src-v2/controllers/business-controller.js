@@ -18,7 +18,7 @@ import Redis from '../../config/redis.js'
 import { clearFilename } from '../helpers/formatters.js'
 import { getGeolocationDataFromCEPs } from '../helpers/geolocation-getter.js'
 import { sendToQueuePostProcess } from '../helpers/rabbit-helper.js'
-import { isTypeCepDistance } from '../helpers/field-methods.js'
+import { isTypeCepDistance, isTypeRegisterActive } from '../helpers/field-methods.js'
 
 export default class BusinessController {
   constructor(businessService = {}) {
@@ -1056,7 +1056,7 @@ export default class BusinessController {
 
   _updateDataRegister(register = {}, dataUpdate = {}, fieldsEditables = []) {
     for (const f of fieldsEditables) {
-      if (dataUpdate[f.column] && String(dataUpdate[f.column]).length > 0) {
+      if (dataUpdate[f.column] != undefined && String(dataUpdate[f.column]).length > 0) {
         if ((f.type === 'array' || f.type === 'options') && !Array.isArray(dataUpdate[f.column])) {
           register[f.column] = [dataUpdate[f.column]]
         } else if (isTypeCepDistance(f)) {
@@ -1070,6 +1070,8 @@ export default class BusinessController {
               distance_in_km: 0
             }
           }
+        } else if (isTypeRegisterActive(f)) {
+          register[f.column] = { value: dataUpdate[f.column], updated_at: moment().format() }
         } else {
           register[f.column] = dataUpdate[f.column]
         }

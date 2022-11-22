@@ -24,7 +24,8 @@ import {
   isTypeResponsible,
   isTypeCepDistance,
   isTypeTime,
-  isValidTime
+  isValidTime,
+  isTypeRegisterActive
 } from '../helpers/field-methods.js'
 
 import StorageService from '../services/storage-service.js'
@@ -697,6 +698,18 @@ export default class Validator {
     return errors
   }
 
+  _validateFieldRegisterActive(rules, fieldData, errors) {
+    if (!(String(fieldData).toLowerCase() === 'true' || String(fieldData).toLowerCase() === 'false')) {
+      errors.push({
+        column: rules.column,
+        error: 'Os valores válidos para este campo são "true" ou "false"',
+        current_value: fieldData
+      })
+    }
+
+    return errors
+  }
+
   _validateFieldResponsible(rules, fieldData, errors) {
     if (isNaN(fieldData)) {
       errors.push({
@@ -980,6 +993,10 @@ export default class Validator {
       lineErrors.errors = this._validateFieldResponsible(rules, el, lineErrors.errors)
     }
 
+    if (isTypeRegisterActive(rules) && this._isRequiredOrFill(rules, el)) {
+      lineErrors.errors = this._validateFieldRegisterActive(rules, el, lineErrors.errors)
+    }
+
     return lineErrors.errors
   }
 
@@ -1029,6 +1046,13 @@ export default class Validator {
     }
 
     return cepDistanceData
+  }
+
+  _formatFieldRegisterActive(fieldData) {
+    return {
+      value: fieldData,
+      updated_at: moment().format()
+    }
   }
 
   _formatFieldDecimal(fieldData) {
@@ -1141,6 +1165,8 @@ export default class Validator {
         elText = this._formatFieldDocument(fieldRules, elText)
       } else if (isTypeListDocument(fieldRules)) {
         elText = this._formatFieldListDocument(fieldRules, elText)
+      } else if (isTypeRegisterActive(fieldRules)) {
+        elText = this._formatFieldRegisterActive(elText)
       }
       formatted[fieldRules.column] = elText
     }
