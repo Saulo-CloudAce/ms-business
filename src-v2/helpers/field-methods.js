@@ -16,6 +16,10 @@ export function isTypeDate(field) {
   return field.type === 'date'
 }
 
+export function isTypeTime(field) {
+  return field.type === 'time'
+}
+
 export function isTypeDocument(field) {
   return field.type === 'document'
 }
@@ -85,4 +89,8 @@ export function isValidDate(date, mask) {
   mask = String(mask).trim()
 
   return moment(date, mask, true).isValid()
+}
+
+export function isValidTime(time = '') {
+  return moment(time, 'HH:MM:SS', true).isValid()
 }
