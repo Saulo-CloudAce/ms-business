@@ -18,7 +18,7 @@ import Redis from '../../config/redis.js'
 import { clearFilename } from '../helpers/formatters.js'
 import { getGeolocationDataFromCEPs } from '../helpers/geolocation-getter.js'
 import { sendToQueuePostProcess } from '../helpers/rabbit-helper.js'
-import { isTypeCepDistance, isTypeRegisterActive } from '../helpers/field-methods.js'
+import { isTypeCepDistance, isTypeOptIn, isTypeRegisterActive } from '../helpers/field-methods.js'
 
 export default class BusinessController {
   constructor(businessService = {}) {
@@ -1071,6 +1071,8 @@ export default class BusinessController {
             }
           }
         } else if (isTypeRegisterActive(f)) {
+          register[f.column] = { value: dataUpdate[f.column], updated_at: moment().format() }
+        } else if (isTypeOptIn(f)) {
           register[f.column] = { value: dataUpdate[f.column], updated_at: moment().format() }
         } else {
           register[f.column] = dataUpdate[f.column]

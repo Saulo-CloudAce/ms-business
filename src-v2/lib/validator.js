@@ -25,7 +25,8 @@ import {
   isTypeCepDistance,
   isTypeTime,
   isValidTime,
-  isTypeRegisterActive
+  isTypeRegisterActive,
+  isTypeOptIn
 } from '../helpers/field-methods.js'
 
 import StorageService from '../services/storage-service.js'
@@ -710,6 +711,18 @@ export default class Validator {
     return errors
   }
 
+  _validateFieldOptIn(rules, fieldData, errors) {
+    if (!(String(fieldData).toLowerCase() === 'true' || String(fieldData).toLowerCase() === 'false')) {
+      errors.push({
+        column: rules.column,
+        error: 'Os valores válidos para este campo são "true" ou "false"',
+        current_value: fieldData
+      })
+    }
+
+    return errors
+  }
+
   _validateFieldResponsible(rules, fieldData, errors) {
     if (isNaN(fieldData)) {
       errors.push({
@@ -997,6 +1010,10 @@ export default class Validator {
       lineErrors.errors = this._validateFieldRegisterActive(rules, el, lineErrors.errors)
     }
 
+    if (isTypeOptions(rules) && this._isRequiredOrFill(rules, el)) {
+      lineErrors.errors = this._validateFieldOptIn(rules, el, lineErrors.errors)
+    }
+
     return lineErrors.errors
   }
 
@@ -1049,6 +1066,13 @@ export default class Validator {
   }
 
   _formatFieldRegisterActive(fieldData) {
+    return {
+      value: fieldData,
+      updated_at: moment().format()
+    }
+  }
+
+  _formatFieldOptIn(fieldData) {
     return {
       value: fieldData,
       updated_at: moment().format()
@@ -1167,6 +1191,8 @@ export default class Validator {
         elText = this._formatFieldListDocument(fieldRules, elText)
       } else if (isTypeRegisterActive(fieldRules)) {
         elText = this._formatFieldRegisterActive(elText)
+      } else if (isTypeOptIn(fieldRules)) {
+        elText = this._formatFieldOptIn(elText)
       }
       formatted[fieldRules.column] = elText
     }

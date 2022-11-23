@@ -60,6 +60,10 @@ export function isTypeRegisterActive(field) {
   return field.type === 'register_active'
 }
 
+export function isTypeOptIn(field) {
+  return field.type === 'opt_in'
+}
+
 export function isTypeTag(field) {
   return field.type === 'tag'
 }
