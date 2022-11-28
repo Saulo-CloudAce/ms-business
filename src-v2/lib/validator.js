@@ -1010,7 +1010,7 @@ export default class Validator {
       lineErrors.errors = this._validateFieldRegisterActive(rules, el, lineErrors.errors)
     }
 
-    if (isTypeOptions(rules) && this._isRequiredOrFill(rules, el)) {
+    if (isTypeOptIn(rules) && this._isRequiredOrFill(rules, el)) {
       lineErrors.errors = this._validateFieldOptIn(rules, el, lineErrors.errors)
     }
 
