@@ -32,11 +32,15 @@ const port = process.env.PORT || 3000
 if (process.env.NODE_ENV !== 'test') {
   const redisInstance = Redis.newConnection()
   app.locals.redis = redisInstance
-  connect(app, () => {
-    app.listen(port, () => {
-      console.log(`API is live on port ${port}`)
+  await new Promise((resolve, reject) => {
+    connect(app, () => {
+      app.listen(port, () => {
+        console.log(`API is live on port ${port}`)
+      })
+      resolve()
     })
   })
+  
 }
 
 global.cache = {
