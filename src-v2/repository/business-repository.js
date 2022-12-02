@@ -1358,6 +1358,34 @@ export default class BusinessRepository {
     }
   }
 
+  async getInfoById(companyToken, id) {
+    try {
+      const business = await this.db
+        .collection('business')
+        .findOne({ _id: new ObjectId(id), companyToken: companyToken }, [
+          '_id',
+          'name',
+          'templateId',
+          'filePath',
+          'jumpFirstLine',
+          'customerStorage',
+          'dataSeparator',
+          'aggregateMode',
+          'quantityRows',
+          'activeUntil',
+          'invalids',
+          'flowPassed',
+          'active',
+          'createdAt',
+          'updatedAt'
+        ])
+
+      return business
+    } catch (err) {
+      throw new Error(err)
+    }
+  }
+
   async getDataByIdToExport(companyToken, id) {
     try {
       const business = await this.db
@@ -1457,6 +1485,52 @@ export default class BusinessRepository {
         .collection('business_data')
         .find({ companyToken, businessId: new ObjectId(businessId) })
         .project({ companyToken: 0, businessId: 0, templateId: 0 })
+        .skip(skipDocs)
+        .limit(limit)
+        .toArray()
+
+      business.data = businessData
+
+      if (business) {
+        business.dataPagination = {
+          numRows: business.quantityRows,
+          page,
+          firstPage: 0,
+          lastPage: Math.ceil(parseInt(business.quantityRows) / limit) - 1
+        }
+      }
+
+      return business
+    } catch (err) {
+      console.error(err)
+      throw new Error(err)
+    }
+  }
+
+  async getDataByIdPaginatedAndFieldsSelected(companyToken, businessId, fields = [], page = 0, limit = 10) {
+    try {
+      const skipDocs = page * limit
+
+      const business = await this.db.collection('business').findOne(
+        { _id: new ObjectId(businessId), companyToken },
+        {
+          fields: { childBatchesId: 0, data: 0 }
+        }
+      )
+
+      let fieldsProject = {}
+      if (fields.length) {
+        for (let f of fields) {
+          fieldsProject[f] = 1
+        }
+      } else {
+        fieldsProject = { companyToken: 0, businessId: 0, templateId: 0 }
+      }
+
+      const businessData = await this.db
+        .collection('business_data')
+        .find({ companyToken, businessId: new ObjectId(businessId) })
+        .project(fieldsProject)
         .skip(skipDocs)
         .limit(limit)
         .toArray()

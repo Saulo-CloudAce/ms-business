@@ -756,6 +756,29 @@ export default class BusinessController {
     }
   }
 
+  async getInfoById(req, res) {
+    const companyToken = req.headers['token']
+    const businessId = req.params.id
+
+    try {
+      const { companyRepository } = this._getInstanceRepositories(req.app)
+      const newBusiness = this._getInstanceBusiness(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
+
+      const business = await newBusiness.getInfoById(companyToken, businessId)
+
+      delete business.childBatchesId
+      delete business.invalids
+
+      return res.status(200).send(business)
+    } catch (e) {
+      console.error(e)
+      return res.status(500).send({ error: 'Ocorreu erro ao buscar o mailing com os dados' })
+    }
+  }
+
   async exportErrorsBusinessById(req, res) {
     const companyToken = req.headers['token']
     const businessId = req.params.id
@@ -873,6 +896,37 @@ export default class BusinessController {
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       const business = await newBusiness.getDataByIdPaginated(companyToken, businessId, page, limit)
+
+      return res.status(200).send(business)
+    } catch (e) {
+      console.error(e)
+      return res.status(500).send({ error: 'Ocorreu erro ao listar os dados paginados' })
+    }
+  }
+
+  async getByIdWithDataPaginatedAndFieldsSelected(req, res) {
+    const companyToken = req.headers['token']
+    let page = 0
+    let limit = 10
+    if (req.query.page && parseInt(req.query.page) >= 0) page = parseInt(req.query.page)
+    if (req.query.limit && parseInt(req.query.limit) >= 0) limit = parseInt(req.query.limit)
+
+    const businessId = req.params.id
+    if (!businessId) return res.status(400).send({ error: 'O ID do business é obrigatório.' })
+
+    let fieldsSelected = []
+    if (req.body.fields) {
+      fieldsSelected = req.body.fields
+    }
+
+    try {
+      const { companyRepository } = this._getInstanceRepositories(req.app)
+      const newBusiness = this._getInstanceBusiness(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
+
+      const business = await newBusiness.getDataByIdPaginatedAndFieldsSelected(companyToken, businessId, fieldsSelected, page, limit)
 
       return res.status(200).send(business)
     } catch (e) {
