@@ -410,6 +410,14 @@ export default class Business {
     }
   }
 
+  async getInfoById(companyToken, id) {
+    try {
+      return this.repository.getInfoById(companyToken, id)
+    } catch (err) {
+      return err
+    }
+  }
+
   async getDataByIdToExport(companyToken, id) {
     try {
       return this.repository.getDataByIdToExport(companyToken, id)
@@ -437,6 +445,14 @@ export default class Business {
   async getDataByIdPaginated(companyToken, id, page = 0, limit = 10) {
     try {
       return this.repository.getDataByIdPaginated(companyToken, id, page, limit)
+    } catch (err) {
+      return err
+    }
+  }
+
+  async getDataByIdPaginatedAndFieldsSelected(companyToken, id, fields, page = 0, limit = 10) {
+    try {
+      return this.repository.getDataByIdPaginatedAndFieldsSelected(companyToken, id, fields, page, limit)
     } catch (err) {
       return err
     }
