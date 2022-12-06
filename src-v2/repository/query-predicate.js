@@ -1,3 +1,4 @@
+import moment from 'moment'
 import {
   isTypeInt,
   isTypeBoolean,
@@ -19,7 +20,10 @@ const comparatorConditions = {
   EQUAL: 'EQUAL',
   DIFFERENT: 'DIFFERENT',
   GREATER_THAN: 'GREATER_THAN',
-  LESS_THAN: 'LESS_THAN'
+  LESS_THAN: 'LESS_THAN',
+  EQUAL_CALC: 'EQUAL_CALC',
+  GREATER_THAN_CALC: 'GREATER_THAN_CALC',
+  LESS_THAN_CALC: 'LESS_THAN_CALC'
 }
 
 export default class QueryPredicate {
@@ -146,6 +150,12 @@ export default class QueryPredicate {
         criterias.push(this._buildGreaterthanCriteriaMongoQuery(rule, templateField))
       } else if (rule.condition === comparatorConditions.LESS_THAN) {
         criterias.push(this._buildLessthanCriteriaMongoQuery(rule, templateField))
+      } else if (rule.condition === comparatorConditions.EQUAL_CALC) {
+        criterias.push(this._buildEqualCalcCriteriaMongoQuery(rule, templateField))
+      } else if (rule.condition === comparatorConditions.GREATER_THAN_CALC) {
+        criterias.push(this._buildGreaterthanCalcCriteriaMongoQuery(rule, templateField))
+      } else if (rule.condition === comparatorConditions.LESS_THAN_CALC) {
+        criterias.push(this._buildLessthanCriteriaMongoQuery(rule, templateField))
       }
     }
 
@@ -155,6 +165,23 @@ export default class QueryPredicate {
   _buildEqualCriteriaMongoQuery(rule = {}, field = {}) {
     const criteria = {}
     criteria[rule.field] = rule.value
+    return criteria
+  }
+
+  _buildEqualCalcCriteriaMongoQuery(rule = {}, field = {}) {
+    const today = moment()
+    let compDate = today
+    if (String(rule.value)[0] === '+') {
+      compDate = today.add(parseInt(rule.value.replace('+', '')), 'days')
+    } else if (String(rule.value)[0] === '-') {
+      compDate = today.subtract(parseInt(rule.value.replace('-', '')), 'days')
+    } else {
+      compDate = today.add(parseInt(rule.value), 'days')
+    }
+    compDate = today.format(field.mask)
+
+    const criteria = {}
+    criteria[rule.field] = compDate
     return criteria
   }
 
@@ -170,9 +197,43 @@ export default class QueryPredicate {
     return criteria
   }
 
+  _buildGreaterthanCalcCriteriaMongoQuery(rule = {}, field = {}) {
+    const today = moment()
+    let compDate = today
+    if (String(rule.value)[0] === '+') {
+      compDate = today.add(parseInt(rule.value.replace('+', '')), 'days')
+    } else if (String(rule.value)[0] === '-') {
+      compDate = today.subtract(parseInt(rule.value.replace('-', '')), 'days')
+    } else {
+      compDate = today.add(parseInt(rule.value), 'days')
+    }
+    compDate = today.format(field.mask)
+
+    const criteria = {}
+    criteria[rule.field] = { $gte: compDate }
+    return criteria
+  }
+
   _buildLessthanCriteriaMongoQuery(rule = {}, field = {}) {
     const criteria = {}
     criteria[rule.field] = { $lte: rule.value }
+    return criteria
+  }
+
+  _buildLessthanCalcCriteriaMongoQuery(rule = {}, field = {}) {
+    const today = moment()
+    let compDate = today
+    if (String(rule.value)[0] === '+') {
+      compDate = today.add(parseInt(rule.value.replace('+', '')), 'days')
+    } else if (String(rule.value)[0] === '-') {
+      compDate = today.subtract(parseInt(rule.value.replace('-', '')), 'days')
+    } else {
+      compDate = today.add(parseInt(rule.value), 'days')
+    }
+    compDate = today.format(field.mask)
+
+    const criteria = {}
+    criteria[rule.field] = { $lte: compDate }
     return criteria
   }
 
