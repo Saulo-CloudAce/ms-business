@@ -19,6 +19,7 @@ import { clearFilename } from '../helpers/formatters.js'
 import { getGeolocationDataFromCEPs } from '../helpers/geolocation-getter.js'
 import { sendToQueuePostProcess } from '../helpers/rabbit-helper.js'
 import { isTypeCepDistance, isTypeOptIn, isTypeRegisterActive } from '../helpers/field-methods.js'
+import QueryPredicate from '../repository/query-predicate.js'
 
 export default class BusinessController {
   constructor(businessService = {}) {
@@ -919,20 +920,45 @@ export default class BusinessController {
       fieldsSelected = req.body.fields
     }
 
+    let filterBy = req.body.filter_rules ? req.body.filter_rules : []
+
     try {
-      const { companyRepository } = this._getInstanceRepositories(req.app)
+      const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
       const newBusiness = this._getInstanceBusiness(req.app)
+
 
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
-      const business = await newBusiness.getDataByIdPaginatedAndFieldsSelected(companyToken, businessId, fieldsSelected, page, limit)
+      const businessInfo = await newBusiness.getInfoById(companyToken, businessId)
+
+      const template = await templateRepository.getByIdWithoutTags(businessInfo.templateId, companyToken)
+
+      filterBy = this._parseQueryPredicate(filterBy)
+      console.log(JSON.stringify(filterBy))
+
+      const queryPredicate = new QueryPredicate(filterBy, template)
+
+      const business = await newBusiness.getDataByIdPaginatedAndFieldsSelected(companyToken, businessId, fieldsSelected, queryPredicate, page, limit)
 
       return res.status(200).send(business)
     } catch (e) {
       console.error(e)
       return res.status(500).send({ error: 'Ocorreu erro ao listar os dados paginados' })
     }
+  }
+
+  _parseQueryPredicate(filters = []) {
+    for (let i = 0; i < filters.length; i++) {
+      if (filters[i].key) {
+        filters[i].field = filters[i].key
+        delete filters[i].key
+      } else {
+        filters[i].rules = this._parseQueryPredicate(filters[i].rules)
+      }
+    }
+
+    return filters
   }
 
   async deactivateExpiredBusiness() {

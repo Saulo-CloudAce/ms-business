@@ -450,9 +450,9 @@ export default class Business {
     }
   }
 
-  async getDataByIdPaginatedAndFieldsSelected(companyToken, id, fields, page = 0, limit = 10) {
+  async getDataByIdPaginatedAndFieldsSelected(companyToken, id, fields, queryPredicate, page = 0, limit = 10) {
     try {
-      return this.repository.getDataByIdPaginatedAndFieldsSelected(companyToken, id, fields, page, limit)
+      return this.repository.getDataByIdPaginatedAndFieldsSelected(companyToken, id, fields, queryPredicate, page, limit)
     } catch (err) {
       return err
     }

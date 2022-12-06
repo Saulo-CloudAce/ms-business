@@ -1507,9 +1507,16 @@ export default class BusinessRepository {
     }
   }
 
-  async getDataByIdPaginatedAndFieldsSelected(companyToken, businessId, fields = [], page = 0, limit = 10) {
+  async getDataByIdPaginatedAndFieldsSelected(companyToken, businessId, fields = [], queryPredicate = new QueryPredicate(), page = 0, limit = 10) {
     try {
       const skipDocs = page * limit
+
+      let matchParams = []
+      if (queryPredicate.isEmpty()) {
+        matchParams.push({ companyToken })
+      } else {
+        matchParams = queryPredicate.generateMongoQuery()
+      }
 
       const business = await this.db.collection('business').findOne(
         { _id: new ObjectId(businessId), companyToken },
@@ -1529,7 +1536,7 @@ export default class BusinessRepository {
 
       const businessData = await this.db
         .collection('business_data')
-        .find({ companyToken, businessId: new ObjectId(businessId) })
+        .find({ companyToken, businessId: new ObjectId(businessId), $and: matchParams })
         .project(fieldsProject)
         .skip(skipDocs)
         .limit(limit)
@@ -1537,12 +1544,37 @@ export default class BusinessRepository {
 
       business.data = businessData
 
-      if (business) {
+      if (page === 0) {
+        const countRows = await this.db
+          .collection('business_data')
+          .aggregate([
+            {
+              $match: {
+                $and: matchParams,
+                companyToken: companyToken,
+                businessId: new ObjectId(businessId)
+              }
+            },
+            { $group: { _id: null, totalRows: { $sum: 1 } } },
+            {
+              $project: {
+                companyToken: 0,
+                templateId: 0,
+                businessId: 0
+              }
+            }
+          ])
+          .toArray()
+
+        const totalRows = (Array.isArray(countRows) && countRows.length) ? countRows[0].totalRows : 0
+
+
         business.dataPagination = {
-          numRows: business.quantityRows,
+          numRowsAllBusiness: business.quantityRows,
+          numRows: totalRows,
           page,
           firstPage: 0,
-          lastPage: Math.ceil(parseInt(business.quantityRows) / limit) - 1
+          lastPage: Math.ceil(parseInt(totalRows) / limit) - 1
         }
       }
 
