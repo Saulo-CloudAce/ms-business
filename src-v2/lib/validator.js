@@ -142,8 +142,8 @@ export default class Validator {
 
     const lineCounter = (
       (i = 0) =>
-      () =>
-        ++i
+        () =>
+          ++i
     )()
 
     const self = this
@@ -355,8 +355,8 @@ export default class Validator {
 
     const lineCounter = (
       (i = 0) =>
-      () =>
-        ++i
+        () =>
+          ++i
     )()
 
     const self = this
@@ -1089,6 +1089,15 @@ export default class Validator {
     return elText
   }
 
+  _formatFieldInt(fieldData) {
+    let elText = fieldData
+    if (String(elText).trim().length > 0) {
+      return parseInt(elText)
+    }
+
+    return 0
+  }
+
   _formatFieldArray(fieldRules, fieldData) {
     const arrData = []
     if (!fieldRules['fields']) {
@@ -1181,6 +1190,8 @@ export default class Validator {
         elText = this._formatFieldCep(elText)
       } else if (isTypeDecimal(fieldRules)) {
         elText = this._formatFieldDecimal(elText)
+      } else if (isTypeInt(fieldRules)) {
+        elText = this._formatFieldInt(elText)
       } else if (isTypeArray(fieldRules)) {
         elText = this._formatFieldArray(fieldRules, elText)
       } else if (isTypeOptions(fieldRules)) {
