@@ -23,7 +23,8 @@ const comparatorConditions = {
   LESS_THAN: 'LESS_THAN',
   EQUAL_CALC: 'EQUAL_CALC',
   GREATER_THAN_CALC: 'GREATER_THAN_CALC',
-  LESS_THAN_CALC: 'LESS_THAN_CALC'
+  LESS_THAN_CALC: 'LESS_THAN_CALC',
+  CONTAINS: 'CONTAINS'
 }
 
 export default class QueryPredicate {
@@ -244,6 +245,8 @@ export default class QueryPredicate {
       rule.condition === comparatorConditions.EQUAL &&
       (isTypeString(field) || isTypeCep(field) || isTypeEmail(field) || isTypePhoneNumber(field))
     ) {
+      rule.value = String(rule.value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    } else if (rule.condition === comparatorConditions.CONTAINS) {
       rule.value = { $regex: String(rule.value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' }
     }
 
