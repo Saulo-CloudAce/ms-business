@@ -1130,7 +1130,12 @@ export default class Validator {
               arrData.push(item)
             } else {
               fieldRules.fields.forEach((field) => {
-                item[field.column] = element[field.column]
+                if (isTypeInt(field)) {
+                  item[field.column] = this._formatFieldInt(element[field.column])
+                } else {
+                  item[field.column] = element[field.column]
+                }
+
               })
 
               arrData.push(item)
