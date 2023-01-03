@@ -1069,6 +1069,20 @@ export default class BusinessController {
         sendToQueuePostProcess(obj)
       }
 
+      if (!dataUpdate.idCrm) {
+        const fieldKey = template.fields.filter(f => f.key)
+        const key = dataUpdate[fieldKey[0].column]
+        if (key) {
+          const result = await crmService.getByCpfCnpj(key, companyToken)
+          if (!result.error && result.data) {
+            const customerId = result.data.id
+            if (customerId) {
+              dataUpdate.idCrm = customerId
+            }
+          }
+        }
+      }
+
       if (dataUpdate.idCrm) {
         const searchCustomerCRM = await crmService.getCustomerById(dataUpdate.idCrm, companyToken)
 
