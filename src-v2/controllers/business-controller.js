@@ -1045,7 +1045,12 @@ export default class BusinessController {
             if (data.type === 'phone_number') {
               if (!objCRM['customer_phone']) objCRM['customer_phone'] = []
               const item = {}
-              item[data.data] = String(JSON.parse(JSON.stringify(register[data.column]))).trim()
+              let phone = String(JSON.parse(JSON.stringify(register[data.column]))).trim()
+              phone = phone.replace(/-/g, '')
+              phone = phone.replace('(', '')
+              phone = phone.replace(')', '')
+              phone = phone.replace(' ', '')
+              item[data.data] = phone
               objCRM['customer_phone'].push(item)
             } else if (data.type === 'email') {
               if (!objCRM['customer_email']) objCRM['customer_email'] = []
