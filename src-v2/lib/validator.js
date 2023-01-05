@@ -1,5 +1,6 @@
 import fs from 'fs'
 import readline from 'linebyline'
+import events from 'events'
 import md5 from 'md5'
 import moment from 'moment'
 import { validateEmail, isArrayObject, arraysEqual, arraysDiff, listElementDuplicated } from '../helpers/validators.js'
@@ -368,7 +369,7 @@ export default class Validator {
     const lineValidsCustomer = []
     let fileColumnsName = []
 
-    const data = await new Promise((resolve, reject) => {
+    const dataLines = await new Promise(async (resolve, reject) => {
       console.log('START_PROCESS_FILE', filePath)
       reader
         .on('line', async function (line, lineno = lineCounter()) {
@@ -419,6 +420,9 @@ export default class Validator {
         })
     })
 
+    // Linha importante para esperar a leitura do arquivo finalizar antes de continuar
+    await events.once(reader, 'close')
+
     const invalids = []
     let valids = []
     let validsCustomer = []
@@ -426,12 +430,15 @@ export default class Validator {
 
     const templateHasCepDistance = self._templateHasCepDistanceField(fields)
 
+
+
     for (let line of lines) {
       const data = line.data.split(dataSeparator)
       const jsonData = self._convertFileDataToJSONData(data, fileColumnsName, fields)
       const lineWithRulesFields = self._mapLineDataToLineDataWithRules(jsonData, rulesByColumn)
       const lineNumberAtFile = line.lineNumber
       const { valid, lineErrors } = self.validate(lineWithRulesFields, lineNumberAtFile, listBatches, fields)
+
       if (valid) {
         const dataFormatted = await self.format(jsonData, rulesByColumn)
         valids.push(dataFormatted)
