@@ -573,6 +573,69 @@ export default class TemplateController {
     }
   }
 
+  async downloadExportDataByTemplateId(req, res) {
+    const companyToken = req.headers['token']
+    const templateId = req.params.id
+
+    try {
+      const { companyRepository, templateRepository, businessRepository, storageService } = this._getInstanceRepositories(req.app)
+
+      if (!mongoIdIsValid(templateId)) {
+        return res.status(400).send({ error: 'ID não válido' })
+      }
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) {
+        return res.status(400).send({ error: 'Company não identificada.' })
+      }
+
+      const template = await templateRepository.getByIdWithoutTags(templateId, companyToken)
+      if (!template) {
+        return res.status(400).send({ error: 'Template não identificado' })
+      }
+
+      let businessData = await businessRepository.listAllBatchesAndChildsByTemplateId(companyToken, templateId)
+
+      let records = []
+      businessData.forEach((bd) => {
+        const data = bd.data && Array.isArray(bd.data) ? bd.data : []
+        records.push(...data)
+      })
+
+      records = this._formatDataToExport(records, template.fields)
+
+      if (records.length === 0) {
+        console.log('Template sem dados para exportar')
+        return
+      }
+
+      let templateFieldsIndexed = {}
+      const allFieldsIndexed = { _id: 'ID' }
+      for (let i = 0; i < template.fields.length; i++) {
+        const field = template.fields[i]
+        allFieldsIndexed[field.column] = field.label
+      }
+
+      templateFieldsIndexed = allFieldsIndexed
+
+      const header = Object.keys(records[0]).map((k) => {
+        return { key: `${k}`, header: `${templateFieldsIndexed[k]}` }
+      })
+
+      const filename = `${template.name}.xlsx`
+      const filepath = `/tmp/${filename}`
+
+      await generateExcel(header, records, filepath)
+
+      const urlPrivate = await storageService.upload(companyToken, filepath, filename)
+      const url = await storageService.getSignedUrl(urlPrivate)
+      return res.status(200).send({ file_url: url })
+    } catch (err) {
+      console.error(err)
+      return res.status(500).send({ error: 'Ocorreu erro ao exportar os dados para arquivo CSV.' })
+    }
+  }
+
   async getAll(req, res) {
     const companyToken = req.headers['token']
 
