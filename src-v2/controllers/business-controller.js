@@ -922,6 +922,11 @@ export default class BusinessController {
 
     let filterBy = req.body.filter_rules ? req.body.filter_rules : []
 
+    let baseDate = moment()
+    if (req.body.base_date) {
+      baseDate = moment(req.body.base_date)
+    }
+
     try {
       const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
       const newBusiness = this._getInstanceBusiness(req.app)
@@ -934,7 +939,7 @@ export default class BusinessController {
 
       const template = await templateRepository.getByIdWithoutTags(businessInfo.templateId, companyToken)
 
-      filterBy = this._parseQueryPredicate(filterBy)
+      filterBy = this._parseQueryPredicate(filterBy, baseDate)
       console.log(JSON.stringify(filterBy))
 
       const queryPredicate = new QueryPredicate(filterBy, template)
@@ -948,13 +953,14 @@ export default class BusinessController {
     }
   }
 
-  _parseQueryPredicate(filters = []) {
+  _parseQueryPredicate(filters = [], baseDate = moment()) {
     for (let i = 0; i < filters.length; i++) {
       if (filters[i].key) {
         filters[i].field = filters[i].key
+        filters[i].base_date = baseDate
         delete filters[i].key
       } else {
-        filters[i].rules = this._parseQueryPredicate(filters[i].rules)
+        filters[i].rules = this._parseQueryPredicate(filters[i].rules, baseDate)
       }
     }
 
