@@ -170,7 +170,8 @@ export default class QueryPredicate {
   }
 
   _buildEqualCalcCriteriaMongoQuery(rule = {}, field = {}) {
-    const today = moment()
+    const today = (rule.base_date) ? rule.base_date : moment()
+
     let compDate = today
     if (String(rule.value)[0] === '+') {
       compDate = today.add(parseInt(rule.value.replace('+', '')), 'days')
