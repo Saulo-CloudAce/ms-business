@@ -120,7 +120,7 @@ export default class TemplateController {
     }
 
     try {
-      const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
+      const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
       if (!mongoIdIsValid(templateId)) {
         return res.status(400).send({ error: 'ID não válido' })
@@ -137,6 +137,8 @@ export default class TemplateController {
       }
 
       await templateRepository.updateActive(templateId, false, updatedBy)
+
+      await businessRepository.deactivateAllByTemplate(companyToken, templateId, updatedBy)
 
       return res.status(200).send(template)
     } catch (err) {

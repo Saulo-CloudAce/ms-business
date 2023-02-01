@@ -246,7 +246,8 @@ export default class BusinessRepository {
       await this.db.collection('business').update(
         {
           templateId,
-          companyToken
+          companyToken,
+          active: true
         },
         { $set: businessUpdated },
         { multi: true }
@@ -1507,7 +1508,14 @@ export default class BusinessRepository {
     }
   }
 
-  async getDataByIdPaginatedAndFieldsSelected(companyToken, businessId, fields = [], queryPredicate = new QueryPredicate(), page = 0, limit = 10) {
+  async getDataByIdPaginatedAndFieldsSelected(
+    companyToken,
+    businessId,
+    fields = [],
+    queryPredicate = new QueryPredicate(),
+    page = 0,
+    limit = 10
+  ) {
     try {
       const skipDocs = page * limit
 
@@ -1566,8 +1574,7 @@ export default class BusinessRepository {
           ])
           .toArray()
 
-        const totalRows = (Array.isArray(countRows) && countRows.length) ? countRows[0].totalRows : 0
-
+        const totalRows = Array.isArray(countRows) && countRows.length ? countRows[0].totalRows : 0
 
         business.dataPagination = {
           numRowsAllBusiness: business.quantityRows,
