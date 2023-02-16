@@ -143,8 +143,8 @@ export default class Validator {
 
     const lineCounter = (
       (i = 0) =>
-        () =>
-          ++i
+      () =>
+        ++i
     )()
 
     const self = this
@@ -356,8 +356,8 @@ export default class Validator {
 
     const lineCounter = (
       (i = 0) =>
-        () =>
-          ++i
+      () =>
+        ++i
     )()
 
     const self = this
@@ -429,8 +429,6 @@ export default class Validator {
     const validsPostProcess = []
 
     const templateHasCepDistance = self._templateHasCepDistanceField(fields)
-
-
 
     for (let line of lines) {
       const data = line.data.split(dataSeparator)
@@ -731,7 +729,13 @@ export default class Validator {
   }
 
   _validateFieldResponsible(rules, fieldData, errors) {
-    if (isNaN(fieldData)) {
+    if (!fieldData || !Object.keys(fieldData).includes('user_id')) {
+      errors.push({
+        column: rules.column,
+        error: 'Este campo deve ser um objeto com a chave user_id contendo um inteiro',
+        current_value: fieldData
+      })
+    } else if (isNaN(fieldData.user_id)) {
       errors.push({
         column: rules.column,
         error: 'Este campo deve ser um inteiro',
@@ -1142,7 +1146,6 @@ export default class Validator {
                 } else {
                   item[field.column] = element[field.column]
                 }
-
               })
 
               arrData.push(item)
@@ -1171,6 +1174,14 @@ export default class Validator {
       document.issue_date = fieldData.issue_date
     }
     return document
+  }
+
+  _formatFieldResponsible(fieldData = {}) {
+    if (!fieldData.user_name) {
+      fieldData.user_name = ''
+    }
+
+    return fieldData
   }
 
   _formatFieldListDocument(fieldRules, fieldData) {
@@ -1216,6 +1227,8 @@ export default class Validator {
         elText = this._formatFieldRegisterActive(elText)
       } else if (isTypeOptIn(fieldRules)) {
         elText = this._formatFieldOptIn(elText)
+      } else if (isTypeResponsible(fieldRules)) {
+        elText = this._formatFieldResponsible(elText)
       }
       formatted[fieldRules.column] = elText
     }

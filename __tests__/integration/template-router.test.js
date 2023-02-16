@@ -311,6 +311,7 @@ describe('CRUD template', () => {
   it('Get a template', async (done) => {
     const t = {
       name: 'template simples - 1',
+      auto_sponsor: false,
       fields: [
         {
           type: 'string',
@@ -335,9 +336,13 @@ describe('CRUD template', () => {
           visible: true
         }
       ],
-      active: true
+      active: true,
+      createdBy: 1
     }
-    const tCreated = await templateRepository.save(t.name, t.fields, companyCreated.token, t.active)
+
+    const tCreated = await templateRepository.save(t.name, t.fields, companyCreated.token, t.auto_sponsor, t.active, t.createdBy)
+
+    console.log(tCreated)
 
     request
       .get(`/api/v2/templates/${tCreated._id}`)

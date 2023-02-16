@@ -70,6 +70,10 @@ function formatField(f = {}, namesColumn = {}, namesData = {}) {
   f.label = f.label ? String(f.label) : String(f.column)
   f.column = clearString(f.column.toLowerCase())
 
+  if (f.type === 'responsible') {
+    f.data = 'customer_responsible'
+  }
+
   if (namesColumn[f.column]) {
     const index = Object.keys(namesColumn).length
     f.column = `${f.column}_${index}`

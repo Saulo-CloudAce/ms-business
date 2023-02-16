@@ -74,6 +74,7 @@ const businessDocument = {
 
 const t = {
   name: 'template simples',
+  auto_sponsor: false,
   fields: [
     {
       type: 'string',
@@ -98,7 +99,8 @@ const t = {
       visible: true
     }
   ],
-  active: true
+  active: true,
+  createdBy: 1
 }
 
 const templateDocument = {
@@ -153,7 +155,14 @@ async function createCompany() {
 }
 
 async function createTemplate(companyToken = '', templateCreate = {}) {
-  return templateRepository.save(templateCreate.name, templateCreate.fields, companyToken, templateCreate.active)
+  return templateRepository.save(
+    templateCreate.name,
+    templateCreate.fields,
+    companyToken,
+    templateCreate.auto_sponsor,
+    templateCreate.active,
+    templateCreate.createdBy
+  )
 }
 
 async function createBusiness(templateId = '', token = '') {
@@ -219,6 +228,7 @@ describe('CRUD business', () => {
       .set('Accept', 'application/json')
       .set('token', companyCreated.token)
       .end((err, res) => {
+        console.log('teste->', res.body)
         if (err) done(err)
 
         expect(res.statusCode).toBe(201)
