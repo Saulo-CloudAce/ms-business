@@ -8,9 +8,10 @@ export default class TemplateRepository {
     this.cacheService = cacheService
   }
 
-  async save(name, fields, companyToken, active, createdBy = 0) {
+  async save(name, fields, companyToken, autoSponsor = false, active, createdBy = 0) {
     const newTemplate = {
       name,
+      auto_sponsor: autoSponsor,
       fields,
       companyToken,
       active,
@@ -48,6 +49,7 @@ export default class TemplateRepository {
 
       const templateUpdated = {
         name: templateUpdate.name,
+        auto_sponsor: templateUpdate.auto_sponsor,
         fields: templateUpdate.fields,
         updatedAt: templateUpdate.updatedAt,
         updatedBy: templateUpdate.updatedBy
@@ -68,7 +70,7 @@ export default class TemplateRepository {
       const result = await this.db
         .collection('business_template')
         .find({ companyToken })
-        .project(['_id', 'name', 'active', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy'])
+        .project(['_id', 'name', 'auto_sponsor', 'active', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy'])
         .toArray()
 
       return result
@@ -115,6 +117,7 @@ export default class TemplateRepository {
         projection: {
           _id: 1,
           name: 1,
+          auto_sponsor: 1,
           fields: 1,
           active: 1,
           createdAt: 1,
@@ -140,6 +143,7 @@ export default class TemplateRepository {
         projection: {
           _id: 1,
           name: 1,
+          auto_sponsor: 1,
           fields: 1,
           active: 1,
           createdAt: 1,
@@ -176,7 +180,7 @@ export default class TemplateRepository {
       const result = await this.db
         .collection('business_template')
         .find({ _id: { $in: listObjectId }, companyToken })
-        .project(['_id', 'name', 'fields', 'active', 'createdAt', 'updatedAt'])
+        .project(['_id', 'name', 'auto_sponsor', 'fields', 'active', 'createdAt', 'updatedAt'])
         .toArray()
 
       return result

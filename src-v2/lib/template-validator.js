@@ -45,6 +45,10 @@ export function hasCustomerFields(fields) {
   return fields.filter((f) => f.data.indexOf('customer') >= 0).length > 0
 }
 
+export function hasResponsibleField(fields = []) {
+  return fields.filter((f) => f.type === 'responsible').length > 0
+}
+
 export function validateKey(fields) {
   const keys = fields.filter((f) => f.key)
   return keys.length > 0
