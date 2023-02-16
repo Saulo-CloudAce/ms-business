@@ -1,5 +1,5 @@
 import fs from 'fs'
-import { validateFields, validateKey, hasCustomerFields } from '../lib/template-validator.js'
+import { validateFields, validateKey, hasCustomerFields, hasResponsibleField } from '../lib/template-validator.js'
 import CompanyRepository from '../repository/company-repository.js'
 import TemplateRepository from '../repository/template-repository.js'
 import BusinessRepository from '../repository/business-repository.js'
@@ -36,7 +36,7 @@ export default class TemplateController {
     try {
       const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
 
-      const { name, fields } = req.body
+      const { name, auto_sponsor, fields } = req.body
       if (req.body.created_by && !isNaN(req.body.created_by)) {
         createdBy = parseInt(req.body.created_by)
       }
@@ -64,7 +64,20 @@ export default class TemplateController {
         return res.status(400).send({ errors: fieldsValidated.errors })
       }
 
-      const template = await templateRepository.save(name, fieldsValidated.fields, companyToken, true, createdBy)
+      const autoSponsor = String(auto_sponsor) === 'true'
+      if (autoSponsor && !hasResponsibleField(fields)) {
+        return res.status(400).send({
+          errors: [
+            {
+              error: 'O template precisa ter um campo do tipo `responsible` para ser definido como auto carteirização (auto_sponsor=true)'
+            }
+          ]
+        })
+      }
+
+      const active = true
+
+      const template = await templateRepository.save(name, fieldsValidated.fields, companyToken, autoSponsor, active, createdBy)
 
       return res.status(201).send(template)
     } catch (err) {
@@ -713,7 +726,7 @@ export default class TemplateController {
     const templateId = req.params.id
 
     try {
-      const { name, fields } = req.body
+      const { name, auto_sponsor, fields } = req.body
       let updatedBy = 0
 
       if (req.body.updated_by && !isNaN(req.body.updated_by)) {
@@ -747,6 +760,18 @@ export default class TemplateController {
         return res.status(400).send({ errors: newFieldsValidated.errors })
       }
 
+      const autoSponsor = String(auto_sponsor) === 'true'
+      if (autoSponsor && !hasResponsibleField(newFieldsValidated.fields)) {
+        return res.status(400).send({
+          errors: [
+            {
+              error: 'O template precisa ter um campo do tipo `responsible` para ser definido como auto carteirização (auto_sponsor=true)'
+            }
+          ]
+        })
+      }
+
+      templateSaved.auto_sponsor = autoSponsor
       templateSaved.fields = newFieldsValidated.fields
 
       const template = await templateRepository.update(templateId, companyToken, templateSaved, updatedBy)
