@@ -97,7 +97,8 @@ export default class QueryPredicate {
       if (!rule.condition) throw new QueryPredicateError(`[${index}] A regra não tem condição`)
       if (!rule.field) throw new QueryPredicateError(`[${index}] A regra não tem campo de comparação`)
       if (!templateField) throw new QueryPredicateError(`[${index}] O field {${rule.field}} não existe no template`)
-      if (String(rule.value).trim().length === 0) throw new QueryPredicateError(`[${index}] A regra não tem valor de comparação`)
+      if (!Object.keys(rule).includes('value') || String(rule.value).trim().length === 0)
+        throw new QueryPredicateError(`[${index}] A regra não tem valor de comparação`)
       if (!Object.keys(comparatorConditions).includes(rule.condition))
         throw new QueryPredicateError(
           `[${index}] A regra tem uma condição inválida. As condições validas são: ${Object.keys(comparatorConditions).join(',')}`
