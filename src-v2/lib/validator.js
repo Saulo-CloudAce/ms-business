@@ -125,6 +125,12 @@ export default class Validator {
           const fileDataIndex = mapColumnsFile[tf.column]
           jsonData[jsonDataField] = [fileData[fileDataIndex]]
         }
+      } else if (tf.type === 'responsible') {
+        const jsonDataField = tf.column
+        const fileDataIndex = mapColumnsFile[tf.column]
+        const valField = fileData[fileDataIndex]
+        const userId = !isNaN(valField) ? parseInt(valField) : 0
+        jsonData[jsonDataField] = { user_id: userId, user_name: '' }
       } else {
         const jsonDataField = tf.column
         const fileDataIndex = mapColumnsFile[tf.column]
