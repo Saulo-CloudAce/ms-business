@@ -97,7 +97,7 @@ export default class QueryPredicate {
       if (!rule.condition) throw new QueryPredicateError(`[${index}] A regra não tem condição`)
       if (!rule.field) throw new QueryPredicateError(`[${index}] A regra não tem campo de comparação`)
       if (!templateField) throw new QueryPredicateError(`[${index}] O field {${rule.field}} não existe no template`)
-      if (!rule.value) throw new QueryPredicateError(`[${index}] A regra não tem valor de comparação`)
+      if (String(rule.value).trim().length === 0) throw new QueryPredicateError(`[${index}] A regra não tem valor de comparação`)
       if (!Object.keys(comparatorConditions).includes(rule.condition))
         throw new QueryPredicateError(
           `[${index}] A regra tem uma condição inválida. As condições validas são: ${Object.keys(comparatorConditions).join(',')}`
@@ -170,7 +170,7 @@ export default class QueryPredicate {
   }
 
   _buildEqualCalcCriteriaMongoQuery(rule = {}, field = {}) {
-    const today = (rule.base_date) ? rule.base_date : moment()
+    const today = rule.base_date ? rule.base_date : moment()
 
     let compDate = today
     if (String(rule.value)[0] === '+') {
@@ -242,6 +242,8 @@ export default class QueryPredicate {
   _convertTypeValueToFieldType(rule = {}, field = {}) {
     if (isTypeInt(field) && typeof rule.value !== 'number') {
       rule.value = parseInt(rule.value)
+    } else if (isTypeBoolean(field) && typeof rule.value !== 'boolean') {
+      rule.value = String(rule.value) === 'true'
     } else if (
       rule.condition === comparatorConditions.EQUAL &&
       (isTypeString(field) || isTypeCep(field) || isTypeEmail(field) || isTypePhoneNumber(field))
