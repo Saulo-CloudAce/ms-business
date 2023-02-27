@@ -621,7 +621,7 @@ export default class TemplateController {
 
       if (records.length === 0) {
         console.log('Template sem dados para exportar')
-        return
+        return res.status(200).send({ msg: 'O template não tem dados para exportar' })
       }
 
       let templateFieldsIndexed = {}
