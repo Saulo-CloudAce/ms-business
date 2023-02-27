@@ -1,4 +1,5 @@
 import { MongoClient } from 'mongodb'
+import Bluebird from 'bluebird'
 import dotenv from 'dotenv'
 dotenv.config()
 
@@ -29,7 +30,7 @@ export async function connect(app, callback) {
   }
   if (config.additionalParams) connectionMongo = `${connectionMongo}?${config.additionalParams}`
 
-  MongoClient.connect(connectionMongo, { promiseLibrary: Promise }, (err, conn) => {
+  MongoClient.connect(connectionMongo, {}, (err, conn) => {
     if (err) console.error(`#00000 - Falha ao conectar ao banco de dados. ${err.stack}`)
 
     const db = conn.db(config.database)
