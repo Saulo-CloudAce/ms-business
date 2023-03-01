@@ -1,13 +1,5 @@
 import moment from 'moment'
-import {
-  isTypeInt,
-  isTypeBoolean,
-  isTypeDecimal,
-  isTypeString,
-  isTypeCep,
-  isTypeEmail,
-  isTypePhoneNumber
-} from '../helpers/field-methods.js'
+import { isTypeInt, isTypeBoolean, isTypeDecimal, isTypeString, isTypeCep, isTypePhoneNumber } from '../helpers/field-methods.js'
 import QueryPredicateError from './query-predicate-error.js'
 
 const connectConditions = {
@@ -245,10 +237,7 @@ export default class QueryPredicate {
       rule.value = parseInt(rule.value)
     } else if (isTypeBoolean(field) && typeof rule.value !== 'boolean') {
       rule.value = String(rule.value) === 'true'
-    } else if (
-      rule.condition === comparatorConditions.EQUAL &&
-      (isTypeString(field) || isTypeCep(field) || isTypeEmail(field) || isTypePhoneNumber(field))
-    ) {
+    } else if (rule.condition === comparatorConditions.EQUAL && (isTypeString(field) || isTypeCep(field) || isTypePhoneNumber(field))) {
       rule.value = String(rule.value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     } else if (rule.condition === comparatorConditions.CONTAINS) {
       rule.value = { $regex: String(rule.value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' }
