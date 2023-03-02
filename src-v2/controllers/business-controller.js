@@ -18,7 +18,7 @@ import Redis from '../../config/redis.js'
 import { clearFilename } from '../helpers/formatters.js'
 import { getGeolocationDataFromCEPs } from '../helpers/geolocation-getter.js'
 import { sendToQueuePostProcess } from '../helpers/rabbit-helper.js'
-import { isTypeCepDistance, isTypeOptIn, isTypeRegisterActive } from '../helpers/field-methods.js'
+import { isTypeCepDistance, isTypeCpfCnpj, isTypeOptIn, isTypeRegisterActive } from '../helpers/field-methods.js'
 import QueryPredicate from '../repository/query-predicate.js'
 
 export default class BusinessController {
@@ -931,7 +931,6 @@ export default class BusinessController {
       const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
       const newBusiness = this._getInstanceBusiness(req.app)
 
-
       const company = await companyRepository.getByToken(companyToken)
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
@@ -944,7 +943,14 @@ export default class BusinessController {
 
       const queryPredicate = new QueryPredicate(filterBy, template)
 
-      const business = await newBusiness.getDataByIdPaginatedAndFieldsSelected(companyToken, businessId, fieldsSelected, queryPredicate, page, limit)
+      const business = await newBusiness.getDataByIdPaginatedAndFieldsSelected(
+        companyToken,
+        businessId,
+        fieldsSelected,
+        queryPredicate,
+        page,
+        limit
+      )
 
       return res.status(200).send(business)
     } catch (e) {
@@ -1047,7 +1053,6 @@ export default class BusinessController {
       template.fields.forEach((data) => {
         Object.keys(register).forEach((keysRegister) => {
           if (keysRegister === data.column) {
-
             if (data.type === 'phone_number') {
               if (!objCRM['customer_phone']) objCRM['customer_phone'] = []
               const item = {}
@@ -1066,7 +1071,6 @@ export default class BusinessController {
             } else {
               objCRM[data.data] = JSON.parse(JSON.stringify(register[data.column]))
             }
-
           }
         })
         if (Array.isArray(data.fields)) {
@@ -1097,7 +1101,7 @@ export default class BusinessController {
       }
 
       if (!dataUpdate.idCrm) {
-        const fieldKey = template.fields.filter(f => f.key)
+        const fieldKey = template.fields.filter((f) => f.key)
         const key = dataUpdate[fieldKey[0].column]
         if (key) {
           const result = await crmService.getByCpfCnpj(key, companyToken)
@@ -1224,6 +1228,45 @@ export default class BusinessController {
 
       const business = await newBusiness.getRegisterById(companyToken, businessId, registerId)
       if (!business) return res.status(400).send({ error: 'Registro não encontrado.' })
+
+      return res.status(200).send(business)
+    } catch (err) {
+      console.error(err)
+      return res.status(500).send({ error: 'Ocorreu erro ao buscar o registro' })
+    }
+  }
+
+  async getBusinessRegisterByIdAndCustomerInfo(req, res) {
+    const companyToken = req.headers['token']
+    const templateId = req.headers['templateid']
+    const businessId = req.params.businessId
+    const registerId = req.params.registerId
+
+    try {
+      const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
+      const newBusiness = this._getInstanceBusiness(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
+
+      const template = await templateRepository.getByIdWithoutTags(templateId, companyToken)
+      if (!template) return res.status(400).send({ error: 'Template não identificado' })
+
+      const business = await newBusiness.getRegisterById(companyToken, businessId, registerId)
+      if (!business) return res.status(400).send({ error: 'Registro não encontrado.' })
+
+      const fieldKey = template.fields.find((f) => f.key)
+      if (fieldKey) {
+        const valueKey = business.data[fieldKey.column]
+        const customerResult = await crmService.searchCustomer(valueKey, companyToken, company.prefix_index_elastic, templateId)
+        if (customerResult && customerResult.data && Array.isArray(customerResult.data) && customerResult.data.length) {
+          const customerData = customerResult.data[0]
+          delete customerData.business_list
+          delete customerData.business_template_list
+
+          business.customer = customerData
+        }
+      }
 
       return res.status(200).send(business)
     } catch (err) {
