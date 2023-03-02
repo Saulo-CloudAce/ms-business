@@ -39,6 +39,9 @@ export default function businessRoute(app = {}) {
   app.get('/api/v2/business/:id/paginated', (req, res) => businessController.getByIdWithDataPaginated(req, res))
   app.post('/api/v2/business/:id/fields/paginated', (req, res) => businessController.getByIdWithDataPaginatedAndFieldsSelected(req, res))
   app.get('/api/v2/business/:businessId/data/:registerId', (req, res) => businessController.getBusinessRegisterById(req, res))
+  app.get('/api/v2/business/:businessId/data/:registerId/customer_info', (req, res) =>
+    businessController.getBusinessRegisterByIdAndCustomerInfo(req, res)
+  )
   app.put('/api/v2/business/:id/activate', checkSchema(activateSpec), applyRules, (req, res) =>
     businessController.activateBusiness(req, res)
   )
