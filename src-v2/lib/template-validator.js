@@ -63,6 +63,7 @@ function formatField(f = {}, namesColumn = {}, namesData = {}) {
   f.operator_can_view = String(f.operatorCanView) === 'true' || String(f.operator_can_view) === 'true'
   f.landingpage_can_show = String(f.landingpage_can_show) === 'true'
   f.visible = String(f.visible) === 'true'
+  f.visible_on_card_ticket = String(f.visible_on_card_ticket) === 'true'
   f.has_tab = String(f.has_tab) === 'true'
   f.quick_search = String(f.quick_search) === 'true'
   f.is_priority = String(f.is_priority) === 'true'
