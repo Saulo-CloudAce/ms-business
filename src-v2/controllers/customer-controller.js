@@ -438,6 +438,12 @@ export default class CustomerController {
     const companyToken = req.headers['token']
     const queryTemplateId = req.headers['templateid']
 
+    const hasShowDisabledParam = Object.keys(req.query).includes('show_disabled')
+    let showDisabled = false
+    if (hasShowDisabledParam) {
+      showDisabled = String(req.query.show_disabled) === 'true'
+    }
+
     try {
       const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
 
@@ -469,7 +475,19 @@ export default class CustomerController {
 
       console.time('searchMongo')
       for (const customer of customers) {
-        const mailings = await businessDomain.listMailingByTemplateListAndKeySortedReverse(companyToken, customer, templateRepository)
+        let mailings = await businessDomain.listMailingByTemplateListAndKeySortedReverse(companyToken, customer, templateRepository)
+
+        if (hasShowDisabledParam && !showDisabled) {
+          const templates = []
+          for (let mail of mailings) {
+            mail.lote_data_list = mail.lote_data_list.filter((lote) => lote.active)
+            if (mail.lote_data_list.length) {
+              templates.push(mail)
+            }
+          }
+
+          mailings = templates
+        }
 
         const customerResult = {
           id: customer.id,
@@ -480,7 +498,9 @@ export default class CustomerController {
           schema_list: mailings
         }
 
-        customerResultList.push(customerResult)
+        if (mailings.length) {
+          customerResultList.push(customerResult)
+        }
       }
       console.timeEnd('searchMongo')
 
