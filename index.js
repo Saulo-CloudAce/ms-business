@@ -9,4 +9,3 @@ import { startConsumersQueues } from './config/consumerqueues.js'
 startConsumersQueues(server)
 
 runCronJob()
-server.listen()
