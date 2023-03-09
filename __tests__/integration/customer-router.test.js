@@ -299,7 +299,7 @@ describe('Customer functions', () => {
       customer_email: [{ id: 100, customer_email: 'pessoay@email.com' }],
       customer_phome: [],
       business_list: [],
-      business_template_list: []
+      business_template_list: ['63f773c304267147cbead711']
     }
 
     nock('http://localhost:4000', {
@@ -320,14 +320,7 @@ describe('Customer functions', () => {
 
         expect(res.statusCode).toBe(200)
 
-        const fResult = res.body[0]
-
-        expect(fResult).toHaveProperty('id')
-        expect(fResult).toHaveProperty('customer_cpfcnpj')
-        expect(fResult).toHaveProperty('customer_name')
-        expect(fResult).toHaveProperty('customer_email')
-        expect(fResult).toHaveProperty('customer_phome')
-        expect(fResult).toHaveProperty('schema_list')
+        expect(res.body.length).toBe(0)
 
         done()
       })
