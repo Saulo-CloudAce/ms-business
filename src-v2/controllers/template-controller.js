@@ -253,6 +253,13 @@ export default class TemplateController {
       })
     }
 
+    let frontendUrl = ''
+    if (req.headers['frontend_url']) {
+      frontendUrl = String(req.headers.frontend_url).trim()
+    }
+
+    const canShowLink = frontendUrl.length > 0
+
     const sortBy = req.body.sort_by ? req.body.sort_by : []
     const filterRules = req.body.filter_rules ? req.body.filter_rules : []
     const fields = req.body.fields ? req.body.fields : []
@@ -334,10 +341,17 @@ export default class TemplateController {
           .map((k) => {
             return { key: `${k}`, header: `${templateFieldsIndexed[k]}` }
           })
+        if (canShowLink) {
+          header.push({ key: '_link_register', header: 'Link para acessar cadastro' })
+        }
 
         worksheet.columns = header
 
-        for (let r of templateData) {
+        for (const r of templateData) {
+          if (canShowLink) {
+            r['_link_register'] = this.#generateLinkRegisterOnFrontend(frontendUrl, templateId, r.business_id.toString(), r._id)
+          }
+
           worksheet.addRow(r).commit()
         }
 
@@ -360,7 +374,11 @@ export default class TemplateController {
           pageData = this._showJustFieldRequested(pageData, fields)
 
           // templateData.push(...pageData)
-          for (let r of pageData) {
+          for (const r of pageData) {
+            if (canShowLink) {
+              r['_link_register'] = this.#generateLinkRegisterOnFrontend(frontendUrl, templateId, r.business_id.toString(), r._id)
+            }
+
             worksheet.addRow(r).commit()
           }
           page += 1
@@ -390,6 +408,10 @@ export default class TemplateController {
       console.error(err)
       return res.status(500).send({ error: 'Ocorreu erro ao exportar os registros do template informado' })
     }
+  }
+
+  #generateLinkRegisterOnFrontend(frontendUrl = '', templateId = '', businessId = '', registerId = '') {
+    return `${frontendUrl}/customers/${templateId}/${businessId}/${registerId}`
   }
 
   _showJustFieldRequested(data = [], fields = []) {
