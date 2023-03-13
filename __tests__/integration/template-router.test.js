@@ -31,67 +31,31 @@ async function createCompany() {
 }
 
 async function createTemplateSimples5() {
-  const tCreated = await templateRepository.save(
-    templateExample5.name,
-    templateExample5.fields,
-    companyCreated.token,
-    templateExample5.active
-  )
+  const tCreated = await templateRepository.save(templateExample5.name, templateExample5.fields, companyCreated.token, templateExample5.active)
 
   const mailing = getMailingExample(companyCreated.token, tCreated._id.toString())
 
-  await businessRepository.save(
-    mailing.companyToken,
-    mailing.name,
-    mailing.filePath,
-    mailing.templateId,
-    mailing.quantityRows,
-    mailing.fieldsData
-  )
+  await businessRepository.save(mailing.companyToken, mailing.name, mailing.filePath, mailing.templateId, mailing.quantityRows, mailing.fieldsData)
 
   return tCreated._id
 }
 
 async function createTemplateSimples6() {
-  const tCreated = await templateRepository.save(
-    templateExample6.name,
-    templateExample6.fields,
-    companyCreated.token,
-    templateExample6.active
-  )
+  const tCreated = await templateRepository.save(templateExample6.name, templateExample6.fields, companyCreated.token, templateExample6.active)
 
   const mailing = getMailingExample(companyCreated.token, tCreated._id.toString())
 
-  await businessRepository.save(
-    mailing.companyToken,
-    mailing.name,
-    mailing.filePath,
-    mailing.templateId,
-    mailing.quantityRows,
-    mailing.fieldsData
-  )
+  await businessRepository.save(mailing.companyToken, mailing.name, mailing.filePath, mailing.templateId, mailing.quantityRows, mailing.fieldsData)
 
   return tCreated._id
 }
 
 async function createTemplateSimples7() {
-  const tCreated = await templateRepository.save(
-    templateExample7.name,
-    templateExample7.fields,
-    companyCreated.token,
-    templateExample7.active
-  )
+  const tCreated = await templateRepository.save(templateExample7.name, templateExample7.fields, companyCreated.token, templateExample7.active)
 
   const mailing = getMailingExample(companyCreated.token, tCreated._id.toString())
 
-  await businessRepository.save(
-    mailing.companyToken,
-    mailing.name,
-    mailing.filePath,
-    mailing.templateId,
-    mailing.quantityRows,
-    mailing.fieldsData
-  )
+  await businessRepository.save(mailing.companyToken, mailing.name, mailing.filePath, mailing.templateId, mailing.quantityRows, mailing.fieldsData)
 
   return tCreated._id
 }
@@ -312,6 +276,7 @@ describe('CRUD template', () => {
     const t = {
       name: 'template simples - 1',
       auto_sponsor: false,
+      show_multiple_registers_per_customer: false,
       fields: [
         {
           type: 'string',
@@ -340,9 +305,7 @@ describe('CRUD template', () => {
       createdBy: 1
     }
 
-    const tCreated = await templateRepository.save(t.name, t.fields, companyCreated.token, t.auto_sponsor, t.active, t.createdBy)
-
-    console.log(tCreated)
+    const tCreated = await templateRepository.save(t.name, t.fields, companyCreated.token, t.auto_sponsor, t.show_multiple_registers_per_customer, t.active, t.createdBy)
 
     request
       .get(`/api/v2/templates/${tCreated._id}`)
@@ -351,6 +314,8 @@ describe('CRUD template', () => {
         if (err) done(err)
 
         expect(res.statusCode).toBe(200)
+
+        console.log('template', res.body)
 
         expect(res.body.name).toBe(t.name)
         expect(res.body.active).toBe(t.active)
@@ -658,16 +623,9 @@ describe('CRUD template', () => {
         }
       ]
     }
-    const requestCreate = await request
-      .post('/api/v2/templates')
-      .send(t)
-      .set('Accept', 'application/json')
-      .set('token', companyCreated.token)
+    const requestCreate = await request.post('/api/v2/templates').send(t).set('Accept', 'application/json').set('token', companyCreated.token)
 
-    const requestGetTemplate = await request
-      .get(`/api/v2/templates/${requestCreate.body._id}`)
-      .set('Accept', 'application/json')
-      .set('token', companyCreated.token)
+    const requestGetTemplate = await request.get(`/api/v2/templates/${requestCreate.body._id}`).set('Accept', 'application/json').set('token', companyCreated.token)
 
     expect(requestCreate.statusCode).toBe(201)
 
@@ -710,16 +668,9 @@ describe('CRUD template', () => {
         }
       ]
     }
-    const requestCreate = await request
-      .post('/api/v2/templates')
-      .send(t)
-      .set('Accept', 'application/json')
-      .set('token', companyCreated.token)
+    const requestCreate = await request.post('/api/v2/templates').send(t).set('Accept', 'application/json').set('token', companyCreated.token)
 
-    const requestGetTemplate = await request
-      .get(`/api/v2/templates/${requestCreate.body._id}`)
-      .set('Accept', 'application/json')
-      .set('token', companyCreated.token)
+    const requestGetTemplate = await request.get(`/api/v2/templates/${requestCreate.body._id}`).set('Accept', 'application/json').set('token', companyCreated.token)
 
     expect(requestCreate.statusCode).toBe(201)
 
