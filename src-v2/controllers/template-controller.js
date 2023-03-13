@@ -36,7 +36,7 @@ export default class TemplateController {
     try {
       const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
 
-      const { name, auto_sponsor, fields } = req.body
+      const { name, auto_sponsor, fields, show_multiple_registers_per_customer } = req.body
       if (req.body.created_by && !isNaN(req.body.created_by)) {
         createdBy = parseInt(req.body.created_by)
       }
@@ -64,6 +64,8 @@ export default class TemplateController {
         return res.status(400).send({ errors: fieldsValidated.errors })
       }
 
+      const showMultipleRegistersPerCustomer = String(show_multiple_registers_per_customer) === 'true'
+
       const autoSponsor = String(auto_sponsor) === 'true'
       if (autoSponsor && !hasResponsibleField(fields)) {
         return res.status(400).send({
@@ -77,7 +79,7 @@ export default class TemplateController {
 
       const active = true
 
-      const template = await templateRepository.save(name, fieldsValidated.fields, companyToken, autoSponsor, active, createdBy)
+      const template = await templateRepository.save(name, fieldsValidated.fields, companyToken, autoSponsor, showMultipleRegistersPerCustomer, active, createdBy)
 
       return res.status(201).send(template)
     } catch (err) {
@@ -223,14 +225,7 @@ export default class TemplateController {
 
       const queryPredicate = new QueryPredicate(filterBy, template)
 
-      const templateData = await businessRepository.listPaginatedDataByTemplateAndFilterByColumns(
-        companyToken,
-        templateId,
-        queryPredicate,
-        sortBy,
-        limit,
-        page
-      )
+      const templateData = await businessRepository.listPaginatedDataByTemplateAndFilterByColumns(companyToken, templateId, queryPredicate, sortBy, limit, page)
 
       return res.status(200).send(templateData)
     } catch (err) {
@@ -287,14 +282,7 @@ export default class TemplateController {
       const limit = 100
       let templateData = []
       console.time('getDataPaginatedFiltered')
-      const initData = await businessRepository.listPaginatedDataByTemplateAndFilterByColumns(
-        companyToken,
-        templateId,
-        queryPredicate,
-        [],
-        limit,
-        page
-      )
+      const initData = await businessRepository.listPaginatedDataByTemplateAndFilterByColumns(companyToken, templateId, queryPredicate, [], limit, page)
 
       if (initData.data.length === 0) {
         return res.status(404).send({ error: 'Não há dados para serem exportados' })
@@ -359,14 +347,7 @@ export default class TemplateController {
         while (page <= initData.pagination.lastPage) {
           const logLabel = `${filename} - [${page}/${initData.pagination.lastPage}]`
           console.time(logLabel)
-          let pageData = await businessRepository.listSkippedDataByTemplateAndFilterByColumns(
-            companyToken,
-            templateId,
-            queryPredicate,
-            [],
-            limit,
-            page
-          )
+          let pageData = await businessRepository.listSkippedDataByTemplateAndFilterByColumns(companyToken, templateId, queryPredicate, [], limit, page)
           console.timeEnd(logLabel)
 
           pageData = this._formatDataToExport(pageData, template.fields)
@@ -748,7 +729,7 @@ export default class TemplateController {
     const templateId = req.params.id
 
     try {
-      const { name, auto_sponsor, fields } = req.body
+      const { name, auto_sponsor, fields, show_multiple_registers_per_customer } = req.body
       let updatedBy = 0
 
       if (req.body.updated_by && !isNaN(req.body.updated_by)) {
@@ -782,6 +763,8 @@ export default class TemplateController {
         return res.status(400).send({ errors: newFieldsValidated.errors })
       }
 
+      const showMultipleRegistersPerCustomer = String(show_multiple_registers_per_customer) === 'true'
+
       const autoSponsor = String(auto_sponsor) === 'true'
       if (autoSponsor && !hasResponsibleField(newFieldsValidated.fields)) {
         return res.status(400).send({
@@ -793,6 +776,7 @@ export default class TemplateController {
         })
       }
 
+      templateSaved.show_multiple_registers_per_customer = showMultipleRegistersPerCustomer
       templateSaved.auto_sponsor = autoSponsor
       templateSaved.fields = newFieldsValidated.fields
 

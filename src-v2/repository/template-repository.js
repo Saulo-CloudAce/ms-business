@@ -8,10 +8,11 @@ export default class TemplateRepository {
     this.cacheService = cacheService
   }
 
-  async save(name, fields, companyToken, autoSponsor = false, active, createdBy = 0) {
+  async save(name, fields, companyToken, autoSponsor = false, showMultipleRegistersPerCustomer = false, active, createdBy = 0) {
     const newTemplate = {
       name,
       auto_sponsor: autoSponsor,
+      show_multiple_registers_per_customer: showMultipleRegistersPerCustomer,
       fields,
       companyToken,
       active,
@@ -50,6 +51,7 @@ export default class TemplateRepository {
       const templateUpdated = {
         name: templateUpdate.name,
         auto_sponsor: templateUpdate.auto_sponsor,
+        show_multiple_registers_per_customer: templateUpdate.show_multiple_registers_per_customer,
         fields: templateUpdate.fields,
         updatedAt: templateUpdate.updatedAt,
         updatedBy: templateUpdate.updatedBy
@@ -67,11 +69,7 @@ export default class TemplateRepository {
 
   async getAllByCompany(companyToken) {
     try {
-      const result = await this.db
-        .collection('business_template')
-        .find({ companyToken })
-        .project(['_id', 'name', 'auto_sponsor', 'active', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy'])
-        .toArray()
+      const result = await this.db.collection('business_template').find({ companyToken }).project(['_id', 'name', 'auto_sponsor', 'active', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy']).toArray()
 
       return result
     } catch (err) {
@@ -118,6 +116,7 @@ export default class TemplateRepository {
           _id: 1,
           name: 1,
           auto_sponsor: 1,
+          show_multiple_registers_per_customer: 1,
           fields: 1,
           active: 1,
           createdAt: 1,
@@ -144,6 +143,7 @@ export default class TemplateRepository {
           _id: 1,
           name: 1,
           auto_sponsor: 1,
+          show_multiple_registers_per_customer: 1,
           fields: 1,
           active: 1,
           createdAt: 1,
