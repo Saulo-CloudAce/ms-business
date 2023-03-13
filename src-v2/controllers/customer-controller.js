@@ -1,16 +1,5 @@
 import moment from 'moment'
-import {
-  createSingleCustomer,
-  getByCpfCnpj,
-  getAllCustomersByCompany,
-  searchCustomer,
-  searchCustomerFormatted,
-  updateCustomer,
-  getCustomerById,
-  getCustomerFormattedById,
-  getAllCustomersByCompanyPaginated,
-  getListCustomersByCpfCnpj
-} from '../services/crm-service.js'
+import { createSingleCustomer, getByCpfCnpj, getAllCustomersByCompany, searchCustomer, searchCustomerFormatted, updateCustomer, getCustomerById, getCustomerFormattedById, getAllCustomersByCompanyPaginated, getListCustomersByCpfCnpj } from '../services/crm-service.js'
 import { clearCPFCNPJ } from '../helpers/formatters.js'
 import { normalizeArraySubfields } from '../lib/data-transform.js'
 import CompanyRepository from '../repository/company-repository.js'
@@ -43,8 +32,7 @@ export default class CustomerController {
       req.body.customer_cpfcnpj = cpfcnpj
 
       const request = await createSingleCustomer(req.body, companyToken, company.prefix_index_elastic)
-      if (request.response && request.response.status && request.response.status !== 200)
-        return res.status(request.response.status).send(request.response.data)
+      if (request.response && request.response.status && request.response.status !== 200) return res.status(request.response.status).send(request.response.data)
       return res.status(201).send(request.data)
     } catch (err) {
       console.error(err)
@@ -68,8 +56,7 @@ export default class CustomerController {
       req.body.customer_cpfcnpj = cpfcnpj
 
       const request = await updateCustomer(customerId, content, companyToken)
-      if (request.response && request.response.status && request.response.status != 200)
-        return res.status(request.response.status).send(request.response.data)
+      if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
 
       await cacheService.removeCustomerFormatted(companyToken, customerId)
       await cacheService.removeCustomer(companyToken, customerId)
@@ -96,8 +83,7 @@ export default class CustomerController {
 
       const request = await getCustomerById(req.params.id, companyToken)
 
-      if (request.response && request.response.status && request.response.status != 200)
-        return res.status(request.response.status).send(request.response.data)
+      if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
 
       const customerCached = await cacheService.getCustomer(companyToken, customerId)
       if (customerCached) {
@@ -142,8 +128,7 @@ export default class CustomerController {
 
       const request = await getCustomerById(customerId, companyToken)
 
-      if (request.response && request.response.status && request.response.status != 200)
-        return res.status(request.response.status).send(request.response.data)
+      if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
 
       const customer = request.data
       const templateList = customer.business_template_list
@@ -187,8 +172,7 @@ export default class CustomerController {
 
       const request = await getCustomerFormattedById(req.params.id, companyToken)
 
-      if (request.response && request.response.status && request.response.status != 200)
-        return res.status(request.response.status).send(request.response.data)
+      if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
 
       let customerCached = await cacheService.getCustomerFormatted(companyToken, customerId)
       if (customerCached) {
@@ -233,8 +217,7 @@ export default class CustomerController {
 
       const request = await getCustomerFormattedById(customerId, companyToken)
 
-      if (request.response && request.response.status && request.response.status != 200)
-        return res.status(request.response.status).send(request.response.data)
+      if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
 
       const customer = request.data
       const templateList = customer.business_template_list
@@ -281,8 +264,7 @@ export default class CustomerController {
         request = await getAllCustomersByCompany(companyToken)
       }
 
-      if (request.response && request.response.status && request.response.status != 200)
-        return res.status(request.response.status).send(request.response.data)
+      if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
 
       const customer = request.data ? request.data : {}
       if (customer) return res.status(200).send(customer)
@@ -309,8 +291,7 @@ export default class CustomerController {
       })
       const request = await getListCustomersByCpfCnpj(cpfcnpjList, companyToken)
 
-      if (request.response && request.response.status && request.response.status !== 200)
-        return res.status(request.response.status).send(request.response.data)
+      if (request.response && request.response.status && request.response.status !== 200) return res.status(request.response.status).send(request.response.data)
 
       const customers = request.data ? request.data : []
       if (customers) return res.status(200).send(customers)
@@ -339,8 +320,7 @@ export default class CustomerController {
         request = await getAllCustomersByCompany(companyToken)
       }
 
-      if (request.response && request.response.status && request.response.status != 200)
-        return res.status(request.response.status).send(request.response.data)
+      if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
 
       console.time('format data')
       const customer = request.data ? request.data : []
@@ -359,12 +339,7 @@ export default class CustomerController {
                 const keyCpfCnpj = fieldKey.column
                 let data = []
                 if (cpfcnpj) {
-                  templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(
-                    companyToken,
-                    templateId,
-                    [keyCpfCnpj],
-                    cpfcnpj
-                  )
+                  templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, [keyCpfCnpj], cpfcnpj)
                 } else {
                   console.log('aaa')
                   data = await businessRepository.listAllAndChildsByTemplateSortedReverse(companyToken, templateId)
@@ -424,8 +399,7 @@ export default class CustomerController {
       const request = await getAllCustomersByCompanyPaginated(companyToken, page, limit, templateId)
       console.timeEnd('lista customers')
 
-      if (request.response && request.response.status && request.response.status != 200)
-        return res.status(request.response.status).send(request.response.data)
+      if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
 
       return res.status(200).send(request.data)
     } catch (err) {
@@ -453,15 +427,15 @@ export default class CustomerController {
       if (!company) return res.status(400).send({ error: 'Company não identificada.' })
 
       const search = req.query.search
-      if (search.trim().length < 3)
-        return res.status(400).send({ warn: 'Para realizar a pesquisa é necessário informar ao menos 3 caracteres' })
+      if (search.trim().length < 3) return res.status(400).send({ warn: 'Para realizar a pesquisa é necessário informar ao menos 3 caracteres' })
       console.time('searchCustomer')
       const request = await searchCustomer(search, companyToken, company.prefix_index_elastic, queryTemplateId)
       console.timeEnd('searchCustomer')
 
-      if (request.response && request.response.status && request.response.status !== 200)
-        return res.status(request.response.status).send(request.response.data)
+      if (request.response && request.response.status && request.response.status !== 200) return res.status(request.response.status).send(request.response.data)
       let customers = Array.isArray(request.data) ? request.data : []
+
+      let template
 
       if (queryTemplateId && String(queryTemplateId).length > 0) {
         customers = customers.filter((c) => c.business_template_list && c.business_template_list.indexOf(queryTemplateId) >= 0)
@@ -469,6 +443,8 @@ export default class CustomerController {
           c.business_template_list = c.business_template_list.filter((t) => String(t) === String(queryTemplateId))
           return c
         })
+
+        template = await templateRepository.getByIdWithoutTags(queryTemplateId, companyToken)
       }
 
       let customerResultList = []
@@ -482,6 +458,10 @@ export default class CustomerController {
           for (let mail of mailings) {
             mail.lote_data_list = mail.lote_data_list.filter((lote) => lote.active)
             if (mail.lote_data_list.length) {
+              if (template && !template.show_multiple_registers_per_customer) {
+                mail.lote_data_list = [mail.lote_data_list[0]]
+              }
+
               templates.push(mail)
             }
           }
@@ -504,9 +484,7 @@ export default class CustomerController {
       }
       console.timeEnd('searchMongo')
 
-      customerResultList = customerResultList.sort((a, b) =>
-        a.customer_name > b.customer_name ? 1 : b.customer_name > a.customer_name ? -1 : 0
-      )
+      customerResultList = customerResultList.sort((a, b) => (a.customer_name > b.customer_name ? 1 : b.customer_name > a.customer_name ? -1 : 0))
 
       return res.status(200).send(customerResultList)
     } catch (err) {
@@ -537,8 +515,7 @@ export default class CustomerController {
       const request = await searchCustomerFormatted(search, companyToken, company.prefix_index_elastic, queryTemplateId, page, limit)
       console.timeEnd('search customer on CRM')
 
-      if (request.response && request.response.status && request.response.status !== 200)
-        return res.status(request.response.status).send(request.response.data)
+      if (request.response && request.response.status && request.response.status !== 200) return res.status(request.response.status).send(request.response.data)
       let customers = Array.isArray(request.data.customers) ? request.data.customers : []
       const customersPagination = request.data.pagination
 
@@ -551,6 +528,8 @@ export default class CustomerController {
       }
 
       let customerResultList = []
+
+      // TODO: implementar filtro de mailings ativos e exibição de registros únicos por cliente
 
       for (const customer of customers) {
         const mailings = await businessDomain.listMailingByTemplateListAndKeySortedReverse(companyToken, customer, templateRepository)
@@ -567,9 +546,7 @@ export default class CustomerController {
         customerResultList.push(customerResult)
       }
 
-      customerResultList = customerResultList.sort((a, b) =>
-        a.customer_name > b.customer_name ? 1 : b.customer_name > a.customer_name ? -1 : 0
-      )
+      customerResultList = customerResultList.sort((a, b) => (a.customer_name > b.customer_name ? 1 : b.customer_name > a.customer_name ? -1 : 0))
 
       return res.status(200).send({ customers: customerResultList, pagination: customersPagination })
     } catch (err) {
