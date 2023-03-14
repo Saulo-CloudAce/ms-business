@@ -20,6 +20,7 @@ import { getGeolocationDataFromCEPs } from '../helpers/geolocation-getter.js'
 import { sendToQueuePostProcess } from '../helpers/rabbit-helper.js'
 import { isTypeCepDistance, isTypeCpfCnpj, isTypeOptIn, isTypeRegisterActive } from '../helpers/field-methods.js'
 import QueryPredicate from '../repository/query-predicate.js'
+import { UserProfile } from '../../domain-v2/user-profile-enum.js'
 
 export default class BusinessController {
   constructor(businessService = {}) {
@@ -99,19 +100,7 @@ export default class BusinessController {
         else dataSeparator = req.body.data_separator
       }
 
-      const { businessId, invalids } = await newBusiness.createFromUrlFile(
-        companyToken,
-        name,
-        urlFile,
-        template.fields,
-        templateId,
-        activeUntil,
-        company.prefix_index_elastic,
-        jumpFirstLine,
-        dataSeparator,
-        createdBy,
-        aggregateMode
-      )
+      const { businessId, invalids } = await newBusiness.createFromUrlFile(companyToken, name, urlFile, template.fields, templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine, dataSeparator, createdBy, aggregateMode)
       if (businessId === null) return res.status(400).send({ error: invalids })
 
       if (invalids.length) return res.status(400).send({ businessId, invalids })
@@ -169,18 +158,7 @@ export default class BusinessController {
         else dataSeparator = req.body.data_separator
       }
 
-      const { businessId, invalids } = await newBusiness.create(
-        companyToken,
-        req.body.name,
-        req.files.file,
-        template.fields,
-        templateId,
-        activeUntil,
-        company.prefix_index_elastic,
-        jumpFirstLine,
-        dataSeparator,
-        createdBy
-      )
+      const { businessId, invalids } = await newBusiness.create(companyToken, req.body.name, req.files.file, template.fields, templateId, activeUntil, company.prefix_index_elastic, jumpFirstLine, dataSeparator, createdBy)
       if (businessId === null) return res.status(400).send({ error: invalids })
 
       if (invalids.length) return res.status(400).send({ businessId, invalids })
@@ -238,19 +216,7 @@ export default class BusinessController {
       const businessList = await newBusiness.getByNameAndTemplateId(companyToken, req.body.name, templateId)
       if (businessList.length) return res.status(400).send({ error: `${req.body.name} já foi cadastrado` })
 
-      const { businessId, invalids } = await newBusiness.createFromJson(
-        companyToken,
-        name,
-        template.fields,
-        templateId,
-        data,
-        activeUntil,
-        company.prefix_index_elastic,
-        req.body,
-        true,
-        createdBy,
-        aggregateMode
-      )
+      const { businessId, invalids } = await newBusiness.createFromJson(companyToken, name, template.fields, templateId, data, activeUntil, company.prefix_index_elastic, req.body, true, createdBy, aggregateMode)
       if (businessId === null) return res.status(400).send({ error: invalids })
 
       if (invalids.length) return res.status(400).send({ businessId, invalids })
@@ -315,19 +281,7 @@ export default class BusinessController {
 
       const isBatch = false
 
-      const { businessId, invalids, contactIds, valids } = await newBusiness.createSingleFromJson(
-        companyToken,
-        businessName,
-        template.fields,
-        templateId,
-        data,
-        activeUntil,
-        company.prefix_index_elastic,
-        req.body,
-        isBatch,
-        createdBy,
-        aggregateMode
-      )
+      const { businessId, invalids, contactIds, valids } = await newBusiness.createSingleFromJson(companyToken, businessName, template.fields, templateId, data, activeUntil, company.prefix_index_elastic, req.body, isBatch, createdBy, aggregateMode)
 
       let dataInvalids = []
       if (invalids.length) dataInvalids = invalids[0].errors
@@ -699,12 +653,7 @@ export default class BusinessController {
         searchParamsValues = searchParams.map((sp) => String(sp.value))
       }
 
-      const templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(
-        companyToken,
-        templateId,
-        keyColumnList,
-        searchParamsValues[0]
-      )
+      const templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, keyColumnList, searchParamsValues[0])
 
       return res.status(200).send(templateData)
     } catch (e) {
@@ -801,9 +750,7 @@ export default class BusinessController {
       const business = await newBusiness.getInvalidsFromBusinessById(companyToken, businessId)
       await this._exportSheetBusinessErrors(business, email)
 
-      return res
-        .status(200)
-        .send({ warn: `Em instantes será enviado um e-mail para ${email} contendo uma planilha com o resultado da busca.` })
+      return res.status(200).send({ warn: `Em instantes será enviado um e-mail para ${email} contendo uma planilha com o resultado da busca.` })
     } catch (e) {
       console.error(e)
       return res.status(500).send({ error: 'Ocorreu erro ao buscar o mailing com os dados' })
@@ -943,14 +890,7 @@ export default class BusinessController {
 
       const queryPredicate = new QueryPredicate(filterBy, template)
 
-      const business = await newBusiness.getDataByIdPaginatedAndFieldsSelected(
-        companyToken,
-        businessId,
-        fieldsSelected,
-        queryPredicate,
-        page,
-        limit
-      )
+      const business = await newBusiness.getDataByIdPaginatedAndFieldsSelected(companyToken, businessId, fieldsSelected, queryPredicate, page, limit)
 
       return res.status(200).send(business)
     } catch (e) {
@@ -1009,6 +949,7 @@ export default class BusinessController {
   async updateBusinessRegisterById(req, res) {
     const companyToken = req.headers['token']
     const templateId = req.headers['templateid']
+    const profileId = req.headers['profileid']
 
     if (!templateId) return res.status(400).send({ error: 'Informar o ID do tempolate no header' })
 
@@ -1039,6 +980,12 @@ export default class BusinessController {
       const fieldEditableMap = this._getMapFieldsEditables(template.fields)
 
       if (Object.keys(fieldEditableMap).length === 0) return res.status(400).send({ error: 'Este template não possui campos editáveis' })
+
+      const checkProfileEdit = this.#checkIfProfileAllowEdit(profileId, Object.keys(dataUpdate), fieldEditableMap)
+
+      if (!checkProfileEdit.allowEdit) {
+        return res.status(400).send({ error: `O perfil informado não pode editar os campos [${checkProfileEdit.fieldsForbidden.join(',')}]` })
+      }
 
       const businessList = await businessRepository.getDataByIdAndChildReference(companyToken, businessId)
       if (!businessList) return res.status(400).send({ error: 'Business não identificado.' })
@@ -1128,6 +1075,24 @@ export default class BusinessController {
       console.error(err)
       return res.status(500).send({ error: 'Ocorreu erro ao atualizar o registro' })
     }
+  }
+
+  #checkIfProfileAllowEdit(profileId = '', fieldsUpdate = [], fieldEditableMap = {}) {
+    let allowEdit = true
+    let fieldsForbidden = []
+    for (let f of fieldsUpdate) {
+      const fieldEditable = fieldEditableMap[f]
+      if (fieldEditable) {
+        const profilesAllowEdit = fieldEditable.profiles_allow_edit
+
+        if (Array.isArray(profilesAllowEdit) && profileId !== UserProfile.ADMIN && !profilesAllowEdit.includes('*') && !profilesAllowEdit.includes(profileId)) {
+          allowEdit = false
+          fieldsForbidden.push(f)
+        }
+      }
+    }
+
+    return { allowEdit, fieldsForbidden }
   }
 
   _templateHasCepDistanceField(fields = []) {
@@ -1296,12 +1261,7 @@ export default class BusinessController {
 
       const keyCPFCNPJ = fieldCPFCNPJ.column
 
-      const response = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(
-        companyToken,
-        templateId,
-        [keyCPFCNPJ],
-        querySearch
-      )
+      const response = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, [keyCPFCNPJ], querySearch)
 
       if (!response || response.length === 0) return res.status(404).send([])
 

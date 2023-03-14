@@ -1,40 +1,8 @@
 import { clearString } from '../helpers/formatters.js'
 import { isArrayElementSameTypes, isArrayOfObjects, isArrayWithEmptyElement } from '../helpers/validators.js'
-import {
-  isTypeOptions,
-  isTypeDate,
-  isTypeMultipleOptions,
-  isTypeArray,
-  isTypeDocument,
-  isTypeListDocument,
-  isTypeTag
-} from '../helpers/field-methods.js'
+import { isTypeOptions, isTypeDate, isTypeMultipleOptions, isTypeArray, isTypeDocument, isTypeListDocument, isTypeTag } from '../helpers/field-methods.js'
 
-const supportedTypes = [
-  'text',
-  'string',
-  'int',
-  'array',
-  'boolean',
-  'cpfcnpj',
-  'cep',
-  'phone_number',
-  'decimal',
-  'email',
-  'options',
-  'date',
-  'timestamp',
-  'time',
-  'table',
-  'multiple_options',
-  'document',
-  'list_document',
-  'tag',
-  'responsible',
-  'cep_distance',
-  'register_active',
-  'opt_in'
-]
+const supportedTypes = ['text', 'string', 'int', 'array', 'boolean', 'cpfcnpj', 'cep', 'phone_number', 'decimal', 'email', 'options', 'date', 'timestamp', 'time', 'table', 'multiple_options', 'document', 'list_document', 'tag', 'responsible', 'cep_distance', 'register_active', 'opt_in']
 const supportedKeys = ['customer_cpfcnpj', 'customer_name', 'customer_phone_number', 'customer_email', 'customer_email_address']
 
 export function hasFieldUnique(fields) {
@@ -67,6 +35,7 @@ function formatField(f = {}, namesColumn = {}, namesData = {}) {
   f.has_tab = String(f.has_tab) === 'true'
   f.quick_search = String(f.quick_search) === 'true'
   f.is_priority = String(f.is_priority) === 'true'
+  f.profiles_allow_edit = Array.isArray(f.profiles_allow_edit) && f.profiles_allow_edit.length ? f.profiles_allow_edit : ['*']
 
   f.label = f.label ? String(f.label) : String(f.column)
   f.column = clearString(f.column.toLowerCase())
@@ -143,10 +112,7 @@ function validateFieldOptionsType(field) {
     return {
       error: 'O list_options não pode ser um array com elementos de vários tipos de dados'
     }
-  } else if (
-    isArrayOfObjects(field.list_options) &&
-    field.list_options.filter((o) => !Object.keys(o).includes('value') || !Object.keys(o).includes('label')).length
-  ) {
+  } else if (isArrayOfObjects(field.list_options) && field.list_options.filter((o) => !Object.keys(o).includes('value') || !Object.keys(o).includes('label')).length) {
     return {
       error: 'O list_options deve ser um array com elementos da seguntes estrutura `{ value: "", label: "" }`'
     }
@@ -243,6 +209,13 @@ function checkIfFieldIsvalid(field = {}, errorsField = {}) {
       error: 'Este campo não tem um "data" permitido para ser usado como chave',
       supported_data_keys: supportedKeys
     })
+  }
+
+  if (field.profiles_allow_edit[0] != '*') {
+    const profilesNotNumber = field.profiles_allow_edit.filter((p) => isNaN(p))
+    if (profilesNotNumber.length) {
+      errorsField.push({ error: 'O atributo `profiles_allow_edit` permite somente números para identificar os perfis' })
+    }
   }
 
   return errorsField
