@@ -249,8 +249,8 @@ export default class TemplateController {
     }
 
     let frontendUrl = ''
-    if (req.headers['frontend_url']) {
-      frontendUrl = String(req.headers.frontend_url).trim()
+    if (req.headers['frontend-url']) {
+      frontendUrl = String(req.headers['frontend-url']).trim()
     }
 
     const canShowLink = frontendUrl.length > 0
