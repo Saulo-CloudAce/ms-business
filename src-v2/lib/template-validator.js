@@ -1,8 +1,8 @@
 import { clearString } from '../helpers/formatters.js'
 import { isArrayElementSameTypes, isArrayOfObjects, isArrayWithEmptyElement } from '../helpers/validators.js'
-import { isTypeOptions, isTypeDate, isTypeMultipleOptions, isTypeArray, isTypeDocument, isTypeListDocument, isTypeTag } from '../helpers/field-methods.js'
+import { isTypeOptions, isTypeDate, isTypeMultipleOptions, isTypeArray, isTypeDocument, isTypeListDocument, isTypeTag, isTypeNumericCalc } from '../helpers/field-methods.js'
 
-const supportedTypes = ['text', 'string', 'int', 'array', 'boolean', 'cpfcnpj', 'cep', 'phone_number', 'decimal', 'email', 'options', 'date', 'timestamp', 'time', 'table', 'multiple_options', 'document', 'list_document', 'tag', 'responsible', 'cep_distance', 'register_active', 'opt_in']
+const supportedTypes = ['text', 'string', 'int', 'array', 'boolean', 'cpfcnpj', 'cep', 'phone_number', 'decimal', 'email', 'options', 'date', 'timestamp', 'time', 'table', 'multiple_options', 'document', 'list_document', 'tag', 'responsible', 'cep_distance', 'register_active', 'opt_in', 'numeric_calc']
 const supportedKeys = ['customer_cpfcnpj', 'customer_name', 'customer_phone_number', 'customer_email', 'customer_email_address']
 
 export function hasFieldUnique(fields) {
@@ -73,6 +73,10 @@ function formatField(f = {}, namesColumn = {}, namesData = {}) {
   } else if (isTypeDocument(f) || isTypeListDocument(f)) {
     f.has_expiration_date = String(f.has_expiration_date) === 'true'
     f.has_issue_date = String(f.has_issue_date) === 'true'
+  } else if (isTypeNumericCalc(f)) {
+    f.formula = f.formula ? String(f.formula) : ''
+  } else {
+    delete f.formula
   }
 
   return { field: f, namesColumn, namesData }
@@ -139,6 +143,88 @@ function validateFieldDocument(field) {
   return {}
 }
 
+function validateFieldNumericCalc(field = {}, templateFields = []) {
+  if (!field.formula || String(field.formula).trim().length === 0) return { error: 'A formula é obrigatória' }
+
+  let formulaFields = field.formula.match(/{{(.*?)}}/g)
+  if (!formulaFields) {
+    formulaFields = []
+  }
+
+  formulaFields = formulaFields.map((f) => f.replace(/{{/g, '').replace(/}}/g, '')).filter((f) => f.length)
+
+  if (!formulaFields || formulaFields.length === 0) return { error: 'A formula deve usar pelo menos um campo do template' }
+
+  const templateFieldsIndexed = indexTemplateFields(templateFields)
+
+  const fieldsExistOnTemplateFields = checkIfEveryFieldExistOnTemplateFields(formulaFields, templateFieldsIndexed)
+  if (!fieldsExistOnTemplateFields.everyFieldExist) {
+    const fieldsNotExist = fieldsExistOnTemplateFields.fieldNamesNotExist
+    return { error: `A formula deve usar apenas campos definidos no template. Os campos [${fieldsNotExist.join(',')}] não existem no template` }
+  }
+
+  const fieldsHasTypeNumeric = checkIfEveryFieldHasTypesNumeric(formulaFields, templateFieldsIndexed)
+  if (!fieldsHasTypeNumeric.everyFieldsHasTypeNumeric) {
+    const fieldsOthersType = fieldsHasTypeNumeric.fieldNamesNotHasTypeNumeric
+    return { error: `A formula deve usar apenas campos com tipos int|decimal|numeric_calc. Os campos [${fieldsOthersType.join(',')}] tem outros tipos de dados.` }
+  }
+
+  const valuesIsValid = checkIfValuesIsValid(field.formula, formulaFields)
+  if (!valuesIsValid.valid) {
+    return { error: `A formula deve conter apenas valores numéricos. Os valores [${valuesIsValid.valuesInvalid.join(',')}] não são válidos.` }
+  }
+
+  return {}
+}
+
+function indexTemplateFields(templateFields = []) {
+  const templateFieldsIndexed = {}
+  for (let tf of templateFields) {
+    templateFieldsIndexed[tf.column] = tf
+  }
+
+  return templateFieldsIndexed
+}
+
+function checkIfEveryFieldExistOnTemplateFields(fieldNames = [], templateFieldsIndexed = {}) {
+  const fieldNamesNotExist = []
+
+  for (let fn of fieldNames) {
+    if (!templateFieldsIndexed[fn]) {
+      fieldNamesNotExist.push(fn)
+    }
+  }
+
+  return { everyFieldExist: fieldNamesNotExist.length === 0, fieldNamesNotExist }
+}
+
+function checkIfEveryFieldHasTypesNumeric(fieldNames = [], templateFieldsIndexed = {}) {
+  const fieldNamesNotHasTypeNumeric = []
+
+  for (let fn of fieldNames) {
+    const field = templateFieldsIndexed[fn]
+    if (!['numeric_calc', 'int', 'decimal'].includes(field.type)) {
+      fieldNamesNotHasTypeNumeric.push(fn)
+    }
+  }
+
+  return { everyFieldsHasTypeNumeric: fieldNamesNotHasTypeNumeric.length === 0, fieldNamesNotHasTypeNumeric }
+}
+
+function checkIfValuesIsValid(formula = '', fieldNames = []) {
+  formula = formula.replace(/{{(.*?)}}/g, '')
+  const values = formula.split(/[*+-\/]/g)
+
+  const valuesInvalid = []
+  for (let v of values) {
+    if (isNaN(v)) {
+      valuesInvalid.push(v)
+    }
+  }
+
+  return { valid: valuesInvalid.length === 0, valuesInvalid }
+}
+
 function isTagFieldFilled(field = {}) {
   return isTypeTag(field) && Object.keys(field).includes('fields') && field.fields.length
 }
@@ -155,7 +241,7 @@ function isArrayFieldNotFilled(field = {}) {
   return isTypeArray(field) && Object.keys(field).includes('fields') && field.fields.length === 0
 }
 
-function checkIfFieldIsvalid(field = {}, errorsField = {}) {
+function checkIfFieldIsvalid(field = {}, fields = [], errorsField = {}) {
   if (!errorsField.column) {
     errorsField = { column: field.column, errors: [] }
   }
@@ -166,7 +252,7 @@ function checkIfFieldIsvalid(field = {}, errorsField = {}) {
     if (isArrayFieldFilled(field) || isTagFieldFilled(field)) {
       for (const arrayFieldItem of field.fields) {
         let errorsSubfield = { column: arrayFieldItem.column, errors: [] }
-        errorsSubfield = checkIfFieldIsvalid(arrayFieldItem, errorsSubfield)
+        errorsSubfield = checkIfFieldIsvalid(arrayFieldItem, fields, errorsSubfield)
         if (errorsSubfield.errors.length) errorsField.errors.push(errorsSubfield)
       }
     } else if (isArrayFieldNotFilled(field) || isTagFieldNotFilled(field)) {
@@ -200,6 +286,11 @@ function checkIfFieldIsvalid(field = {}, errorsField = {}) {
       const error = validateFieldDocument(field)
       if (error && Object.keys(error).length) errorsField.errors.push(error)
     }
+
+    if (isTypeNumericCalc(field)) {
+      const error = validateFieldNumericCalc(field, fields)
+      if (error && Object.keys(error).length) errorsField.errors.push(error)
+    }
   } else {
     errorsField.push({ error: 'O type é obrigatório' })
   }
@@ -227,7 +318,7 @@ export function validateFields(fields) {
 
   for (const field of formattedFields) {
     let errorsField = { column: field.column, errors: [] }
-    errorsField = checkIfFieldIsvalid(field, errorsField)
+    errorsField = checkIfFieldIsvalid(field, fields, errorsField)
     if (errorsField.errors.length) {
       errors.push(errorsField)
     }

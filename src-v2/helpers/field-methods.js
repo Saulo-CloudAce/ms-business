@@ -80,6 +80,10 @@ export function isTypeString(field) {
   return field.type === 'string'
 }
 
+export function isTypeNumericCalc(field) {
+  return field.type === 'numeric_calc'
+}
+
 export function isRequired(field) {
   return field.required
 }

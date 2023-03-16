@@ -4,31 +4,7 @@ import events from 'events'
 import md5 from 'md5'
 import moment from 'moment'
 import { validateEmail, isArrayObject, arraysEqual, arraysDiff, listElementDuplicated } from '../helpers/validators.js'
-import {
-  isKey,
-  isTypeDate,
-  isTypeOptions,
-  isTypeInt,
-  isTypeDecimal,
-  isTypeBoolean,
-  isTypeCep,
-  isTypeEmail,
-  isTypePhoneNumber,
-  isTypeArray,
-  isTypeCpfCnpj,
-  isRequired,
-  isUnique,
-  isTypeMultipleOptions,
-  isValidDate,
-  isTypeDocument,
-  isTypeListDocument,
-  isTypeResponsible,
-  isTypeCepDistance,
-  isTypeTime,
-  isValidTime,
-  isTypeRegisterActive,
-  isTypeOptIn
-} from '../helpers/field-methods.js'
+import { isKey, isTypeDate, isTypeOptions, isTypeInt, isTypeDecimal, isTypeBoolean, isTypeCep, isTypeEmail, isTypePhoneNumber, isTypeArray, isTypeCpfCnpj, isRequired, isUnique, isTypeMultipleOptions, isValidDate, isTypeDocument, isTypeListDocument, isTypeResponsible, isTypeCepDistance, isTypeTime, isValidTime, isTypeRegisterActive, isTypeOptIn, isTypeNumericCalc } from '../helpers/field-methods.js'
 
 import StorageService from '../services/storage-service.js'
 import { getGeolocationDataFromCEPs } from '../helpers/geolocation-getter.js'
@@ -95,7 +71,7 @@ export default class Validator {
     templateFields.forEach((field) => {
       if (field.type === 'array' && Object.keys(field).includes('fields')) {
         field.fields.forEach((subField) => listColumnsName.push(subField.column))
-      } else {
+      } else if (field.type !== 'numeric_calc') {
         listColumnsName.push(field.column)
       }
     })
@@ -131,6 +107,10 @@ export default class Validator {
         const valField = fileData[fileDataIndex]
         const userId = !isNaN(valField) ? parseInt(valField) : 0
         jsonData[jsonDataField] = { user_id: userId, user_name: '' }
+      } else if (tf.type === 'numeric_calc') {
+        const jsonDataField = tf.column
+        const fileDataIndex = mapColumnsFile[tf.column]
+        jsonData[jsonDataField] = this.#formatFieldNumericCalc(fileData[fileDataIndex])
       } else {
         const jsonDataField = tf.column
         const fileDataIndex = mapColumnsFile[tf.column]
@@ -237,17 +217,7 @@ export default class Validator {
       const firstLineData = listLineData.shift()
       listLineData.forEach((line) => {
         columnsArray.forEach((col) => {
-          const lineFilled = line[col.column].filter(
-            (l) =>
-              Object.keys(l).filter(
-                (lk) =>
-                  String(l[lk]).length > 0 &&
-                  firstLineData[col.column] &&
-                  Array.isArray(firstLineData[col.column]) &&
-                  firstLineData[col.column].length > 0 &&
-                  firstLineData[col.column][0][lk] !== l[lk]
-              ).length > 0
-          )
+          const lineFilled = line[col.column].filter((l) => Object.keys(l).filter((lk) => String(l[lk]).length > 0 && firstLineData[col.column] && Array.isArray(firstLineData[col.column]) && firstLineData[col.column].length > 0 && firstLineData[col.column][0][lk] !== l[lk]).length > 0)
           if (lineFilled.length) firstLineData[col.column] = firstLineData[col.column].concat(lineFilled)
         })
       })
@@ -287,17 +257,7 @@ export default class Validator {
       const firstLineData = listLineData.shift()
       listLineData.forEach((line) => {
         columnsArray.forEach((col) => {
-          const lineFilled = line[col.data].filter(
-            (l) =>
-              Object.keys(l).filter(
-                (lk) =>
-                  String(l[lk]).length > 0 &&
-                  firstLineData[col.data] &&
-                  Array.isArray(firstLineData[col.data]) &&
-                  firstLineData[col.data].length > 0 &&
-                  firstLineData[col.data][0][lk] !== l[lk]
-              ).length > 0
-          )
+          const lineFilled = line[col.data].filter((l) => Object.keys(l).filter((lk) => String(l[lk]).length > 0 && firstLineData[col.data] && Array.isArray(firstLineData[col.data]) && firstLineData[col.data].length > 0 && firstLineData[col.data][0][lk] !== l[lk]).length > 0)
           if (lineFilled.length) firstLineData[col.data] = firstLineData[col.data].concat(lineFilled)
         })
       })
@@ -312,6 +272,9 @@ export default class Validator {
     const columnKey = fieldKey.length && Object.keys(fieldKey[0]).includes('data') ? fieldKey[0].data : rules.find((r) => r.unique).data
     const columnsArray = rules.filter((r) => isTypeArray(r))
     let dataIndexedByKeyData = {}
+    if (!customerBatch) {
+      return dataIndexedByKeyData
+    }
     customerBatch.forEach((data) => {
       const dataKeyValue = data[columnKey]
       if (dataIndexedByKeyData[dataKeyValue]) {
@@ -1062,6 +1025,10 @@ export default class Validator {
     return fieldData.replace(/-/g, '')
   }
 
+  #formatFieldNumericCalc(fieldData) {
+    return 0
+  }
+
   async _formatFieldCepDistance(fieldData) {
     const ceps = fieldData.split(':').map((cep) => {
       return this._formatFieldCep(cep)
@@ -1194,20 +1161,30 @@ export default class Validator {
     return fieldData.map((f) => this._formatFieldDocument(fieldRules, f))
   }
 
+  #getFieldsNumericCalc(fieldsIndexed = {}) {
+    const numericCalcFields = []
+    for (const fi of Object.keys(fieldsIndexed)) {
+      const field = fieldsIndexed[fi]
+      if (field.type === 'numeric_calc') {
+        numericCalcFields.push(field)
+      }
+    }
+
+    return numericCalcFields
+  }
+
   async format(data, rules) {
     const formatted = {}
     const fieldKeyList = Object.keys(data)
 
-    for (const indexFieldKey in fieldKeyList) {
-      const fieldKey = fieldKeyList[indexFieldKey]
+    const numericCalcFields = this.#getFieldsNumericCalc(rules)
+    fieldKeyList.push(...numericCalcFields.map((nf) => nf.column))
 
+    for (const fieldKey of fieldKeyList) {
       const el = data[fieldKey]
       const fieldRules = rules[fieldKey]
 
       let elText = el
-      if (!fieldRules) {
-        // console.log(fieldKey, el, fieldRules, rules)
-      }
 
       if (isTypeCpfCnpj(fieldRules)) {
         elText = this._formatFieldCpfCnpj(elText)
@@ -1235,6 +1212,8 @@ export default class Validator {
         elText = this._formatFieldOptIn(elText)
       } else if (isTypeResponsible(fieldRules)) {
         elText = this._formatFieldResponsible(elText)
+      } else if (isTypeNumericCalc(fieldRules)) {
+        elText = this.#formatFieldNumericCalc(elText)
       }
       formatted[fieldRules.column] = elText
     }
