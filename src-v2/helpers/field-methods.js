@@ -1,5 +1,9 @@
 import moment from 'moment'
 
+export function isTypePercentual(field) {
+  return field.type === 'percentual'
+}
+
 export function isTypeOptions(field) {
   return field.type === 'options'
 }
@@ -78,6 +82,10 @@ export function isTypeCpfCnpj(field) {
 
 export function isTypeString(field) {
   return field.type === 'string'
+}
+
+export function isTypeNumericCalc(field) {
+  return field.type === 'numeric_calc'
 }
 
 export function isRequired(field) {

@@ -11,21 +11,7 @@ export default class BusinessRepository {
     this.cacheService = cacheService
   }
 
-  async save(
-    companyToken,
-    name,
-    filePath,
-    templateId,
-    quantityRows,
-    fieldsData,
-    activeUntil,
-    jumpFirstLine = false,
-    dataSeparator = '',
-    isBatch = true,
-    invalids = [],
-    createdBy = 0,
-    aggregateMode = AggregateModeType.INCREMENT
-  ) {
+  async save(companyToken, name, filePath, templateId, quantityRows, fieldsData, activeUntil, jumpFirstLine = false, dataSeparator = '', isBatch = true, invalids = [], createdBy = 0, aggregateMode = AggregateModeType.INCREMENT) {
     const business = {
       _id: new ObjectId(),
       companyToken,
@@ -163,7 +149,7 @@ export default class BusinessRepository {
   async updateDataBusiness(businessId, updatedBy = 0) {
     try {
       const businessUpdated = { updatedAt: moment().format(), updatedBy }
-      await this.db.collection('business').update(
+      await this.db.collection('business').updateOne(
         {
           _id: new ObjectId(businessId)
         },
@@ -272,19 +258,7 @@ export default class BusinessRepository {
           templateId,
           name: businessName
         })
-        .project([
-          '_id',
-          'name',
-          'templateId',
-          'activeUntil',
-          'active',
-          'createdAt',
-          'updatedAt',
-          'createdBy',
-          'updatedBy',
-          'aggregateMode',
-          'flowPassed'
-        ])
+        .project(['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'aggregateMode', 'flowPassed'])
         .toArray()
 
       businessList = businessList.sort((a, b) => moment(b.createdAt) - moment(a.createdAt))
@@ -300,19 +274,7 @@ export default class BusinessRepository {
       let businessList = await this.db
         .collection('business')
         .find({ companyToken: companyToken, parentBatchId: { $exists: false } })
-        .project([
-          '_id',
-          'name',
-          'templateId',
-          'activeUntil',
-          'active',
-          'createdAt',
-          'updatedAt',
-          'createdBy',
-          'updatedBy',
-          'aggregateMode',
-          'flowPassed'
-        ])
+        .project(['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'aggregateMode', 'flowPassed'])
         .toArray()
 
       businessList = businessList.sort((a, b) => moment(b.createdAt) - moment(a.createdAt))
@@ -328,19 +290,7 @@ export default class BusinessRepository {
       let businessList = await this.db
         .collection('business')
         .find({ companyToken: companyToken, parentBatchId: { $exists: false } })
-        .project([
-          '_id',
-          'name',
-          'templateId',
-          'activeUntil',
-          'active',
-          'createdAt',
-          'updatedAt',
-          'createdBy',
-          'updatedBy',
-          'aggregateMode',
-          'flowPassed'
-        ])
+        .project(['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'aggregateMode', 'flowPassed'])
         .toArray()
 
       businessList = businessList.sort((a, b) => moment(b.createdAt) - moment(a.createdAt))
@@ -356,20 +306,7 @@ export default class BusinessRepository {
       const businessList = await this.db
         .collection('business')
         .find({ companyToken: companyToken, parentBatchId: { $exists: false } })
-        .project([
-          '_id',
-          'name',
-          'templateId',
-          'activeUntil',
-          'active',
-          'createdAt',
-          'updatedAt',
-          'createdBy',
-          'updatedBy',
-          'aggregateMode',
-          'quantityRows',
-          'flowPassed'
-        ])
+        .project(['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'aggregateMode', 'quantityRows', 'flowPassed'])
         .limit(10)
         .sort({ createdAt: -1 })
         .toArray()
@@ -396,20 +333,7 @@ export default class BusinessRepository {
           parentBatchId: { $exists: false },
           active: true
         })
-        .project([
-          '_id',
-          'name',
-          'templateId',
-          'activeUntil',
-          'active',
-          'createdAt',
-          'updatedAt',
-          'createdBy',
-          'updatedBy',
-          'aggregateMode',
-          'flowPassed',
-          'quantityRows'
-        ])
+        .project(['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'aggregateMode', 'flowPassed', 'quantityRows'])
         .sort({ createdAt: -1 })
         .toArray()
       console.timeEnd('getActivatedBatchesBasic')
@@ -446,20 +370,7 @@ export default class BusinessRepository {
       const businessList = await this.db
         .collection('business')
         .find({ companyToken: companyToken, parentBatchId: { $exists: false } })
-        .project([
-          '_id',
-          'name',
-          'templateId',
-          'activeUntil',
-          'active',
-          'createdAt',
-          'updatedAt',
-          'createdBy',
-          'updatedBy',
-          'aggregateMode',
-          'quantityRows',
-          'flowPassed'
-        ])
+        .project(['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'aggregateMode', 'quantityRows', 'flowPassed'])
         .skip(skipDocs)
         .limit(limit)
         .sort({ createdAt: -1 })
@@ -503,20 +414,7 @@ export default class BusinessRepository {
           parentBatchId: { $exists: false },
           active: true
         })
-        .project([
-          '_id',
-          'name',
-          'templateId',
-          'activeUntil',
-          'active',
-          'createdAt',
-          'updatedAt',
-          'createdBy',
-          'updatedBy',
-          'aggregateMode',
-          'quantityRows',
-          'flowPassed'
-        ])
+        .project(['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'aggregateMode', 'quantityRows', 'flowPassed'])
         .skip(skipDocs)
         .limit(limit)
         .sort({ createdAt: -1 })
@@ -561,20 +459,7 @@ export default class BusinessRepository {
           parentBatchId: { $exists: false },
           active: false
         })
-        .project([
-          '_id',
-          'name',
-          'templateId',
-          'activeUntil',
-          'active',
-          'createdAt',
-          'updatedAt',
-          'createdBy',
-          'updatedBy',
-          'aggregateMode',
-          'quantityRows',
-          'flowPassed'
-        ])
+        .project(['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'aggregateMode', 'quantityRows', 'flowPassed'])
         .skip(skipDocs)
         .limit(limit)
         .sort({ createdAt: -1 })
@@ -608,20 +493,7 @@ export default class BusinessRepository {
       const businessList = await this.db
         .collection('business')
         .find({ templateId, companyToken, parentBatchId: { $exists: false } })
-        .project([
-          '_id',
-          'name',
-          'data',
-          'activeUntil',
-          'active',
-          'aggregateMode',
-          'createdAt',
-          'updatedAt',
-          'createdBy',
-          'updatedBy',
-          'flowPassed',
-          'active'
-        ])
+        .project(['_id', 'name', 'data', 'activeUntil', 'active', 'aggregateMode', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'flowPassed', 'active'])
         .toArray()
 
       return businessList
@@ -630,14 +502,7 @@ export default class BusinessRepository {
     }
   }
 
-  async listSkippedDataByTemplateAndFilterByColumns(
-    companyToken = '',
-    templateId = '',
-    queryPredicate = new QueryPredicate(),
-    sortColumns = [],
-    limit = 10,
-    page = 0
-  ) {
+  async listSkippedDataByTemplateAndFilterByColumns(companyToken = '', templateId = '', queryPredicate = new QueryPredicate(), sortColumns = [], limit = 10, page = 0) {
     const offset = page * limit
     let matchParams = []
     if (queryPredicate.isEmpty()) {
@@ -694,14 +559,7 @@ export default class BusinessRepository {
     return businessDataList
   }
 
-  async listPaginatedDataByTemplateAndFilterByColumns(
-    companyToken = '',
-    templateId = '',
-    queryPredicate = new QueryPredicate(),
-    sortColumns = [],
-    limit = 10,
-    page = 0
-  ) {
+  async listPaginatedDataByTemplateAndFilterByColumns(companyToken = '', templateId = '', queryPredicate = new QueryPredicate(), sortColumns = [], limit = 10, page = 0) {
     const offset = page * limit
     let matchParams = []
     if (queryPredicate.isEmpty()) {
@@ -867,20 +725,7 @@ export default class BusinessRepository {
       const businessList = await this.db
         .collection('business')
         .find({ templateId, companyToken, parentBatchId: { $exists: false } })
-        .project([
-          '_id',
-          'name',
-          'childBatchesId',
-          'activeUntil',
-          'active',
-          'aggregateMode',
-          'createdAt',
-          'updatedAt',
-          'createdBy',
-          'updatedBy',
-          'flowPassed',
-          'active'
-        ])
+        .project(['_id', 'name', 'childBatchesId', 'activeUntil', 'active', 'aggregateMode', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'flowPassed', 'active'])
         .toArray()
 
       const businessChildList = []
@@ -956,19 +801,7 @@ export default class BusinessRepository {
       let businessList = await this.db
         .collection('business')
         .find({ templateId, companyToken, parentBatchId: { $exists: false } })
-        .project([
-          '_id',
-          'name',
-          'activeUntil',
-          'active',
-          'aggregateMode',
-          'createdAt',
-          'updatedAt',
-          'createdBy',
-          'updatedBy',
-          'flowPassed',
-          'active'
-        ])
+        .project(['_id', 'name', 'activeUntil', 'active', 'aggregateMode', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'flowPassed', 'active'])
         .toArray()
       businessList = businessList.sort((a, b) => (a.createdAt > b.createdAt ? -1 : b.createdAt > a.createdAt ? 1 : 0))
 
@@ -980,24 +813,7 @@ export default class BusinessRepository {
 
   async listAllAndChildsByTemplateSortedReverse(companyToken, templateId) {
     try {
-      let businessList = await this.db
-        .collection('business')
-        .find({ templateId, companyToken })
-        .project([
-          '_id',
-          'name',
-          'parentBatchId',
-          'activeUntil',
-          'active',
-          'aggregateMode',
-          'createdAt',
-          'updatedAt',
-          'createdBy',
-          'updatedBy',
-          'flowPassed',
-          'active'
-        ])
-        .toArray()
+      let businessList = await this.db.collection('business').find({ templateId, companyToken }).project(['_id', 'name', 'parentBatchId', 'activeUntil', 'active', 'aggregateMode', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'flowPassed', 'active']).toArray()
       businessList = businessList.sort((a, b) => (a.createdAt > b.createdAt ? -1 : b.createdAt > a.createdAt ? 1 : 0))
 
       return businessList
@@ -1225,18 +1041,7 @@ export default class BusinessRepository {
       const businessList = await this.db
         .collection('business')
         .find({ templateId, companyToken, parentBatchId: { $exists: false } })
-        .project([
-          '_id',
-          'name',
-          'activeUntil',
-          'active',
-          'createdAt',
-          'updatedAt',
-          'createdBy',
-          'aggregateMode',
-          'flowPassed',
-          'updatedBy'
-        ])
+        .project(['_id', 'name', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'createdBy', 'aggregateMode', 'flowPassed', 'updatedBy'])
         .toArray()
 
       return businessList
@@ -1247,21 +1052,7 @@ export default class BusinessRepository {
 
   async getById(companyToken, id) {
     try {
-      const business = await this.db
-        .collection('business')
-        .findOne({ _id: new ObjectId(id), companyToken: companyToken }, [
-          '_id',
-          'name',
-          'templateId',
-          'activeUntil',
-          'active',
-          'createdAt',
-          'updatedAt',
-          'createdBy',
-          'updatedBy',
-          'flowPassed',
-          'aggregateMode'
-        ])
+      const business = await this.db.collection('business').findOne({ _id: new ObjectId(id), companyToken: companyToken }, ['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'flowPassed', 'aggregateMode'])
 
       return business
     } catch (err) {
@@ -1325,25 +1116,7 @@ export default class BusinessRepository {
 
   async getDataById(companyToken, id) {
     try {
-      const business = await this.db
-        .collection('business')
-        .findOne({ _id: new ObjectId(id), companyToken: companyToken }, [
-          '_id',
-          'name',
-          'templateId',
-          'filePath',
-          'jumpFirstLine',
-          'customerStorage',
-          'dataSeparator',
-          'aggregateMode',
-          'quantityRows',
-          'activeUntil',
-          'invalids',
-          'flowPassed',
-          'active',
-          'createdAt',
-          'updatedAt'
-        ])
+      const business = await this.db.collection('business').findOne({ _id: new ObjectId(id), companyToken: companyToken }, ['_id', 'name', 'templateId', 'filePath', 'jumpFirstLine', 'customerStorage', 'dataSeparator', 'aggregateMode', 'quantityRows', 'activeUntil', 'invalids', 'flowPassed', 'active', 'createdAt', 'updatedAt'])
 
       const data = await this.db
         .collection('business_data')
@@ -1361,25 +1134,7 @@ export default class BusinessRepository {
 
   async getInfoById(companyToken, id) {
     try {
-      const business = await this.db
-        .collection('business')
-        .findOne({ _id: new ObjectId(id), companyToken: companyToken }, [
-          '_id',
-          'name',
-          'templateId',
-          'filePath',
-          'jumpFirstLine',
-          'customerStorage',
-          'dataSeparator',
-          'aggregateMode',
-          'quantityRows',
-          'activeUntil',
-          'invalids',
-          'flowPassed',
-          'active',
-          'createdAt',
-          'updatedAt'
-        ])
+      const business = await this.db.collection('business').findOne({ _id: new ObjectId(id), companyToken: companyToken }, ['_id', 'name', 'templateId', 'filePath', 'jumpFirstLine', 'customerStorage', 'dataSeparator', 'aggregateMode', 'quantityRows', 'activeUntil', 'invalids', 'flowPassed', 'active', 'createdAt', 'updatedAt'])
 
       return business
     } catch (err) {
@@ -1389,9 +1144,7 @@ export default class BusinessRepository {
 
   async getDataByIdToExport(companyToken, id) {
     try {
-      const business = await this.db
-        .collection('business')
-        .findOne({ _id: new ObjectId(id), companyToken: companyToken }, ['_id', 'name', 'templateId'])
+      const business = await this.db.collection('business').findOne({ _id: new ObjectId(id), companyToken: companyToken }, ['_id', 'name', 'templateId'])
 
       const data = await this.db
         .collection('business_data')
@@ -1456,9 +1209,7 @@ export default class BusinessRepository {
       )
       if (!data) return data
 
-      const business = await this.db
-        .collection('business')
-        .findOne({ _id: new ObjectId(businessId), companyToken: companyToken }, ['_id', 'name'])
+      const business = await this.db.collection('business').findOne({ _id: new ObjectId(businessId), companyToken: companyToken }, ['_id', 'name'])
 
       business.data = data
 
@@ -1508,14 +1259,7 @@ export default class BusinessRepository {
     }
   }
 
-  async getDataByIdPaginatedAndFieldsSelected(
-    companyToken,
-    businessId,
-    fields = [],
-    queryPredicate = new QueryPredicate(),
-    page = 0,
-    limit = 10
-  ) {
+  async getDataByIdPaginatedAndFieldsSelected(companyToken, businessId, fields = [], queryPredicate = new QueryPredicate(), page = 0, limit = 10) {
     try {
       const skipDocs = page * limit
 
