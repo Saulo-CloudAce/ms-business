@@ -2,7 +2,7 @@ import { clearString } from '../helpers/formatters.js'
 import { isArrayElementSameTypes, isArrayOfObjects, isArrayWithEmptyElement } from '../helpers/validators.js'
 import { isTypeOptions, isTypeDate, isTypeMultipleOptions, isTypeArray, isTypeDocument, isTypeListDocument, isTypeTag, isTypeNumericCalc } from '../helpers/field-methods.js'
 
-const supportedTypes = ['text', 'string', 'int', 'array', 'boolean', 'cpfcnpj', 'cep', 'phone_number', 'decimal', 'email', 'options', 'date', 'timestamp', 'time', 'table', 'multiple_options', 'document', 'list_document', 'tag', 'responsible', 'cep_distance', 'register_active', 'opt_in', 'numeric_calc']
+const supportedTypes = ['text', 'string', 'int', 'array', 'boolean', 'cpfcnpj', 'cep', 'phone_number', 'decimal', 'email', 'options', 'date', 'timestamp', 'time', 'table', 'multiple_options', 'document', 'list_document', 'tag', 'responsible', 'cep_distance', 'register_active', 'opt_in', 'numeric_calc', 'percentual']
 const supportedKeys = ['customer_cpfcnpj', 'customer_name', 'customer_phone_number', 'customer_email', 'customer_email_address']
 
 export function hasFieldUnique(fields) {
@@ -166,7 +166,7 @@ function validateFieldNumericCalc(field = {}, templateFields = []) {
   const fieldsHasTypeNumeric = checkIfEveryFieldHasTypesNumeric(formulaFields, templateFieldsIndexed)
   if (!fieldsHasTypeNumeric.everyFieldsHasTypeNumeric) {
     const fieldsOthersType = fieldsHasTypeNumeric.fieldNamesNotHasTypeNumeric
-    return { error: `A formula deve usar apenas campos com tipos int|decimal|numeric_calc. Os campos [${fieldsOthersType.join(',')}] tem outros tipos de dados.` }
+    return { error: `A formula deve usar apenas campos com tipos int|decimal|numeric_calc|percentual. Os campos [${fieldsOthersType.join(',')}] tem outros tipos de dados.` }
   }
 
   const valuesIsValid = checkIfValuesIsValid(field.formula, formulaFields)
@@ -203,7 +203,7 @@ function checkIfEveryFieldHasTypesNumeric(fieldNames = [], templateFieldsIndexed
 
   for (let fn of fieldNames) {
     const field = templateFieldsIndexed[fn]
-    if (!['numeric_calc', 'int', 'decimal'].includes(field.type)) {
+    if (!['numeric_calc', 'int', 'decimal', 'percentual'].includes(field.type)) {
       fieldNamesNotHasTypeNumeric.push(fn)
     }
   }

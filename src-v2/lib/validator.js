@@ -4,7 +4,7 @@ import events from 'events'
 import md5 from 'md5'
 import moment from 'moment'
 import { validateEmail, isArrayObject, arraysEqual, arraysDiff, listElementDuplicated } from '../helpers/validators.js'
-import { isKey, isTypeDate, isTypeOptions, isTypeInt, isTypeDecimal, isTypeBoolean, isTypeCep, isTypeEmail, isTypePhoneNumber, isTypeArray, isTypeCpfCnpj, isRequired, isUnique, isTypeMultipleOptions, isValidDate, isTypeDocument, isTypeListDocument, isTypeResponsible, isTypeCepDistance, isTypeTime, isValidTime, isTypeRegisterActive, isTypeOptIn, isTypeNumericCalc } from '../helpers/field-methods.js'
+import { isKey, isTypeDate, isTypeOptions, isTypeInt, isTypeDecimal, isTypeBoolean, isTypeCep, isTypeEmail, isTypePhoneNumber, isTypeArray, isTypeCpfCnpj, isRequired, isUnique, isTypeMultipleOptions, isValidDate, isTypeDocument, isTypeListDocument, isTypeResponsible, isTypeCepDistance, isTypeTime, isValidTime, isTypeRegisterActive, isTypeOptIn, isTypeNumericCalc, isTypePercentual } from '../helpers/field-methods.js'
 
 import StorageService from '../services/storage-service.js'
 import { getGeolocationDataFromCEPs } from '../helpers/geolocation-getter.js'
@@ -1073,6 +1073,18 @@ export default class Validator {
     return elText
   }
 
+  _formatFieldPercentual(fieldData) {
+    let elText = String(fieldData)
+    elText = elText.replace('%', '')
+
+    if (elText.indexOf(',') >= 0) {
+      elText = elText.replace('.', '')
+      elText = elText.replace(',', '.')
+    }
+
+    return parseFloat(elText)
+  }
+
   _formatFieldInt(fieldData) {
     let elText = fieldData
     if (String(elText).trim().length > 0) {
@@ -1198,6 +1210,8 @@ export default class Validator {
         elText = this._formatFieldDecimal(elText)
       } else if (isTypeInt(fieldRules)) {
         elText = this._formatFieldInt(elText)
+      } else if (isTypePercentual(fieldRules)) {
+        elText = this._formatFieldPercentual(elText)
       } else if (isTypeArray(fieldRules)) {
         elText = this._formatFieldArray(fieldRules, elText)
       } else if (isTypeOptions(fieldRules)) {

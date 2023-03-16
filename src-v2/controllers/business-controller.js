@@ -18,7 +18,7 @@ import Redis from '../../config/redis.js'
 import { clearFilename } from '../helpers/formatters.js'
 import { getGeolocationDataFromCEPs } from '../helpers/geolocation-getter.js'
 import { sendToQueuePostProcess } from '../helpers/rabbit-helper.js'
-import { isTypeCepDistance, isTypeCpfCnpj, isTypeOptIn, isTypeRegisterActive } from '../helpers/field-methods.js'
+import { isTypeCepDistance, isTypeCpfCnpj, isTypeDecimal, isTypeNumericCalc, isTypeOptIn, isTypePercentual, isTypeRegisterActive } from '../helpers/field-methods.js'
 import QueryPredicate from '../repository/query-predicate.js'
 import { UserProfile } from '../../domain-v2/user-profile-enum.js'
 
@@ -1164,6 +1164,30 @@ export default class BusinessController {
           register[f.column] = { value: dataUpdate[f.column], updated_at: moment().format() }
         } else if (isTypeOptIn(f)) {
           register[f.column] = { value: dataUpdate[f.column], updated_at: moment().format() }
+        } else if (isTypeNumericCalc(f)) {
+          let val = dataUpdate[f.column]
+          if (isNaN(val)) {
+            val = 0
+          }
+          register[f.column] = val
+        } else if (isTypeDecimal(f)) {
+          let elText = dataUpdate[f.column]
+          if (String(elText).indexOf(',') >= 0) {
+            elText = elText.replace('.', '')
+            elText = elText.replace(',', '.')
+          }
+
+          register[f.column] = elText
+        } else if (isTypePercentual(f)) {
+          let elText = String(dataUpdate[f.column])
+          elText = elText.replace('%', '')
+
+          if (elText.indexOf(',') >= 0) {
+            elText = elText.replace('.', '')
+            elText = elText.replace(',', '.')
+          }
+
+          register[f.column] = parseFloat(elText)
         } else {
           register[f.column] = dataUpdate[f.column]
         }

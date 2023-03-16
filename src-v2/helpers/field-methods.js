@@ -1,5 +1,9 @@
 import moment from 'moment'
 
+export function isTypePercentual(field) {
+  return field.type === 'percentual'
+}
+
 export function isTypeOptions(field) {
   return field.type === 'options'
 }
