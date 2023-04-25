@@ -66,6 +66,7 @@ export async function sendEmailBussinessError(emailTo = '', filepath = '', filen
     }
 
     await sgMail.send(msg)
+    return {}
   } catch (err) {
     console.error(err.response.body)
     return { error: 'Ocorreu erro ao enviar o e-mail.' }

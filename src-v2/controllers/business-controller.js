@@ -771,12 +771,12 @@ export default class BusinessController {
       { key: 'current_value', header: 'Valor enviado' }
     ]
 
-    const filename = `${business.name}_errors.xlsx`
+    const filename = `${business.name.replace(/\//g, '_')}_errors.xlsx`
     const filepath = `/tmp/${filename}`
 
     generateExcel(header, errors, filepath).then(
-      setTimeout(() => {
-        const result = sendEmailBussinessError(email, filepath, filename)
+      setTimeout(async () => {
+        const result = await sendEmailBussinessError(email, filepath, filename)
         if (result.error) {
           console.error('Ocorreu erro ao enviar o e-mail com o arquivo gerado.')
         } else {
