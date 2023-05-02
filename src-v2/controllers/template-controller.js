@@ -642,11 +642,13 @@ export default class TemplateController {
 
       const filename = `${template.name}.xlsx`
       const filepath = `/tmp/${filename}`
+      console.log('generate file', filepath)
 
       await generateExcel(header, records, filepath)
 
       const urlPrivate = await storageService.upload(companyToken, filepath, filename)
       const url = await storageService.getSignedUrl(urlPrivate)
+      console.log('download data from template', templateId, 'to file', filepath, 'finished')
       return res.status(200).send({ file_url: url })
     } catch (err) {
       console.error(err)
