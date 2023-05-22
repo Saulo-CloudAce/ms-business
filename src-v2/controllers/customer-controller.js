@@ -322,53 +322,53 @@ export default class CustomerController {
 
       if (request.response && request.response.status && request.response.status != 200) return res.status(request.response.status).send(request.response.data)
 
-      console.time('format data')
       const customer = request.data ? request.data : []
       const templateList = customer && customer.business_template_list ? customer.business_template_list : []
       let templates = []
-      if (templateList && templateList.length > 0) {
-        templates = await Promise.all(
-          templateList.map(async (templateId) => {
-            const template = await templateRepository.getByIdWithoutTags(templateId, companyToken)
-            if (template) {
-              const templateFinal = { _id: template._id, name: template.name, updatedAt: template.updatedAt }
-              let templateData = []
-              const fieldKey = template.fields.find((f) => f.data === 'customer_cpfcnpj')
 
-              if (fieldKey) {
-                const keyCpfCnpj = fieldKey.column
-                let data = []
-                if (cpfcnpj) {
-                  templateData = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, [keyCpfCnpj], cpfcnpj)
-                } else {
-                  console.log('aaa')
-                  data = await businessRepository.listAllAndChildsByTemplateSortedReverse(companyToken, templateId)
-
-                  data = data.filter((d) => d.data)
-                  if (data && data.length > 0) {
-                    data.map((m) => {
-                      m.data = m.data.filter((md) => md[keyCpfCnpj] === cpfcnpj)
-                      if (m.parentBatchId) {
-                        m._id = m.parentBatchId
-                        delete m.parentBatchId
-                      }
-                    })
-                  }
-
-                  templateData = data
-                }
-
-                if (templateData.length > 0) {
-                  templateData = normalizeArraySubfields(templateData, template)
-                  templateFinal.lote_data_list = templateData
-                  return templateFinal
-                }
-              }
-            }
-          })
-        )
+      const templateData = await templateRepository.getByListIdWithoutTags(templateList, companyToken)
+      const templateDataIndexed = {}
+      for (let t of templateData) {
+        templateDataIndexed[t._id] = t
       }
-      console.timeEnd('format data')
+
+      for (const templateId of templateList) {
+        const template = templateDataIndexed[templateId]
+        if (template) {
+          const templateFinal = { _id: template._id, name: template.name, updatedAt: template.updatedAt }
+          let templateData = []
+          const fieldKey = template.fields.find((f) => f.data === 'customer_cpfcnpj')
+
+          if (fieldKey) {
+            const keyCpfCnpj = fieldKey.column
+            let data = []
+            if (cpfcnpj) {
+              templateData = await businessRepository.listAllAndChildsByTemplateAndKeyCpfCnpjSortedReverse(companyToken, templateId, [keyCpfCnpj], cpfcnpj)
+            } else {
+              data = await businessRepository.listAllAndChildsByTemplateSortedReverse(companyToken, templateId)
+
+              data = data.filter((d) => d.data)
+              if (data && data.length > 0) {
+                data.map((m) => {
+                  m.data = m.data.filter((md) => md[keyCpfCnpj] === cpfcnpj)
+                  if (m.parentBatchId) {
+                    m._id = m.parentBatchId
+                    delete m.parentBatchId
+                  }
+                })
+              }
+
+              templateData = data
+            }
+
+            if (templateData.length > 0) {
+              templateData = normalizeArraySubfields(templateData, template)
+              templateFinal.lote_data_list = templateData
+              templates.push(templateFinal)
+            }
+          }
+        }
+      }
 
       customer.schema_list = templates.filter((t) => t).sort((a, b) => moment(b.updatedAt) - moment(a.updatedAt))
       delete customer.business_list

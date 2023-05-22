@@ -959,6 +959,90 @@ export default class BusinessRepository {
     }
   }
 
+  async listAllAndChildsByTemplateAndKeyCpfCnpjSortedReverse(companyToken, templateId, keyColumnList = [], keyValue = '') {
+    const matchParams = []
+    const matchParamsCache = []
+    for (const column of keyColumnList) {
+      const param = {}
+      const paramCache = {}
+      param[column] = keyValue
+      paramCache[paramCache] = keyValue
+      matchParams.push(param)
+      matchParamsCache.push(paramCache)
+    }
+
+    try {
+      const hashPayload = JSON.stringify({
+        matchParamsCache,
+        companyToken,
+        templateId
+      })
+      const hash = Buffer.from(hashPayload).toString('base64')
+
+      let queryCached = await this.cacheService.getChildByTemplate(companyToken, templateId, hash)
+      if (queryCached) {
+        console.log('SEARCH_IN_DATA_CACHED')
+        return queryCached
+      }
+
+      let businessDataList = await this.db
+        .collection('business_data')
+        .aggregate([
+          {
+            $match: {
+              $or: matchParams,
+              companyToken: companyToken,
+              templateId: templateId
+            }
+          },
+          {
+            $group: {
+              _id: '$businessId',
+              data: { $push: '$$ROOT' }
+            }
+          },
+          {
+            $project: {
+              'data.companyToken': 0,
+              'data.templateId': 0,
+              'data.businessId': 0
+            }
+          }
+        ])
+        .toArray()
+
+      const businessIdList = []
+      const businessDataMap = {}
+      businessDataList.forEach((bd) => {
+        businessIdList.push(bd._id)
+        businessDataMap[bd._id] = bd
+      })
+
+      const businessList = await this.db
+        .collection('business')
+        .find({ _id: { $in: businessIdList }, companyToken })
+        .project(['_id', 'name', 'createdAt', 'updatedAt', 'activeUntil', 'flowPassed', 'aggregateMode', 'active', 'flowPassed'])
+        .sort({ createdAt: -1 })
+        .toArray()
+
+      businessList.forEach((bus, ind) => {
+        businessList[ind].data = businessDataMap[bus._id].data
+      })
+
+      console.log('SEARCH_IN_DATA_STORED')
+      // global.cache.hashSearch[hash] = {
+      //   data: businessList,
+      //   expire: new Date()
+      // }
+      await this.cacheService.setChildByTemplate(companyToken, templateId, hash, businessList)
+
+      return businessList
+    } catch (err) {
+      console.error(err)
+      throw new Error(err)
+    }
+  }
+
   async getLastByTemplateAndKeySortedReverse(companyToken, templateId, keyColumnList = [], keyValue = '') {
     const businessListLast = []
 
