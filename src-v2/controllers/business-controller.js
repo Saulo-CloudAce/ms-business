@@ -1285,7 +1285,7 @@ export default class BusinessController {
 
       const keyCPFCNPJ = fieldCPFCNPJ.column
 
-      const response = await businessRepository.listAllAndChildsByTemplateAndKeySortedReverse(companyToken, templateId, [keyCPFCNPJ], querySearch)
+      const response = await businessRepository.listAllAndChildsByTemplateAndKeyCpfCnpjSortedReverse(companyToken, templateId, [keyCPFCNPJ], querySearch)
 
       if (!response || response.length === 0) return res.status(404).send([])
 

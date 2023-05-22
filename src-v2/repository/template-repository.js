@@ -180,10 +180,40 @@ export default class TemplateRepository {
       const result = await this.db
         .collection('business_template')
         .find({ _id: { $in: listObjectId }, companyToken })
-        .project(['_id', 'name', 'auto_sponsor', 'fields', 'active', 'createdAt', 'updatedAt'])
+        .project(['_id', 'name', 'auto_sponsor', 'show_multiple_registers_per_customer', 'fields', 'active', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy'])
         .toArray()
 
       return result
+    } catch (err) {
+      throw new Error(err)
+    }
+  }
+
+  async getByListIdWithoutTags(listId = [], companyToken = '') {
+    try {
+      const listObjectId = listId.map((id) => new ObjectId(id))
+
+      const results = await this.db
+        .collection('business_template')
+        .find({ _id: { $in: listObjectId }, companyToken })
+        .project(['_id', 'name', 'auto_sponsor', 'show_multiple_registers_per_customer', 'fields', 'active', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy'])
+        .toArray()
+
+      for (let result of results) {
+        if (result && result.fields) {
+          const fields = []
+          for (const field of result.fields) {
+            if (isTypeTag(field)) {
+              fields.push(...field.fields)
+            } else {
+              fields.push(field)
+            }
+          }
+          result.fields = fields
+        }
+      }
+
+      return results
     } catch (err) {
       throw new Error(err)
     }
