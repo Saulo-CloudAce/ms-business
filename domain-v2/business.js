@@ -11,32 +11,14 @@ export default class Business {
     this.crmService = crmService
   }
 
-  async create(
-    companyToken,
-    name,
-    file,
-    fields,
-    templateId,
-    activeUntil,
-    prefixIndexElastic,
-    jumpFirstLine,
-    dataSeparator,
-    createdBy = 0,
-    aggregateMode = AggregateModeType.INCREMENT
-  ) {
+  async create(companyToken, name, file, fields, templateId, activeUntil, prefixIndexElastic, jumpFirstLine, dataSeparator, createdBy = 0, aggregateMode = AggregateModeType.INCREMENT) {
     let listBatches = []
     // if (hasFieldUnique(fields)) {
     //   listBatches = await this.listAllByTemplateId(companyToken, templateId)
     // }
 
     console.time('validate')
-    const { invalids, valids, validsCustomer } = await this.validator.validateAndFormat(
-      file.path,
-      fields,
-      jumpFirstLine,
-      dataSeparator,
-      listBatches
-    )
+    const { invalids, valids, validsCustomer } = await this.validator.validateAndFormat(file.path, fields, jumpFirstLine, dataSeparator, listBatches)
     console.timeEnd('validate')
 
     if (valids.length === 0) {
@@ -49,63 +31,29 @@ export default class Business {
 
     const filePath = await this.uploader.upload(file, companyToken)
     console.time('save mongodb')
-    const businessId = await this.repository.save(
-      companyToken,
-      name,
-      filePath,
-      templateId,
-      valids.length,
-      valids,
-      activeUntil,
-      jumpFirstLine,
-      dataSeparator,
-      false,
-      invalids,
-      createdBy,
-      aggregateMode
-    )
+    const businessId = await this.repository.save(companyToken, name, filePath, templateId, valids.length, valids, activeUntil, jumpFirstLine, dataSeparator, false, invalids, createdBy, aggregateMode)
     console.timeEnd('save mongodb')
 
     console.time('send crm')
     if (hasCustomerFields(fields)) {
       const listFieldKey = fields.filter((f) => f.key).map((f) => f.data)
 
-      this.crmService
-        .sendData(validsCustomer, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic, aggregateMode)
-        .catch(() => {
-          console.log('Errro ao enviar customers para CRM - BUSINESS_ID:', businessId)
-        })
+      this.crmService.sendData(validsCustomer, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic, aggregateMode).catch(() => {
+        console.log('Errro ao enviar customers para CRM - BUSINESS_ID:', businessId)
+      })
     }
     console.timeEnd('send crm')
 
     return { businessId, invalids }
   }
 
-  async createFromUrlFile(
-    companyToken,
-    name,
-    filepath,
-    fields,
-    templateId,
-    activeUntil,
-    prefixIndexElastic,
-    jumpFirstLine,
-    dataSeparator,
-    createdBy = 0,
-    aggregateMode = AggregateModeType.INCREMENT
-  ) {
+  async createFromUrlFile(companyToken, name, filepath, fields, templateId, activeUntil, prefixIndexElastic, jumpFirstLine, dataSeparator, createdBy = 0, aggregateMode = AggregateModeType.INCREMENT) {
     const listBatches = []
     // if (hasFieldUnique(fields)) {
     //   listBatches = await this.listAllByTemplateId(companyToken, templateId)
     // }
 
-    const { invalids, valids, validsCustomer, validsPostProcess } = await this.validator.validateAndFormatFromUrlFile(
-      filepath,
-      fields,
-      jumpFirstLine,
-      dataSeparator,
-      listBatches
-    )
+    const { invalids, valids, validsCustomer, validsPostProcess } = await this.validator.validateAndFormatFromUrlFile(filepath, fields, jumpFirstLine, dataSeparator, listBatches)
 
     if (valids.length === 0) {
       return { businessId: null, invalids }
@@ -115,30 +63,14 @@ export default class Business {
       await this.repository.deactivateAllByTemplate(companyToken, templateId)
     }
 
-    const businessId = await this.repository.save(
-      companyToken,
-      name,
-      filepath,
-      templateId,
-      valids.length,
-      valids,
-      activeUntil,
-      jumpFirstLine,
-      dataSeparator,
-      false,
-      invalids,
-      createdBy,
-      aggregateMode
-    )
+    const businessId = await this.repository.save(companyToken, name, filepath, templateId, valids.length, valids, activeUntil, jumpFirstLine, dataSeparator, false, invalids, createdBy, aggregateMode)
 
     if (hasCustomerFields(fields)) {
       const listFieldKey = fields.filter((f) => f.key).map((f) => f.data)
 
-      this.crmService
-        .sendData(validsCustomer, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic, aggregateMode)
-        .catch(() => {
-          console.log('Errro ao enviar customers para CRM - BUSINESS_ID:', businessId)
-        })
+      this.crmService.sendData(validsCustomer, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic, aggregateMode).catch(() => {
+        console.log('Errro ao enviar customers para CRM - BUSINESS_ID:', businessId)
+      })
     }
 
     if (validsPostProcess.length) {
@@ -156,29 +88,13 @@ export default class Business {
     return { businessId, invalids }
   }
 
-  async createFromJson(
-    companyToken,
-    name,
-    fields,
-    templateId,
-    data,
-    activeUntil,
-    prefixIndexElastic,
-    requestBody,
-    isBatch = true,
-    createdBy = 0,
-    aggregateMode = AggregateModeType.INCREMENT
-  ) {
+  async createFromJson(companyToken, name, fields, templateId, data, activeUntil, prefixIndexElastic, requestBody, isBatch = true, createdBy = 0, aggregateMode = AggregateModeType.INCREMENT) {
     let listBatches = []
     // if (hasFieldUnique(fields)) {
     //   listBatches = await this.listAllByTemplateId(companyToken, templateId)
     // }
 
-    const { invalids, valids, validsCustomer, validsPostProcess } = await this.validator.validateAndFormatFromJson(
-      data,
-      fields,
-      listBatches
-    )
+    const { invalids, valids, validsCustomer, validsPostProcess } = await this.validator.validateAndFormatFromJson(data, fields, listBatches)
 
     if (valids.length === 0) {
       return { businessId: null, invalids }
@@ -193,30 +109,14 @@ export default class Business {
 
     const filename = `${name}.json`
     const filePath = await this.uploader.uploadContent(companyToken, uploadContentRequestBody, filename)
-    const businessId = await this.repository.save(
-      companyToken,
-      name,
-      filePath,
-      templateId,
-      valids.length,
-      valids,
-      activeUntil,
-      false,
-      '',
-      isBatch,
-      invalids,
-      createdBy,
-      aggregateMode
-    )
+    const businessId = await this.repository.save(companyToken, name, filePath, templateId, valids.length, valids, activeUntil, false, '', isBatch, invalids, createdBy, aggregateMode)
 
     if (hasCustomerFields(fields)) {
       const listFieldKey = fields.filter((f) => f.key).map((f) => f.data)
 
-      this.crmService
-        .sendData(validsCustomer, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic, aggregateMode)
-        .catch(() => {
-          console.log('Errro ao enviar customers para CRM - BUSINESS_ID:', businessId)
-        })
+      this.crmService.sendData(validsCustomer, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic, aggregateMode).catch(() => {
+        console.log('Errro ao enviar customers para CRM - BUSINESS_ID:', businessId)
+      })
     }
 
     if (validsPostProcess.length) {
@@ -234,30 +134,14 @@ export default class Business {
     return { businessId, invalids, valids }
   }
 
-  async createSingleFromJson(
-    companyToken,
-    name,
-    fields,
-    templateId,
-    data,
-    activeUntil,
-    prefixIndexElastic,
-    requestBody,
-    isBatch = true,
-    createdBy = 0,
-    aggregateMode = AggregateModeType.INCREMENT
-  ) {
+  async createSingleFromJson(companyToken, name, fields, templateId, data, activeUntil, prefixIndexElastic, requestBody, isBatch = true, createdBy = 0, aggregateMode = AggregateModeType.INCREMENT) {
     let listBatches = []
     let contactIdList = []
     // if (hasFieldUnique(fields)) {
     //   listBatches = await this.listAllByTemplateId(companyToken, templateId)
     // }
 
-    const { invalids, valids, validsCustomer, validsPostProcess } = await this.validator.validateAndFormatFromJson(
-      data,
-      fields,
-      listBatches
-    )
+    const { invalids, valids, validsCustomer, validsPostProcess } = await this.validator.validateAndFormatFromJson(data, fields, listBatches)
 
     if (valids.length === 0) {
       return { businessId: null, invalids }
@@ -268,34 +152,12 @@ export default class Business {
 
     const filename = `${name}.json`
     const filePath = await this.uploader.uploadContent(companyToken, uploadContentRequestBody, filename)
-    const businessId = await this.repository.save(
-      companyToken,
-      name,
-      filePath,
-      templateId,
-      valids.length,
-      valids,
-      activeUntil,
-      false,
-      '',
-      isBatch,
-      invalids,
-      createdBy,
-      aggregateMode
-    )
+    const businessId = await this.repository.save(companyToken, name, filePath, templateId, valids.length, valids, activeUntil, false, '', isBatch, invalids, createdBy, aggregateMode)
 
     if (hasCustomerFields(fields)) {
       const listFieldKey = fields.filter((f) => f.key).map((f) => f.data)
 
-      const responseSendData = await this.crmService.sendData(
-        validsCustomer,
-        companyToken,
-        businessId,
-        templateId,
-        listFieldKey,
-        prefixIndexElastic,
-        aggregateMode
-      )
+      const responseSendData = await this.crmService.sendData(validsCustomer, companyToken, businessId, templateId, listFieldKey, prefixIndexElastic, aggregateMode)
       if (responseSendData.data && responseSendData.data.contact_ids) contactIdList = responseSendData.data.contact_ids
     }
 
@@ -498,9 +360,9 @@ export default class Business {
               if (fieldKey.data === 'customer_cpfcnpj') {
                 keyValue = customer.cpfcnpj ? customer.cpfcnpj : customer.customer_cpfcnpj
               } else if (fieldKey.data === 'customer_phone' || fieldKey.data === 'customer_phone_number') {
-                keyValue = customer.phone ? customer.phone[0].number : customer.customer_phone[0].customer_phone_number
+                keyValue = customer.phone ? customer.phone[0].number : customer.customer_phone ? customer.customer_phone[0].customer_phone_number : customer.custome_phome ? customer.customer_phome[0].number : ''
               } else if (fieldKey.data === 'customer_email' || fieldKey.data === 'customer_email_address') {
-                keyValue = customer.email ? customer.email[0].email : customer.customer_email[0].customer_email
+                keyValue = customer.email ? customer.email[0].email : customer.customer_email ? customer.customer_email[0].customer_email : ''
               } else if (fieldKey.data === 'customer_name') {
                 keyValue = customer.name ? customer.name : customer.customer_name
               }
@@ -559,15 +421,9 @@ export default class Business {
               let keyValue = ''
               if (fieldKey.data === 'customer_cpfcnpj') {
                 keyValue = customer.cpfcnpj ? customer.cpfcnpj : customer.customer_cpfcnpj
-              } else if (
-                (fieldKey.data === 'customer_phone' && customer.phone) ||
-                (fieldKey.data === 'customer_phone_number' && customer.customer_phone)
-              ) {
+              } else if ((fieldKey.data === 'customer_phone' && customer.phone) || (fieldKey.data === 'customer_phone_number' && customer.customer_phone)) {
                 keyValue = customer.phone ? customer.phone[0].number : customer.customer_phone[0].customer_phone_number
-              } else if (
-                (fieldKey.data === 'customer_email' && customer.email) ||
-                (fieldKey.data === 'customer_email_address' && customer.customer_email)
-              ) {
+              } else if ((fieldKey.data === 'customer_email' && customer.email) || (fieldKey.data === 'customer_email_address' && customer.customer_email)) {
                 keyValue = customer.email ? customer.email[0].email : customer.customer_email[0].customer_email
               } else if (fieldKey.data === 'customer_name') {
                 keyValue = customer.name ? customer.name : customer.customer_name
