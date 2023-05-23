@@ -52,6 +52,7 @@ export default class BusinessRepository {
       await this.cacheService.removeBusinessActivePaginatedList(business.companyToken)
       await this.cacheService.removeChildByTemplate(business.companyToken, business.templateId)
       await this.cacheService.removeAllBusinessActivatedList(business.companyToken)
+      await this.cacheService.removeBusinessActiveListByTemplate(business.companyToken, business.templateId)
 
       return business._id
     } catch (err) {
@@ -186,6 +187,7 @@ export default class BusinessRepository {
       await this.cacheService.removeAllCustomer(companyToken)
       await this.cacheService.removeAllCustomerFormatted(companyToken)
       await this.cacheService.removeAllBusinessActivatedList(companyToken)
+      await this.cacheService.removeAllBusinessActiveList(companyToken)
     } catch (err) {
       throw new Error(err)
     }
@@ -216,6 +218,7 @@ export default class BusinessRepository {
       await this.cacheService.removeAllCustomer(companyToken)
       await this.cacheService.removeAllCustomerFormatted(companyToken)
       await this.cacheService.removeAllBusinessActivatedList(companyToken)
+      await this.cacheService.removeAllBusinessActiveList(companyToken)
     } catch (err) {
       console.error(err)
       throw new Error(err)
@@ -243,6 +246,7 @@ export default class BusinessRepository {
       await this.cacheService.removeAllCustomer(companyToken)
       await this.cacheService.removeAllCustomerFormatted(companyToken)
       await this.cacheService.removeAllBusinessActivatedList(companyToken)
+      await this.cacheService.removeBusinessActiveListByTemplate(companyToken, templateId)
     } catch (err) {
       console.error(err)
       throw new Error(err)
@@ -356,6 +360,30 @@ export default class BusinessRepository {
         .sort({ createdAt: -1 })
         .toArray()
       console.timeEnd('select_all_basic')
+
+      return businessList
+    } catch (err) {
+      throw new Error(err)
+    }
+  }
+
+  async getAllBatchesActiveBasicByTemplateId(companyToken, templateId = '') {
+    try {
+      const businessListCached = await this.cacheService.getBusinessActiveListByTemplate(companyToken, templateId)
+      if (businessListCached) {
+        console.log('BUSINESS_ACTIVE_LIST_CACHED')
+        return businessListCached
+      }
+
+      console.time('all business list')
+      const businessList = await this.db
+        .collection('business')
+        .find({ companyToken, templateId, parentBatchId: { $exists: false }, active: true })
+        .project(['_id', 'name', 'templateId', 'activeUntil', 'active', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'aggregateMode', 'quantityRows', 'flowPassed'])
+        .toArray()
+      console.timeEnd('all business list')
+
+      this.cacheService.setBusinessActiveListByTemplate(companyToken, templateId, businessList)
 
       return businessList
     } catch (err) {

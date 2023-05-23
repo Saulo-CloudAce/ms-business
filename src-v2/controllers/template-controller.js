@@ -701,6 +701,48 @@ export default class TemplateController {
     }
   }
 
+  async listBusinessActiveByTemplateId(req, res) {
+    const companyToken = req.headers['token']
+    const templateId = req.params.id
+
+    try {
+      const { companyRepository, businessRepository } = this._getInstanceRepositories(req.app)
+
+      if (!mongoIdIsValid(templateId)) {
+        return res.status(400).send({ error: 'ID não válido' })
+      }
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) {
+        return res.status(400).send({ error: 'Company não identificada.' })
+      }
+
+      const businessList = await businessRepository.getAllBatchesActiveBasicByTemplateId(companyToken, templateId)
+      const business = { data: [] }
+      business.data = businessList.map((b) => {
+        return {
+          _id: b._id,
+          name: b.name,
+          activeUntil: b.activeUntil,
+          active: b.active,
+          aggregateMode: b.aggregateMode ? b.aggregateMode : AggregateModeType.INCREMENT,
+          createdAt: b.createdAt,
+          updatedAt: b.updatedAt,
+          createdBy: b.createdBy ? b.createdBy : 0,
+          updatedBy: b.updatedBy ? b.updatedBy : 0,
+          dataAmount: b.quantityRows,
+          flowPassed: b.flow_passed || b.flowPassed ? true : false,
+          templateId: b.templateId
+        }
+      })
+
+      return res.status(200).send(business)
+    } catch (err) {
+      console.error(err)
+      return res.status(500).send({ error: 'Ocorreu erro ao listar os mailings ativos do template' })
+    }
+  }
+
   async getByIdWithoutTags(req, res) {
     const companyToken = req.headers['token']
     const templateId = req.params.id

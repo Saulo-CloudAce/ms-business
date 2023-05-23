@@ -209,6 +209,43 @@ export default class CacheService {
     await this.redis.hdel(keyPattern, 'data')
   }
 
+  async setBusinessActiveListByTemplate(companyToken = '', templateId = '', data = {}) {
+    const key = `${PREFIX_KEY}:${companyToken}:business_activated:template:${templateId}`
+    await this.redis.hset(key, 'data', JSON.stringify(data))
+
+    await this._setTTL(key)
+  }
+
+  async getBusinessActiveListByTemplate(companyToken = '', templateId = '') {
+    const key = `${PREFIX_KEY}:${companyToken}:business_activated:template:${templateId}`
+    let template = await this.redis.hget(key, 'data')
+    if (template) {
+      template = JSON.parse(template)
+    }
+
+    return template
+  }
+
+  async removeBusinessActiveListByTemplate(companyToken = '', templateId = '') {
+    const key = `${PREFIX_KEY}:${companyToken}:business_activated:template:${templateId}`
+    await this.redis.hdel(key, 'data')
+  }
+
+  async removeAllBusinessActiveList(companyToken = '') {
+    const keyPattern = `${PREFIX_KEY}:${companyToken}:business_activated:template:*`
+    const keysStored = await this.redis.keys(keyPattern)
+
+    if (keysStored.length === 0) return
+
+    const requestsKeyDeletion = []
+    for (let i = 0; i < keysStored.length; i++) {
+      const key = keysStored[i]
+      requestsKeyDeletion.push(this.redis.hdel(key, 'data'))
+    }
+
+    await Promise.all(requestsKeyDeletion)
+  }
+
   async _setTTL(key = '') {
     const ttl = process.env.REDIS_TTL ? process.env.REDIS_TTL : 10
     this.redis.expire(key, ttl)
