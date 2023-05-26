@@ -90,7 +90,10 @@ export default class BusinessController {
         })
 
       const businessList = await newBusiness.getByNameAndTemplateId(companyToken, req.body.name, templateId)
-      if (businessList.length) return res.status(400).send({ error: `${req.body.name} já foi cadastrado` })
+      if (businessList.length) {
+        const dateImport = moment(businessList[0].createdAt).format('DD/MM/YYYY')
+        return res.status(400).send({ error: `${req.body.name} já foi cadastrado em ${dateImport}` })
+      }
 
       const jumpFirstLine = req.body.jump_first_line ? req.body.jump_first_line : false
 
