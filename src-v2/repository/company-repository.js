@@ -50,7 +50,6 @@ export default class CompanyRepository {
   async getByToken(token) {
     try {
       if (global.cache.companies[token]) {
-        console.log('COMPANY_CACHED')
         const companyCached = global.cache.companies[token]
         return companyCached.data
       }
@@ -68,9 +67,7 @@ export default class CompanyRepository {
 
   async update(id, name, callback, activated) {
     try {
-      const result = await this.db
-        .collection('company')
-        .update({ _id: new ObjectId(id) }, { $set: { name, callback, activated, updated_at: moment().format() } })
+      const result = await this.db.collection('company').update({ _id: new ObjectId(id) }, { $set: { name, callback, activated, updated_at: moment().format() } })
 
       return result.ops[0]
     } catch (err) {

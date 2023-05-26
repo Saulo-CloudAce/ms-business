@@ -7,6 +7,7 @@ import TemplateRepository from '../repository/template-repository.js'
 import BusinessRepository from '../repository/business-repository.js'
 import Business from '../../domain-v2/business.js'
 import CacheService from '../services/cache-service.js'
+import { mongoIdIsValid } from '../helpers/validators.js'
 
 export default class CustomerController {
   _getInstanceRepositories(app) {
@@ -443,6 +444,10 @@ export default class CustomerController {
           c.business_template_list = c.business_template_list.filter((t) => String(t) === String(queryTemplateId))
           return c
         })
+
+        if (!mongoIdIsValid(queryTemplateId)) {
+          return res.status(400).send({ error: 'O ID de template informado é inválido' })
+        }
 
         template = await templateRepository.getByIdWithoutTags(queryTemplateId, companyToken)
       }
