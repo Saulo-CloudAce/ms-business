@@ -886,7 +886,6 @@ export default class BusinessController {
       const template = await templateRepository.getByIdWithoutTags(businessInfo.templateId, companyToken)
 
       filterBy = this._parseQueryPredicate(filterBy, baseDate)
-      console.log(JSON.stringify(filterBy))
 
       const queryPredicate = new QueryPredicate(filterBy, template)
 
