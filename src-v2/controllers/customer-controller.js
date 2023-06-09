@@ -1,5 +1,5 @@
 import moment from 'moment'
-import { createSingleCustomer, getByCpfCnpj, getAllCustomersByCompany, searchCustomer, searchCustomerFormatted, updateCustomer, getCustomerById, getCustomerFormattedById, getAllCustomersByCompanyPaginated, getListCustomersByCpfCnpj } from '../services/crm-service.js'
+import { createSingleCustomer, getByCpfCnpj, getAllCustomersByCompany, searchCustomer, searchCustomerFormatted, updateCustomer, getCustomerById, getCustomerFormattedById, getAllCustomersByCompanyPaginated, getListCustomersByCpfCnpj, getCustomerByIdList } from '../services/crm-service.js'
 import { clearCPFCNPJ } from '../helpers/formatters.js'
 import { normalizeArraySubfields } from '../lib/data-transform.js'
 import CompanyRepository from '../repository/company-repository.js'

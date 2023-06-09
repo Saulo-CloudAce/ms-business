@@ -451,4 +451,68 @@ export default class Business {
       throw Error('Ocorreu erro ao listar os mailings que tenha este cliente presente')
     }
   }
+
+  async getLastMailingByCustomerListAndTemplateAndKeySortedReverse(companyToken = '', customers = [], templateId = '', templateRepository = {}) {
+    const mapTemplate = {}
+    const matchParams = []
+    const mapCustomers = {}
+
+    let keyColumn
+
+    try {
+      const template = await templateRepository.getByIdWithoutTags(templateId, companyToken)
+      if (template) {
+        const fieldKey = template.fields.find((f) => f.key)
+        if (fieldKey) {
+          keyColumn = fieldKey.column
+
+          for (let customer of customers) {
+            let keyValue = ''
+            if (fieldKey.data === 'customer_cpfcnpj') {
+              keyValue = customer.cpfcnpj ? customer.cpfcnpj : customer.customer_cpfcnpj
+            } else if ((fieldKey.data === 'customer_phone' && customer.phone) || (fieldKey.data === 'customer_phone_number' && customer.customer_phone)) {
+              keyValue = customer.phone ? customer.phone[0].number : customer.customer_phone[0].customer_phone_number
+            } else if ((fieldKey.data === 'customer_email' && customer.email) || (fieldKey.data === 'customer_email_address' && customer.customer_email)) {
+              keyValue = customer.email ? customer.email[0].email : customer.customer_email[0].customer_email
+            } else if (fieldKey.data === 'customer_name') {
+              keyValue = customer.name ? customer.name : customer.customer_name
+            }
+
+            const matchp = {}
+            matchp[keyColumn] = String(keyValue)
+            matchParams.push(matchp)
+
+            customer.schema_list = [
+              {
+                _id: template._id,
+                name: template.name,
+                lote_data_list: []
+              }
+            ]
+
+            mapCustomers[keyValue] = customer
+          }
+        }
+      }
+
+      const templateIdList = [templateId]
+
+      if (templateIdList.length && matchParams.length) {
+        const customerMailings = await this.repository.listAllByTemplateListAndKeySortedReverse(companyToken, templateIdList, matchParams)
+        for (let mailing of customerMailings) {
+          const keyValue = mailing.data[0][keyColumn]
+          const cust = mapCustomers[keyValue]
+          if (cust && cust.schema_list[0].lote_data_list.length === 0) {
+            cust.schema_list[0].lote_data_list.push(mailing)
+            mapCustomers[keyValue] = cust
+          }
+        }
+      }
+
+      return Object.values(mapCustomers)
+    } catch (err) {
+      console.error(err)
+      throw Error('Ocorreu erro ao listar os mailings que tenha este cliente presente')
+    }
+  }
 }

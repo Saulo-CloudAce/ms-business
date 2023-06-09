@@ -1192,8 +1192,6 @@ export default class BusinessRepository {
       resultFields[sf] = 1
     })
 
-    console.log(resultFields)
-
     try {
       const businessData = await this.db
         .collection('business_data')

@@ -15,6 +15,8 @@ import uploadFileFTP from '../helpers/upload-ftp.js'
 import { generateCSV } from '../helpers/csv-generator.js'
 import { Stream } from 'stream'
 import ExcelJS from 'exceljs'
+import { getCustomerByIdList } from '../services/crm-service.js'
+import Business from '../../domain-v2/business.js'
 
 export default class TemplateController {
   _getInstanceRepositories(app) {
@@ -830,6 +832,36 @@ export default class TemplateController {
     } catch (err) {
       console.error(err)
       return res.status(500).send({ error: 'Ocorreu erro ao atualizar o template' })
+    }
+  }
+
+  async getCustomersByIdAndTemplateId(req, res) {
+    const companyToken = req.headers['token']
+    const templateId = req.params.id
+    const customersSearch = req.body.customers_search // [1000,2000]
+    try {
+      const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
+
+      const businessDomain = new Business(businessRepository)
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
+
+      const request = await getCustomerByIdList(customersSearch, companyToken)
+      let customers = request.data
+
+      customers = customers
+        .filter((c) => Array.isArray(c.business_template_list) && c.business_template_list.find((tl) => tl === templateId))
+        .map((c) => {
+          c.business_template_list = [templateId]
+          return c
+        })
+
+      customers = await businessDomain.getLastMailingByCustomerListAndTemplateAndKeySortedReverse(companyToken, customers, templateId, templateRepository)
+      return res.status(200).send(customers)
+    } catch (err) {
+      console.error(err)
+      return res.status(500).send({ error: 'Ocorreu erro ao buscar os clientes por template' })
     }
   }
 }
