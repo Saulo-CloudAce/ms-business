@@ -1,15 +1,7 @@
 import axios from 'axios'
 import { AggregateModeType } from '../../domain-v2/aggregate-mode-enum.js'
 
-export async function sendData(
-  data,
-  companyToken,
-  businessId,
-  templateId,
-  fieldKeyList,
-  prefixIndexElastic,
-  aggregateMode = AggregateModeType.INCREMENT
-) {
+export async function sendData(data, companyToken, businessId, templateId, fieldKeyList, prefixIndexElastic, aggregateMode = AggregateModeType.INCREMENT) {
   const payload = {
     customers: data,
     business_id: businessId,
@@ -71,6 +63,15 @@ export async function getCustomerById(id, companyToken) {
   }
 }
 
+export async function getCustomerByIdList(listId = [], companyToken) {
+  try {
+    return await getAxiosInstance(companyToken).post(`${process.env.CRM_URL}/pool_customers_by_id`, { customer_ids: listId })
+  } catch (err) {
+    console.error(err)
+    return err
+  }
+}
+
 export async function getCustomerFormattedById(id, companyToken) {
   try {
     return await getAxiosInstance(companyToken).get(`${process.env.CRM_URL}/customers/${id}/formatted`)
@@ -110,10 +111,7 @@ export async function getAllCustomersByCompany(companyToken) {
 
 export async function getAllCustomersByCompanyPaginated(companyToken, page = 0, limit = 0, templateId = '') {
   try {
-    if (templateId && templateId.length)
-      return await getAxiosInstanceByCompanyTemplateID(companyToken, templateId).get(
-        `${process.env.CRM_URL}/customers/all?page=${page}&limit=${limit}`
-      )
+    if (templateId && templateId.length) return await getAxiosInstanceByCompanyTemplateID(companyToken, templateId).get(`${process.env.CRM_URL}/customers/all?page=${page}&limit=${limit}`)
     return await getAxiosInstance(companyToken).get(`${process.env.CRM_URL}/customers/all?page=${page}&limit=${limit}`)
   } catch (err) {
     return err
