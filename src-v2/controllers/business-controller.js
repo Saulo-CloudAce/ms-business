@@ -1344,7 +1344,85 @@ export default class BusinessController {
     }
   }
 
-  async exportBusiness(req, res) {
+  async exportBusinessRaw(req, res) {
+    const companyToken = req.headers['token']
+    const businessId = req.params.id
+    const email = req.query.email
+    if (!email) {
+      return res.status(400).send({
+        error: 'Informe um e-mail para enviar o arquivo com os dados'
+      })
+    }
+
+    try {
+      const { companyRepository, templateRepository } = this._getInstanceRepositories(req.app)
+      const newBusiness = this._getInstanceBusiness(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
+
+      const business = await newBusiness.getDataByIdToExport(companyToken, businessId)
+
+      if (!business) {
+        return res.status(404).send({ error: 'Não foi encontrado um business com este ID' })
+      }
+
+      const template = await templateRepository.getByIdWithoutTags(business.templateId, companyToken)
+
+      const businessData = this._formatDataToExportRaw(business.data, template.fields)
+
+      const header = Object.keys(businessData[0]).map((k) => {
+        return { key: `${k}`, header: `${k}` }
+      })
+
+      const filename = `${clearFilename(business.name)}_exported_${moment().format('YYYYMMDDHHMMSS')}.xlsx`
+      const filepath = `/tmp/${filename}`
+
+      generateExcel(header, businessData, filepath).then(
+        setTimeout(() => {
+          const result = sendEmail(email, filepath, filename)
+          if (result.error) {
+            console.error('Ocorreu erro ao enviar o e-mail com o arquivo gerado.')
+          } else {
+            console.log('E-mail enviado com CSV gerado.')
+          }
+          fs.unlink(filepath, (err) => {
+            if (err) console.error('Ocorreu erro ao excluir o CSV gerado.')
+            else console.log('Arquivo CSV excluido.')
+          })
+        }, 5000)
+      )
+
+      return res.status(200).send({ warn: `Em instantes será enviado um e-mail para ${email} contendo o mailing solicitado.` })
+    } catch (err) {
+      console.error(err)
+      return res.status(500).send({ error: 'Ocorreu erro ao exportar os dados do business' })
+    }
+  }
+
+  _formatDataToExportRaw(data = [], fields = []) {
+    const dataFormatted = []
+    for (const d of data) {
+      const newData = {}
+      for (const f of fields) {
+        const fd = d[f.column]
+        if (!['array', 'options', 'multiple_options'].includes(f.type)) {
+          newData[f.column] = fd
+        } else if (f.type === 'array') {
+          for (const sf of f.fields) {
+            newData[sf.column] = fd && fd.length ? fd[0][sf.column] : ''
+          }
+        } else if (['options', 'multiple_options'].includes(f.type)) {
+          newData[f.column] = fd && fd.length ? fd.join(',') : ''
+        }
+      }
+      dataFormatted.push(newData)
+    }
+
+    return dataFormatted
+  }
+
+  async exportBusinessFormatted(req, res) {
     const companyToken = req.headers['token']
     const businessId = req.params.id
     const email = req.query.email

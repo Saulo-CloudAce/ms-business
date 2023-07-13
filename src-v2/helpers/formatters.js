@@ -1306,5 +1306,9 @@ export function clearCPFCNPJ(str) {
 }
 
 export function clearFilename(filename = '') {
-  return filename.replace(/\//g, '-').replace('.', '')
+  return filename
+    .replace(/\//g, '-')
+    .replace('.', '')
+    .replace(/^\s+|\s+$|\s+(?=\s)/g, '')
+    .trim()
 }
