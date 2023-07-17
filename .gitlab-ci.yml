@@ -67,7 +67,6 @@ build_homol:
     - apk add --no-cache tzdata python3 py-pip py3-pip jq git unzip zip curl bash openssl wget tar bash bash-completion > /dev/null 2>&1
     - pip install pyyaml==5.3.1 > /dev/null 2>&1
     - pip install awscli > /dev/null 2>&1
-    - mv /root/.local/bin/* /usr/local/bin
     - cp /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime
     - rm /bin/sh && ln -s /bin/bash /bin/sh
     - curl -s https://releases.hashicorp.com/vault/1.5.3/vault_1.5.3_linux_amd64.zip -o "vault.zip"
