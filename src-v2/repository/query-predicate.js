@@ -1,5 +1,5 @@
 import moment from 'moment'
-import { isTypeInt, isTypeBoolean, isTypeDecimal, isTypeString, isTypeCep, isTypePhoneNumber } from '../helpers/field-methods.js'
+import { isTypeInt, isTypeBoolean, isTypeDecimal, isTypeString, isTypeCep, isTypePhoneNumber, isValidDate, isTypeDate } from '../helpers/field-methods.js'
 import QueryPredicateError from './query-predicate-error.js'
 
 const connectConditions = {
@@ -94,6 +94,18 @@ export default class QueryPredicate {
   }
 
   _validateRuleValueType(rule = {}, templateField = {}, ruleIndex = 0) {
+    if (isTypeDate(templateField)) {
+
+      if (rule.value) {
+        const date = rule.value.trim()
+        if (!isValidDate(date, "YYYY-MM-DD")){
+          throw new Error(`[${ruleIndex}] O valor não é uma data válida`);
+        }
+      } else {
+        throw new Error(`[${ruleIndex}] O valor da data está vazio`);
+      }
+      
+    }
     if (isTypeInt(templateField) && isNaN(rule.value)) throw new Error(`[${ruleIndex}] O tipo de dados valor da regra é diferente do tipo de dados do campo no template`)
     if (isTypeBoolean(templateField) && !['true', 'false'].includes(String(rule.value))) throw new Error(`[${ruleIndex}] O tipo de dados valor da regra é diferente do tipo de dados do campo no template`)
     if (isTypeDecimal(templateField) && isNaN(rule.value)) throw new Error(`[${ruleIndex}] O tipo de dados valor da regra é diferente do tipo de dados do campo no template`)
@@ -151,7 +163,15 @@ export default class QueryPredicate {
 
   _buildEqualCriteriaMongoQuery(rule = {}, field = {}) {
     const criteria = {}
-    criteria[rule.field] = rule.value
+    
+    if(isTypeDate(field)){
+      const valueDate = moment(rule.value).format(field.mask)
+      criteria[rule.field] = valueDate
+    }
+    else{
+      criteria[rule.field] = rule.value
+    }
+    
     return criteria
   }
 
