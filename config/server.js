@@ -1,3 +1,4 @@
+import tracing from './elastic-apm.js'
 import express from 'express'
 import bodyParser from 'body-parser'
 import multipart from 'connect-multiparty'
@@ -21,11 +22,11 @@ app.use(multipart())
 app.use(helmet())
 app.use(cors())
 
-businessRoutesV2(app)
-companyRoutesV2(app)
-templateRoutesV2(app)
-customerRoutesV2(app)
-healthRoutesV2(app)
+businessRoutesV2(app, tracing)
+companyRoutesV2(app, tracing)
+templateRoutesV2(app, tracing)
+customerRoutesV2(app, tracing)
+healthRoutesV2(app, tracing)
 
 const port = process.env.PORT || 3000
 
