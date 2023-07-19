@@ -1,10 +1,19 @@
-function init(serviceName = '', serverUrl = '') {
-  if (serviceName.length === 0 || serverUrl.length === 0) return
+import dotenv from 'dotenv'
+import apm from 'elastic-apm-node'
+dotenv.config()
 
-  return apm = require('elastic-apm-node').start({
-    serviceName,
-    serverUrl
-  })
-}
+const projectName = process.env.PROJECT_NAME
+const apmServerUrl = process.env.APM_SERVER_URL
+const environment = process.env.APP_ENVIRONMENT
 
-module.exports = init
+let tracing = apm.start({
+    serviceName:  projectName,
+    serverUrl:  apmServerUrl,
+    environment: environment,
+    pageLoadTraceId: '${transaction.traceId}',
+    pageLoadSpanId: '${transaction.ensureParentId()}',
+    pageLoadSampled: '${transaction.sampled}',
+    logLevel: 'debug',
+})
+
+export default tracing
