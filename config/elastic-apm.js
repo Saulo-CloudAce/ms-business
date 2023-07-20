@@ -13,7 +13,7 @@ let tracing = apm.start({
     pageLoadTraceId: '${transaction.traceId}',
     pageLoadSpanId: '${transaction.ensureParentId()}',
     pageLoadSampled: '${transaction.sampled}',
-    logLevel: 'debug',
+    //logLevel: 'debug',
 })
 
 export default tracing
