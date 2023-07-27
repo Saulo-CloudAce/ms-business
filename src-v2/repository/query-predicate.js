@@ -94,7 +94,7 @@ export default class QueryPredicate {
   }
 
   _validateRuleValueType(rule = {}, templateField = {}, ruleIndex = 0) {
-    if (isTypeDate(templateField) && rule.condition === comparatorConditions.EQUAL) {
+    if (isTypeDate(templateField) && [comparatorConditions.EQUAL, comparatorConditions.GREATER_THAN, comparatorConditions.LESS_THAN].includes(rule.condition)) {
       if (rule.value) {
         const date = rule.value.trim()
         if (!isValidDate(date, 'YYYY-MM-DD')) {
@@ -198,7 +198,14 @@ export default class QueryPredicate {
 
   _buildGreaterthanCriteriaMongoQuery(rule = {}, field = {}) {
     const criteria = {}
-    criteria[rule.field] = { $gte: rule.value }
+
+    if (isTypeDate(field)) {
+      const valueDate = moment(rule.value).format(field.mask)
+      criteria[rule.field] = { $gte: valueDate }
+    } else {
+      criteria[rule.field] = { $gte: rule.value }
+    }
+
     return criteria
   }
 
@@ -221,7 +228,14 @@ export default class QueryPredicate {
 
   _buildLessthanCriteriaMongoQuery(rule = {}, field = {}) {
     const criteria = {}
-    criteria[rule.field] = { $lte: rule.value }
+
+    if (isTypeDate(field)) {
+      const valueDate = moment(rule.value).format(field.mask)
+      criteria[rule.field] = { $lte: valueDate }
+    } else {
+      criteria[rule.field] = { $lte: rule.value }
+    }
+
     return criteria
   }
 
