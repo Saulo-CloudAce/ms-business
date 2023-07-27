@@ -17,6 +17,7 @@ import { Stream } from 'stream'
 import ExcelJS from 'exceljs'
 import { getCustomerByIdList } from '../services/crm-service.js'
 import Business from '../../domain-v2/business.js'
+import { isTypeMultipleOptions, isTypeOptions } from '../helpers/field-methods.js'
 
 export default class TemplateController {
   _getInstanceRepositories(app) {
@@ -431,19 +432,36 @@ export default class TemplateController {
 
   _formatDataFromFieldArray(data = [], fields = []) {
     const fieldIndexed = {}
+    const fieldsOptions = []
     for (let i = 0; i < fields.length; i++) {
       const f = fields[i]
       if (f.fields) {
         fieldIndexed[f.column] = this._indexFieldArray(f.fields)
+      } else if (isTypeOptions(f) || isTypeMultipleOptions(f)) {
+        fieldsOptions.push(f)
       }
     }
 
     for (let i = 0; i < data.length; i++) {
       let linha = data[i]
       linha = this._formatRowWithArray(linha, fieldIndexed)
+      linha = this._formatDataFieldOptions(linha, fieldsOptions)
     }
 
     return data
+  }
+
+  _formatDataFieldOptions(linha = {}, fields = []) {
+    for (const f of fields) {
+      let fieldOpt = linha[f.column]
+      if (Array.isArray(fieldOpt)) {
+        fieldOpt = fieldOpt.map((o) => o).filter((o) => o.length)
+        fieldOpt = fieldOpt.join(',')
+      }
+
+      linha[f.column] = fieldOpt
+    }
+    return linha
   }
 
   _indexFieldArray(fields = []) {
