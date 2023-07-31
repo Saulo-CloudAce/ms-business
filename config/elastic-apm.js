@@ -7,7 +7,7 @@ const apmServerUrl = process.env.APM_SERVER_URL
 const environment = process.env.APP_ENVIRONMENT
 
 let tracing
-if (process.env.STATE_ENV === 'production') {
+if (process.env.STATE_ENV === 'production' || process.env.STATE_ENV === 'staging') {
   tracing = apm.start({
     serviceName: projectName,
     serverUrl: apmServerUrl,
