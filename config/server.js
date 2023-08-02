@@ -4,7 +4,6 @@ import bodyParser from 'body-parser'
 import multipart from 'connect-multiparty'
 import helmet from 'helmet'
 import cors from 'cors'
-import morgan from 'morgan'
 
 import businessRoutesV2 from '../src-v2/routes/business.js'
 import companyRoutesV2 from '../src-v2/routes/company.js'
@@ -41,7 +40,6 @@ if (process.env.NODE_ENV !== 'test') {
       resolve()
     })
   })
-  
 }
 
 global.cache = {
