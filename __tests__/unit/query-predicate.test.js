@@ -182,7 +182,7 @@ describe('Query predicate unit tests', () => {
     ]
     const qp = new QueryPredicate(filterRules, templateExample)
 
-    const queryExpected = [{ name: /^John Doe$/i }]
+    const queryExpected = [{ $and: [{ name: /^John Doe$/i }] }]
 
     const queryGenerated = qp.generateMongoQuery()
 
@@ -242,7 +242,7 @@ describe('Query predicate unit tests', () => {
     ]
     const qp = new QueryPredicate(filterRules, templateExample)
 
-    const queryExpected = [{ name: { $ne: 'John Doe' } }]
+    const queryExpected = [{ $and: [{ name: { $ne: 'John Doe' } }] }]
 
     const queryGenerated = qp.generateMongoQuery()
 
@@ -260,7 +260,7 @@ describe('Query predicate unit tests', () => {
     ]
     const qp = new QueryPredicate(filterRules, templateExample)
 
-    const queryExpected = [{ age: { $gte: 10 } }]
+    const queryExpected = [{ $and: [{ age: { $gte: 10 } }] }]
 
     const queryGenerated = qp.generateMongoQuery()
 
@@ -278,7 +278,7 @@ describe('Query predicate unit tests', () => {
     ]
     const qp = new QueryPredicate(filterRules, templateExample)
 
-    const queryExpected = [{ age: { $lte: 10 } }]
+    const queryExpected = [{ $and: [{ age: { $lte: 10 } }] }]
 
     const queryGenerated = qp.generateMongoQuery()
 
