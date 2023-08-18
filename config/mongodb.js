@@ -1,5 +1,4 @@
 import { MongoClient } from 'mongodb'
-import Bluebird from 'bluebird'
 import dotenv from 'dotenv'
 dotenv.config()
 

@@ -21,6 +21,7 @@ const comparatorConditions = {
 
 export default class QueryPredicate {
   constructor(rulesGroup = [], template = {}) {
+    this.template = template
     this.templateFields = this._indexTemplateFields(template)
 
     this._validateRulesGroup(rulesGroup, this.templateFields)
@@ -109,6 +110,127 @@ export default class QueryPredicate {
     if (isTypeDecimal(templateField) && isNaN(rule.value)) throw new Error(`[${ruleIndex}] O tipo de dados valor da regra é diferente do tipo de dados do campo no template`)
   }
 
+  generateMongoQueryFieldParser() {
+    const parsers = {}
+
+    for (let i = 0; i < this.rulesGroup.length; i++) {
+      const group = this.rulesGroup[i]
+
+      const criterias = this._createParseMongoQuery(group.rules)
+      for (const k of Object.keys(criterias)) {
+        parsers[k] = criterias[k]
+      }
+    }
+
+    return parsers
+  }
+
+  _createParseMongoQuery(rules = []) {
+    const parsers = {}
+
+    for (let i = 0; i < rules.length; i++) {
+      let rule = rules[i]
+      const templateField = this.templateFields[rule.field]
+
+      rule = this._convertTypeValueToFieldType(rule, templateField)
+
+      if (![comparatorConditions.GREATER_THAN, comparatorConditions.LESS_THAN].includes(rule.condition)) {
+        continue
+      }
+      if (!isTypeDate(templateField)) {
+        continue
+      }
+
+      if (this._isSubField(rule.field)) {
+        const fieldsParts = rule.field.split('.')
+        const firstField = fieldsParts[0]
+        const field = this.template.fields.find((f) => f.column == firstField)
+        const nameFieldParser = `__parsed_${fieldsParts[0]}`
+        // const obj = {}
+        parsers[nameFieldParser] = this._mapSubfields(fieldsParts.slice(1), field, field.fields, firstField)
+      } else {
+        const nameFieldParser = `__parsed_${rule.field}`
+        parsers[nameFieldParser] = this._createParseDateFromString(rule, templateField)
+      }
+    }
+
+    return parsers
+  }
+
+  _mapSubfields(fieldPaths = [], parentField = {}, fields = [], prefixParsed = '') {
+    const fieldname = fieldPaths[0]
+    const field = fields.find((f) => (f.column = fieldname))
+    if (fieldPaths.length === 1) {
+      const nameParsed = `__parsed_${fieldname}`
+      const fieldParsed = this._createParseDateFromString({ field: fieldname }, field, prefixParsed)
+      const obj = {}
+      obj[nameParsed] = fieldParsed
+      const objParsed = {
+        $map: {
+          input: `$${parentField.column}`,
+          as: `${parentField.column}`,
+          in: obj
+        }
+      }
+
+      return objParsed
+    }
+
+    const parsedname = `__parsed_${fieldname}`
+    const obj = {}
+    obj[parsedname] = this._mapSubfields(fieldPaths.slice(1), field, field.fields, fieldname)
+    return obj
+  }
+
+  _createParseDateFromString(rule = {}, templateField = {}, prefix = '') {
+    const dateFormat = this._parseMaskToDateFormatMongo(templateField)
+    let fieldPath = `${rule.field}`
+    if (prefix.length) {
+      fieldPath = `$${prefix}.${fieldPath}`
+    }
+    return {
+      $dateFromString: {
+        dateString: `$${fieldPath}`,
+        format: dateFormat,
+        onError: `$${fieldPath}`
+      }
+    }
+  }
+
+  _isSubField(fieldname = '') {
+    const parts = String(fieldname).split('.')
+    return parts.length > 1
+  }
+
+  _parseMaskToDateFormatMongo(templateField = {}) {
+    if (templateField.mask === 'DD-MM-YYYY') {
+      return '%d-%m-%Y'
+    }
+    if (templateField.mask === 'MM-DD-YYYY') {
+      return '%m-%d-%Y'
+    }
+    if (templateField.mask === 'YYYY-MM-DD') {
+      return '%Y-%m-%d'
+    }
+    if (templateField.mask === 'YYYY-DD-MM') {
+      return '%Y-%d-%m'
+    }
+    if (templateField.mask === 'DD/MM/YYYY') {
+      return '%d/%m/%Y'
+    }
+    if (templateField.mask === 'MM/DD/YYYY') {
+      return '%m/%d/%Y'
+    }
+    if (templateField.mask === 'YYYY/MM/DD') {
+      return '%Y/%m/%d'
+    }
+    if (templateField.mask === 'YYYY/DD/MM') {
+      return '%Y/%d/%m'
+    }
+
+    return '%d/%m/%Y'
+  }
+
   generateMongoQuery() {
     let query = []
 
@@ -116,7 +238,8 @@ export default class QueryPredicate {
       const group = this.rulesGroup[i]
 
       if (group.condition === connectConditions.ONLY) {
-        return this._translateRulesToCriteriaMongoQuery(group.rules)
+        const criterias = this._translateRulesToCriteriaMongoQuery(group.rules)
+        query.push({ $and: criterias })
       } else if (group.condition === connectConditions.AND) {
         const criterias = this._translateRulesToCriteriaMongoQuery(group.rules)
         query.push({ $and: criterias })
@@ -196,12 +319,20 @@ export default class QueryPredicate {
     return criteria
   }
 
+  _buildGreaterThanDateStatement(rule = {}, field = {}) {
+    return { $gte: new Date(rule.value) }
+  }
+
   _buildGreaterthanCriteriaMongoQuery(rule = {}, field = {}) {
     const criteria = {}
 
     if (isTypeDate(field)) {
       const valueDate = moment(rule.value).format(field.mask)
-      criteria[rule.field] = { $gte: valueDate }
+      let fieldnameParts = rule.field.split('.').map((f) => {
+        return `__parsed_${f}`
+      })
+      const fieldParsed = fieldnameParts.join('.')
+      criteria[fieldParsed] = this._buildGreaterThanDateStatement(rule, field)
     } else {
       criteria[rule.field] = { $gte: rule.value }
     }
@@ -226,12 +357,20 @@ export default class QueryPredicate {
     return criteria
   }
 
+  _buildLessThanDateStatement(rule = {}, field = {}) {
+    return { $lte: new Date(rule.value) }
+  }
+
   _buildLessthanCriteriaMongoQuery(rule = {}, field = {}) {
     const criteria = {}
 
     if (isTypeDate(field)) {
       const valueDate = moment(rule.value).format(field.mask)
-      criteria[rule.field] = { $lte: valueDate }
+      let fieldnameParts = rule.field.split('.').map((f) => {
+        return `__parsed_${f}`
+      })
+      const fieldParsed = fieldnameParts.join('.')
+      criteria[fieldParsed] = this._buildLessThanDateStatement(rule, field)
     } else {
       criteria[rule.field] = { $lte: rule.value }
     }

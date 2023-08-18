@@ -886,6 +886,10 @@ export default class BusinessController {
 
       const businessInfo = await newBusiness.getInfoById(companyToken, businessId)
 
+      if (!businessInfo) {
+        return res.status(400).send({ error: 'não foi encontrado um mailing com este ID' })
+      }
+
       const template = await templateRepository.getByIdWithoutTags(businessInfo.templateId, companyToken)
 
       filterBy = this._parseQueryPredicate(filterBy, baseDate)
