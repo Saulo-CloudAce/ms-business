@@ -539,6 +539,8 @@ export default class BusinessRepository {
       matchParams = queryPredicate.generateMongoQuery()
     }
 
+    const fieldParsers = queryPredicate.generateMongoQueryFieldParser()
+
     const businessIdActives = await this.getBusinessActiveId(companyToken, templateId)
 
     const sortCriteria = {}
@@ -553,26 +555,34 @@ export default class BusinessRepository {
       sortCriteria['businessCreatedAt'] = -1
     }
 
+    const aggregateCriteriaFind = []
+    const aggregateMatch = {
+      $match: {
+        $and: matchParams,
+        companyToken: companyToken,
+        templateId: templateId,
+        businessId: { $in: businessIdActives }
+      }
+    }
+    const aggregateProject = {
+      $project: {
+        companyToken: 0,
+        templateId: 0,
+        businessCreatedAt: 0,
+        businessUpdatedAt: 0
+      }
+    }
+    if (Object.keys(fieldParsers).length) {
+      const aggregateAddFields = { $addFields: fieldParsers }
+      aggregateCriteriaFind.push(aggregateAddFields)
+    }
+
+    aggregateCriteriaFind.push(aggregateMatch)
+    aggregateCriteriaFind.push(aggregateProject)
+
     let businessDataList = await this.db
       .collection('business_data')
-      .aggregate([
-        {
-          $match: {
-            $and: matchParams,
-            companyToken: companyToken,
-            templateId: templateId,
-            businessId: { $in: businessIdActives }
-          }
-        },
-        {
-          $project: {
-            companyToken: 0,
-            templateId: 0,
-            businessCreatedAt: 0,
-            businessUpdatedAt: 0
-          }
-        }
-      ])
+      .aggregate(aggregateCriteriaFind)
       // .sort(sortCriteria)
       .skip(offset)
       .limit(limit)
@@ -596,6 +606,8 @@ export default class BusinessRepository {
       matchParams = queryPredicate.generateMongoQuery()
     }
 
+    const fieldParsers = queryPredicate.generateMongoQueryFieldParser()
+
     const businessIdActives = await this.getBusinessActiveId(companyToken, templateId)
 
     const sortCriteria = {}
@@ -610,30 +622,41 @@ export default class BusinessRepository {
       sortCriteria['businessCreatedAt'] = -1
     }
 
-    let businessDataList = await this.db
-      .collection('business_data')
-      .aggregate([
-        {
-          $match: {
-            $and: matchParams,
-            companyToken: companyToken,
-            templateId: templateId,
-            businessId: { $in: businessIdActives }
-          }
-        },
-        {
-          $project: {
-            companyToken: 0,
-            templateId: 0,
-            businessCreatedAt: 0,
-            businessUpdatedAt: 0
-          }
-        }
-      ])
-      // .sort(sortCriteria)
-      .skip(offset)
-      .limit(limit)
-      .toArray()
+    const aggregateCriteriaFind = []
+    const aggregateCriteriaCount = []
+    const aggregateMatch = {
+      $match: {
+        $and: matchParams,
+        companyToken: companyToken,
+        templateId: templateId,
+        businessId: { $in: businessIdActives }
+      }
+    }
+    const aggregateProject = {
+      $project: {
+        companyToken: 0,
+        templateId: 0,
+        businessCreatedAt: 0,
+        businessUpdatedAt: 0
+      }
+    }
+    const aggregateGroup = { $group: { _id: null, totalRows: { $sum: 1 } } }
+    if (Object.keys(fieldParsers).length) {
+      const aggregateAddFields = { $addFields: fieldParsers }
+      aggregateCriteriaFind.push(aggregateAddFields)
+      aggregateCriteriaCount.push(aggregateAddFields)
+    }
+
+    aggregateCriteriaFind.push(aggregateMatch)
+    aggregateCriteriaFind.push(aggregateProject)
+
+    aggregateCriteriaCount.push(aggregateMatch)
+    aggregateCriteriaCount.push(aggregateProject)
+    aggregateCriteriaCount.push(aggregateGroup)
+
+    console.log('Mongo Query on filter by template ->', JSON.stringify(aggregateCriteriaFind))
+
+    let businessDataList = await this.db.collection('business_data').aggregate(aggregateCriteriaFind).skip(offset).limit(limit).toArray()
 
     businessDataList = businessDataList.map((b) => {
       b.business_id = b.businessId
@@ -641,27 +664,7 @@ export default class BusinessRepository {
       return b
     })
 
-    const countRows = await this.db
-      .collection('business_data')
-      .aggregate([
-        {
-          $match: {
-            $and: matchParams,
-            companyToken: companyToken,
-            templateId: templateId,
-            businessId: { $in: businessIdActives }
-          }
-        },
-        { $group: { _id: null, totalRows: { $sum: 1 } } },
-        {
-          $project: {
-            companyToken: 0,
-            templateId: 0,
-            businessId: 0
-          }
-        }
-      ])
-      .toArray()
+    const countRows = await this.db.collection('business_data').aggregate(aggregateCriteriaCount).toArray()
 
     const totalRows = countRows.length ? countRows[0].totalRows : 0
     const totalPages = Math.ceil(totalRows / limit) - 1
@@ -679,58 +682,6 @@ export default class BusinessRepository {
     }
 
     return result
-  }
-
-  async listDataByTemplateAndFilterByColumns(companyToken = '', templateId = '', queryPredicate = new QueryPredicate(), sortColumns = []) {
-    let matchParams = []
-    if (queryPredicate.isEmpty()) {
-      matchParams.push({ templateId })
-    } else {
-      matchParams = queryPredicate.generateMongoQuery()
-    }
-
-    const businessIdActives = await this.getBusinessActiveId(companyToken, templateId)
-
-    const sortCriteria = {}
-    for (let criteria of sortColumns) {
-      const column = Object.keys(criteria)[0]
-      const sortType = Object.values(criteria)[0]
-      if (column && sortType) {
-        sortCriteria[column] = sortType === 'asc' ? 1 : -1
-      }
-    }
-    if (Object.keys(sortCriteria).length === 0) {
-      sortCriteria['businessCreatedAt'] = -1
-    }
-
-    let businessDataList = await this.db
-      .collection('business_data')
-      .aggregate([
-        {
-          $match: {
-            $and: matchParams,
-            companyToken: companyToken,
-            templateId: templateId,
-            businessId: { $in: businessIdActives }
-          }
-        },
-        {
-          $project: {
-            _id: 0,
-            companyToken: 0,
-            templateId: 0,
-            businessCreatedAt: 0,
-            businessUpdatedAt: 0,
-            businessId: 0
-          }
-        }
-      ])
-      // .skip(1)
-      // .limit(1)
-      // .sort(sortCriteria)
-      .toArray()
-
-    return businessDataList
   }
 
   async getBusinessActiveId(companyToken = '', templateId = '') {
@@ -1380,6 +1331,8 @@ export default class BusinessRepository {
         matchParams = queryPredicate.generateMongoQuery()
       }
 
+      const fieldParsers = queryPredicate.generateMongoQueryFieldParser()
+
       const business = await this.db.collection('business').findOne(
         { _id: new ObjectId(businessId), companyToken },
         {
@@ -1396,37 +1349,39 @@ export default class BusinessRepository {
         fieldsProject = { companyToken: 0, businessId: 0, templateId: 0 }
       }
 
-      const businessData = await this.db
-        .collection('business_data')
-        .find({ companyToken, businessId: new ObjectId(businessId), $and: matchParams })
-        .project(fieldsProject)
-        .skip(skipDocs)
-        .limit(limit)
-        .toArray()
+      const aggregateGroup = { $group: { _id: null, totalRows: { $sum: 1 } } }
+      const aggregateMatch = {
+        $match: {
+          $and: matchParams,
+          companyToken,
+          businessId: new ObjectId(businessId)
+        }
+      }
+      const aggregateProject = {
+        $project: fieldsProject
+      }
+      const aggregateCriteriaFind = []
+      const aggregateCriteriaCount = []
+      if (Object.keys(fieldParsers).length) {
+        const aggregateAddFields = { $addFields: fieldParsers }
+        aggregateCriteriaFind.push(aggregateAddFields)
+        aggregateCriteriaCount.push(aggregateAddFields)
+      }
+      aggregateCriteriaFind.push(aggregateMatch)
+      aggregateCriteriaFind.push(aggregateProject)
+
+      aggregateCriteriaCount.push(aggregateMatch)
+      aggregateCriteriaCount.push(aggregateProject)
+      aggregateCriteriaCount.push(aggregateGroup)
+
+      console.log('Mongo Query on filter by mailing -> ', JSON.stringify(aggregateCriteriaFind))
+
+      const businessData = await this.db.collection('business_data').aggregate(aggregateCriteriaFind).toArray()
 
       business.data = businessData
 
       if (page === 0) {
-        const countRows = await this.db
-          .collection('business_data')
-          .aggregate([
-            {
-              $match: {
-                $and: matchParams,
-                companyToken: companyToken,
-                businessId: new ObjectId(businessId)
-              }
-            },
-            { $group: { _id: null, totalRows: { $sum: 1 } } },
-            {
-              $project: {
-                companyToken: 0,
-                templateId: 0,
-                businessId: 0
-              }
-            }
-          ])
-          .toArray()
+        const countRows = await this.db.collection('business_data').aggregate(aggregateCriteriaCount).toArray()
 
         const totalRows = Array.isArray(countRows) && countRows.length ? countRows[0].totalRows : 0
 

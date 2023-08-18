@@ -1193,7 +1193,7 @@ export default class Validator {
     fieldKeyList.push(...numericCalcFields.map((nf) => nf.column))
 
     for (const fieldKey of fieldKeyList) {
-      const el = data[fieldKey].trim()
+      const el = data[fieldKey]
       const fieldRules = rules[fieldKey]
 
       let elText = el
