@@ -146,8 +146,14 @@ export default class QueryPredicate {
         const firstField = fieldsParts[0]
         const field = this.template.fields.find((f) => f.column == firstField)
         const nameFieldParser = `__parsed_${fieldsParts[0]}`
-        // const obj = {}
-        parsers[nameFieldParser] = this._mapSubfields(fieldsParts.slice(1), field, field.fields, firstField)
+        const objMap = {
+          $map: {
+            input: `${firstField}`,
+            as: `${firstField}`,
+            in: this._mapSubfields(fieldsParts.slice(1), field, field.fields, firstField)
+          }
+        }
+        parsers[nameFieldParser] = objMap
       } else {
         const nameFieldParser = `__parsed_${rule.field}`
         parsers[nameFieldParser] = this._createParseDateFromString(rule, templateField)
@@ -159,7 +165,7 @@ export default class QueryPredicate {
 
   _mapSubfields(fieldPaths = [], parentField = {}, fields = [], prefixParsed = '') {
     const fieldname = fieldPaths[0]
-    const field = fields.find((f) => (f.column = fieldname))
+    const field = fields.find((f) => f.column == fieldname)
     if (fieldPaths.length === 1) {
       const nameParsed = `__parsed_${fieldname}`
       const fieldParsed = this._createParseDateFromString({ field: fieldname }, field, prefixParsed)
@@ -173,12 +179,19 @@ export default class QueryPredicate {
         }
       }
 
-      return objParsed
+      return obj
     }
 
     const parsedname = `__parsed_${fieldname}`
     const obj = {}
-    obj[parsedname] = this._mapSubfields(fieldPaths.slice(1), field, field.fields, fieldname)
+    const objMap = {
+      $map: {
+        input: `$$${parentField.column}.${fieldname}`,
+        as: `${fieldname}`,
+        in: this._mapSubfields(fieldPaths.slice(1), field, field.fields, fieldname)
+      }
+    }
+    obj[parsedname] = objMap
     return obj
   }
 
