@@ -543,6 +543,16 @@ export default class BusinessRepository {
 
     const businessIdActives = await this.getBusinessActiveId(companyToken, templateId)
 
+    const fieldsProject = {
+      companyToken: 0,
+      templateId: 0,
+      businessCreatedAt: 0,
+      businessUpdatedAt: 0
+    }
+    for (const f of Object.keys(fieldParsers)) {
+      fieldsProject[f] = 0
+    }
+
     const sortCriteria = {}
     for (let criteria of sortColumns) {
       const column = Object.keys(criteria)[0]
@@ -556,21 +566,19 @@ export default class BusinessRepository {
     }
 
     const aggregateCriteriaFind = []
+    const criteriaMatch = {
+      companyToken: companyToken,
+      templateId: templateId,
+      businessId: { $in: businessIdActives }
+    }
+    if (matchParams.length) {
+      criteriaMatch['$and'] = matchParams
+    }
     const aggregateMatch = {
-      $match: {
-        $and: matchParams,
-        companyToken: companyToken,
-        templateId: templateId,
-        businessId: { $in: businessIdActives }
-      }
+      $match: criteriaMatch
     }
     const aggregateProject = {
-      $project: {
-        companyToken: 0,
-        templateId: 0,
-        businessCreatedAt: 0,
-        businessUpdatedAt: 0
-      }
+      $project: fieldsProject
     }
     if (Object.keys(fieldParsers).length) {
       const aggregateAddFields = { $addFields: fieldParsers }
@@ -610,6 +618,16 @@ export default class BusinessRepository {
 
     const businessIdActives = await this.getBusinessActiveId(companyToken, templateId)
 
+    const fieldsProject = {
+      companyToken: 0,
+      templateId: 0,
+      businessCreatedAt: 0,
+      businessUpdatedAt: 0
+    }
+    for (const f of Object.keys(fieldParsers)) {
+      fieldsProject[f] = 0
+    }
+
     const sortCriteria = {}
     for (let criteria of sortColumns) {
       const column = Object.keys(criteria)[0]
@@ -624,21 +642,19 @@ export default class BusinessRepository {
 
     const aggregateCriteriaFind = []
     const aggregateCriteriaCount = []
+    const criteriaMatch = {
+      companyToken: companyToken,
+      templateId: templateId,
+      businessId: { $in: businessIdActives }
+    }
+    if (matchParams.length) {
+      criteriaMatch['$and'] = matchParams
+    }
     const aggregateMatch = {
-      $match: {
-        $and: matchParams,
-        companyToken: companyToken,
-        templateId: templateId,
-        businessId: { $in: businessIdActives }
-      }
+      $match: criteriaMatch
     }
     const aggregateProject = {
-      $project: {
-        companyToken: 0,
-        templateId: 0,
-        businessCreatedAt: 0,
-        businessUpdatedAt: 0
-      }
+      $project: fieldsProject
     }
     const aggregateGroup = { $group: { _id: null, totalRows: { $sum: 1 } } }
     if (Object.keys(fieldParsers).length) {
@@ -1348,15 +1364,22 @@ export default class BusinessRepository {
       } else {
         fieldsProject = { companyToken: 0, businessId: 0, templateId: 0 }
       }
+      for (const f of Object.keys(fieldParsers)) {
+        fieldsProject[f] = 0
+      }
 
       const aggregateGroup = { $group: { _id: null, totalRows: { $sum: 1 } } }
-      const aggregateMatch = {
-        $match: {
-          $and: matchParams,
-          companyToken,
-          businessId: new ObjectId(businessId)
-        }
+      const criteriaMatch = {
+        companyToken,
+        businessId: new ObjectId(businessId)
       }
+      if (matchParams.length) {
+        criteriaMatch['$and'] = matchParams
+      }
+      const aggregateMatch = {
+        $match: criteriaMatch
+      }
+
       const aggregateProject = {
         $project: fieldsProject
       }
