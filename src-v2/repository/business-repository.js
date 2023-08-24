@@ -556,13 +556,16 @@ export default class BusinessRepository {
     }
 
     const aggregateCriteriaFind = []
+    const criteriaMatch = {
+      companyToken: companyToken,
+      templateId: templateId,
+      businessId: { $in: businessIdActives }
+    }
+    if (matchParams.length) {
+      criteriaMatch['$and'] = matchParams
+    }
     const aggregateMatch = {
-      $match: {
-        $and: matchParams,
-        companyToken: companyToken,
-        templateId: templateId,
-        businessId: { $in: businessIdActives }
-      }
+      $match: criteriaMatch
     }
     const aggregateProject = {
       $project: {
@@ -624,13 +627,17 @@ export default class BusinessRepository {
 
     const aggregateCriteriaFind = []
     const aggregateCriteriaCount = []
+    const criteriaMatch = {
+      companyToken: companyToken,
+      templateId: templateId,
+      businessId: { $in: businessIdActives }
+    }
+    if (matchParams.length) {
+      console.log('match', matchParams)
+      criteriaMatch['$and'] = matchParams
+    }
     const aggregateMatch = {
-      $match: {
-        $and: matchParams,
-        companyToken: companyToken,
-        templateId: templateId,
-        businessId: { $in: businessIdActives }
-      }
+      $match: criteriaMatch
     }
     const aggregateProject = {
       $project: {
@@ -1350,13 +1357,17 @@ export default class BusinessRepository {
       }
 
       const aggregateGroup = { $group: { _id: null, totalRows: { $sum: 1 } } }
-      const aggregateMatch = {
-        $match: {
-          $and: matchParams,
-          companyToken,
-          businessId: new ObjectId(businessId)
-        }
+      const criteriaMatch = {
+        companyToken,
+        businessId: new ObjectId(businessId)
       }
+      if (matchParams.length) {
+        criteriaMatch['$and'] = matchParams
+      }
+      const aggregateMatch = {
+        $match: criteriaMatch
+      }
+
       const aggregateProject = {
         $project: fieldsProject
       }
@@ -1376,7 +1387,7 @@ export default class BusinessRepository {
 
       console.log('Mongo Query on filter by mailing -> ', JSON.stringify(aggregateCriteriaFind))
 
-      const businessData = await this.db.collection('business_data').aggregate(aggregateCriteriaFind).toArray()
+      const businessData = await this.db.collection('business_data').aggregate(aggregateCriteriaFind).skip(skipDocs).limit(limit).toArray()
 
       business.data = businessData
 

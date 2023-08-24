@@ -148,7 +148,7 @@ export default class QueryPredicate {
         const nameFieldParser = `__parsed_${fieldsParts[0]}`
         const objMap = {
           $map: {
-            input: `${firstField}`,
+            input: `$${firstField}`,
             as: `${firstField}`,
             in: this._mapSubfields(fieldsParts.slice(1), field, field.fields, firstField)
           }
@@ -252,13 +252,19 @@ export default class QueryPredicate {
 
       if (group.condition === connectConditions.ONLY) {
         const criterias = this._translateRulesToCriteriaMongoQuery(group.rules)
-        query.push({ $and: criterias })
+        if (criterias.length) {
+          query.push({ $and: criterias })
+        }
       } else if (group.condition === connectConditions.AND) {
         const criterias = this._translateRulesToCriteriaMongoQuery(group.rules)
-        query.push({ $and: criterias })
+        if (criterias.length) {
+          query.push({ $and: criterias })
+        }
       } else if (group.condition === connectConditions.OR) {
         const criterias = this._translateRulesToCriteriaMongoQuery(group.rules)
-        query.push({ $or: criterias })
+        if (criterias.length) {
+          query.push({ $or: criterias })
+        }
       }
     }
 
@@ -266,8 +272,10 @@ export default class QueryPredicate {
   }
 
   _translateRulesToCriteriaMongoQuery(rules = []) {
+    const rulesSubLevel = rules.filter((r) => r.field.includes('.'))
+    const rulesFirstLevel = rules.filter((r) => !r.field.includes('.'))
     const criterias = []
-    for (let i = 0; i < rules.length; i++) {
+    for (let i = 0; i < rulesFirstLevel.length; i++) {
       let rule = rules[i]
       const templateField = this.templateFields[rule.field]
 
