@@ -614,7 +614,7 @@ export default class Validator {
             error: 'O valor informado não é um CEP',
             current_value: cep
           })
-        } else if (elText.length !== 8) {
+        } else if (elText.length < 5) {
           errors.push({
             column: rules.column,
             error: 'O CEP informado é inválido',
@@ -643,7 +643,7 @@ export default class Validator {
           error: 'O valor informado não é um CEP',
           current_value: fieldData
         })
-      } else if (elText.length !== 8) {
+      } else if (elText.length < 5) {
         errors.push({
           column: rules.column,
           error: 'O CEP informado é inválido',
@@ -727,20 +727,21 @@ export default class Validator {
 
   _validateFieldPhoneNumber(rules, fieldData, errors) {
     if (typeof fieldData === 'string') {
-      let elText = fieldData.replace(' ', '')
-      elText = elText.replace('(', '')
-      elText = elText.replace(')', '')
-      elText = elText.replace('-', '')
+      let elText = fieldData.replace(/\s/g, '')
+      elText = elText.replace(/\(/g, '')
+      elText = elText.replace(/\)/g, '')
+      elText = elText.replace(/-/g, '')
       if (isNaN(elText)) {
         errors.push({
           column: rules.column,
           error: 'O valor informado não é um número de telefone',
           current_value: fieldData
         })
-      } else if (!(elText.length >= 10)) {
+      } else if (elText.length < 7 || elText.length > 15) {
+        // 7 é o número mínimo DDIXXXX
         errors.push({
           column: rules.column,
-          error: 'O telefone informado não tem a quantidade mínima de 10 números',
+          error: 'O telefone informado não tem a quantidade mínima de 7 números e máximo de 15',
           current_value: fieldData
         })
       } else if (parseInt(elText) === 0) {
@@ -841,10 +842,10 @@ export default class Validator {
     // } else {
     //   errors.push({ column: rules.column, error: 'O valor informado não tem a quantidade de caracteres válidos para um CPF ou CNPJ', current_value: fieldData })
     // }
-    if (elText.length !== 11 && elText.length !== 14) {
+    if (elText.length < 4 || elText.length > 14) {
       errors.push({
         column: rules.column,
-        error: 'O valor informado não tem a quantidade de caracteres válidos para um CPF ou CNPJ',
+        error: 'O valor informado não tem a quantidade de caracteres válidos para um CPF ou CNPJ mínima de 4 e máximo de 14 dígitos',
         current_value: fieldData
       })
     }
@@ -1012,11 +1013,9 @@ export default class Validator {
 
   _formatFieldPhoneNumber(fieldData) {
     let elText = fieldData.replace(/-/g, '')
-    elText = elText.replace('(', '')
-    elText = elText.replace(')', '')
-    elText = elText.replace(' ', '')
-
-    if (elText.length <= 8) return ''
+    elText = elText.replace(/\(/g, '')
+    elText = elText.replace(/\)/g, '')
+    elText = elText.replace(/\s/g, '')
 
     return elText
   }
