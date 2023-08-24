@@ -1376,7 +1376,7 @@ export default class BusinessRepository {
 
       console.log('Mongo Query on filter by mailing -> ', JSON.stringify(aggregateCriteriaFind))
 
-      const businessData = await this.db.collection('business_data').aggregate(aggregateCriteriaFind).toArray()
+      const businessData = await this.db.collection('business_data').aggregate(aggregateCriteriaFind).skip(skipDocs).limit(limit).toArray()
 
       business.data = businessData
 
