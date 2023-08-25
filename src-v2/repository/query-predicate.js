@@ -329,10 +329,7 @@ export default class QueryPredicate {
       })
 
       for (const q of queries) {
-        console.log('q..', q, q instanceof Object, Object.keys(q))
-        if (Object.keys(q).includes('$eq')) {
-          console.log('.....', q['$eq'])
-        } else if (Object.keys(q).includes('$ne')) {
+        if (Object.keys(q).includes('$ne')) {
           if (!fieldMongoQuery['$nin']) {
             fieldMongoQuery['$nin'] = []
           }
@@ -342,7 +339,6 @@ export default class QueryPredicate {
             fieldMongoQuery['$in'] = []
           }
           fieldMongoQuery['$in'].push(q)
-          // fieldMongoQuery = Object.assign(fieldMongoQuery, { $eq: q })
         } else {
           fieldMongoQuery = Object.assign(fieldMongoQuery, q)
         }
