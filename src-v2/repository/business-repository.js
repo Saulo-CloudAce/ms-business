@@ -1364,9 +1364,6 @@ export default class BusinessRepository {
       } else {
         fieldsProject = { companyToken: 0, businessId: 0, templateId: 0 }
       }
-      for (const f of Object.keys(fieldParsers)) {
-        fieldsProject[f] = 0
-      }
 
       const aggregateGroup = { $group: { _id: null, totalRows: { $sum: 1 } } }
       const criteriaMatch = {
