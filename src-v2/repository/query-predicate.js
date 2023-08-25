@@ -387,7 +387,7 @@ export default class QueryPredicate {
       } else if (rule.condition === comparatorConditions.GREATER_THAN_CALC) {
         criterias.push(this._buildGreaterthanCalcCriteriaMongoQuery(rule, templateField))
       } else if (rule.condition === comparatorConditions.LESS_THAN_CALC) {
-        criterias.push(this._buildLessCalcthanCriteriaMongoQuery(rule, templateField))
+        criterias.push(this._buildLessthanCalcCriteriaMongoQuery(rule, templateField))
       }
     }
 
