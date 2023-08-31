@@ -1006,14 +1006,21 @@ export default class BusinessController {
       template.fields.forEach((data) => {
         Object.keys(register).forEach((keysRegister) => {
           if (keysRegister === data.column) {
-            if (data.type === 'phone_number') {
-              if (!objCRM['customer_phone']) objCRM['customer_phone'] = []
+            if (['email', 'string', 'text'].includes(data.type)) {
+              let content = register[data.column]
+              content = String(content).trim()
+              register[data.column] = content
+            } else if (data.type === 'phone_number') {
+              if (!objCRM['customer_phone']) {
+                objCRM['customer_phone'] = []
+              }
               const item = {}
               let phone = String(JSON.parse(JSON.stringify(register[data.column]))).trim()
               phone = phone.replace(/-/g, '')
               phone = phone.replace('(', '')
               phone = phone.replace(')', '')
               phone = phone.replace(' ', '')
+              register[data.column] = phone
               item[data.data] = phone
               objCRM['customer_phone'].push(item)
             } else if (data.type === 'email') {
