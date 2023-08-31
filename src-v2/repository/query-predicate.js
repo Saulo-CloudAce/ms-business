@@ -113,13 +113,31 @@ export default class QueryPredicate {
     if (isTypeDecimal(templateField) && isNaN(rule.value)) throw new Error(`[${ruleIndex}] O tipo de dados valor da regra é diferente do tipo de dados do campo no template`)
   }
 
+  getFieldsParsedToIgnore() {
+    const fieldsParsed = []
+    for (let i = 0; i < this.rulesGroup.length; i++) {
+      const group = this.rulesGroup[i]
+
+      for (const r of group.rules) {
+        const templateField = this.templateFields[r.field]
+        if (this._isSubField(r.field) && isTypeDate(templateField)) {
+          const nameParts = r.field.split('.')
+          const nameParsed = [...nameParts.slice(0, -1), `__parsed_${nameParts[nameParts.length - 1]}`].join('.')
+          fieldsParsed.push(nameParsed)
+        }
+      }
+    }
+
+    return fieldsParsed
+  }
+
   generateMongoQueryFieldParser() {
     const parsers = {}
 
     for (let i = 0; i < this.rulesGroup.length; i++) {
       const group = this.rulesGroup[i]
 
-      const criterias = this._createParseMongoQuery(group.rules)
+      const criterias = this._createParseMongoQuery(group.rules, group.condition)
       for (const k of Object.keys(criterias)) {
         parsers[k] = criterias[k]
       }
@@ -128,7 +146,7 @@ export default class QueryPredicate {
     return parsers
   }
 
-  _createParseMongoQuery(rules = []) {
+  _createParseMongoQuery(rules = [], groupCondition = '') {
     const parsers = {}
 
     for (let i = 0; i < rules.length; i++) {
@@ -137,18 +155,11 @@ export default class QueryPredicate {
 
       rule = this._convertTypeValueToFieldType(rule, templateField)
 
-      if (!comparatorConditions.getCalcOperations().includes(rule.condition)) {
-        continue
-      }
-      if (!isTypeDate(templateField)) {
-        continue
-      }
-
       if (this._isSubField(rule.field)) {
         const fieldsParts = rule.field.split('.')
         const firstField = fieldsParts[0]
         const field = this.template.fields.find((f) => f.column == firstField)
-        const nameFieldParser = `__parsed_${fieldsParts[0]}`
+        const nameFieldParser = `${fieldsParts[0]}`
         const objMap = {
           $map: {
             input: `$${firstField}`,
@@ -156,8 +167,19 @@ export default class QueryPredicate {
             in: this._mapSubfields(fieldsParts.slice(1), field, field.fields, firstField)
           }
         }
-        parsers[nameFieldParser] = objMap
-      } else {
+        const filterConditions = this._translateFilterMapMongoQuery(rule, rules, groupCondition, templateField)
+        console.log(JSON.stringify(filterConditions))
+        const objFilter = {
+          $filter: {
+            input: objMap,
+            as: `${firstField}`,
+            cond: {
+              $and: [filterConditions]
+            }
+          }
+        }
+        parsers[nameFieldParser] = objFilter
+      } else if (isTypeDate(templateField)) {
         const nameFieldParser = `__parsed_${rule.field}`
         parsers[nameFieldParser] = this._createParseDateFromString(rule, templateField)
       }
@@ -166,14 +188,61 @@ export default class QueryPredicate {
     return parsers
   }
 
+  _translateFilterMapMongoQuery(rule = {}, rules = [], groupCondition = '', templateField = {}) {
+    const prefix = `${rule.field.split('.').slice(0, -1).join('.')}.`
+    const rulesSameObject = rules.filter((r) => r.field.search(prefix) === 0)
+    const filters = []
+    for (const r of rulesSameObject) {
+      const fieldParts = r.field.split('.')
+      const lastField = `__parsed_${fieldParts[fieldParts.length - 1]}`
+      const nameParsed = [...fieldParts.slice(0, -1), lastField].join('.')
+
+      let expFilter
+
+      if (r.condition === comparatorConditions.GREATER_THAN) {
+        expFilter = this._buildGreaterthanFilterMongoQuery(nameParsed, r, templateField)
+      } else if (r.condition === comparatorConditions.LESS_THAN) {
+        expFilter = this._buildLessthanFilterMongoQuery(nameParsed, r, templateField)
+      } else if (r.condition === comparatorConditions.EQUAL) {
+        expFilter = this._buildEqualFilterMongoQuery(nameParsed, r, templateField)
+      } else if (r.condition === comparatorConditions.EQUAL_CALC) {
+        expFilter = this._buildEqualCalcFilterMongoQuery(nameParsed, r, templateField)
+      } else if (r.condition === comparatorConditions.DIFFERENT) {
+        expFilter = this._buildDifferentFilterMongoQuery(nameParsed, r, templateField)
+      } else if (r.condition === comparatorConditions.GREATER_THAN_CALC) {
+        expFilter = this._buildGreaterthanCalcFilterMongoQuery(nameParsed, r, templateField)
+      } else if (r.condition === comparatorConditions.LESS_THAN_CALC) {
+        expFilter = this._buildLessthanCalcFilterMongoQuery(nameParsed, r, templateField)
+      }
+
+      filters.push(expFilter)
+    }
+
+    let operator = '$and'
+    if (groupCondition === connectConditions.OR) {
+      operator = '$or'
+    }
+    const obj = {}
+    obj[operator] = filters
+
+    return obj
+  }
+
   _mapSubfields(fieldPaths = [], parentField = {}, fields = [], prefixParsed = '') {
     const fieldname = fieldPaths[0]
     const field = fields.find((f) => f.column == fieldname)
     if (fieldPaths.length === 1) {
-      const nameParsed = `__parsed_${fieldname}`
-      const fieldParsed = this._createParseDateFromString({ field: fieldname }, field, prefixParsed)
       const obj = {}
-      obj[nameParsed] = fieldParsed
+      for (let field of fields) {
+        obj[field.column] = `$$${parentField.column}.${field.column}`
+        if (field.column === fieldname && isTypeDate(field)) {
+          const nameParsed = `__parsed_${fieldname}`
+          const fieldParsed = this._createParseDateFromString({ field: fieldname }, field, prefixParsed)
+
+          obj[nameParsed] = fieldParsed
+        }
+      }
+
       const objParsed = {
         $map: {
           input: `$${parentField.column}`,
@@ -185,7 +254,7 @@ export default class QueryPredicate {
       return obj
     }
 
-    const parsedname = `__parsed_${fieldname}`
+    const parsedname = `${fieldname}`
     const obj = {}
     const objMap = {
       $map: {
@@ -254,17 +323,17 @@ export default class QueryPredicate {
       const group = this.rulesGroup[i]
 
       if (group.condition === connectConditions.ONLY) {
-        const criterias = this._translateRulesToCriteriaMongoQuery(group.rules)
+        const criterias = this._translateRulesToCriteriaMongoQuery(group.rules, group.condition)
         if (criterias.length) {
           query.push({ $and: criterias })
         }
       } else if (group.condition === connectConditions.AND) {
-        const criterias = this._translateRulesToCriteriaMongoQuery(group.rules)
+        const criterias = this._translateRulesToCriteriaMongoQuery(group.rules, group.condition)
         if (criterias.length) {
           query.push({ $and: criterias })
         }
       } else if (group.condition === connectConditions.OR) {
-        const criterias = this._translateRulesToCriteriaMongoQuery(group.rules)
+        const criterias = this._translateRulesToCriteriaMongoQuery(group.rules, group.condition)
         if (criterias.length) {
           query.push({ $or: criterias })
         }
@@ -274,7 +343,7 @@ export default class QueryPredicate {
     return query
   }
 
-  _translateRulesSublevelToCriteriaMongoQuery(rules = []) {
+  _translateRulesSublevelToCriteriaMongoQuery(rules = [], groupCondition = '') {
     const criterias = []
     const rulesIndexed = {}
     for (const r of rules) {
@@ -291,15 +360,16 @@ export default class QueryPredicate {
 
       const fieldParts = field.split('.')
 
-      const fieldMongoQuery = this._translateSubLevelMongoQuery(fieldParts, fieldRules, templateField)
+      const fieldMongoQuery = this._translateSubLevelMongoQuery(fieldParts, fieldRules, templateField, groupCondition)
       criterias.push(fieldMongoQuery)
     }
 
     return criterias
   }
 
-  _translateSubLevelMongoQuery(fieldPath = [], rules = [], templateField = {}) {
+  _translateSubLevelMongoQuery(fieldPath = [], rules = [], templateField = {}, groupCondition = '') {
     if (fieldPath.length === 1) {
+      const fieldNameParsed = isTypeDate(templateField) ? `__parsed_${fieldPath[0]}` : fieldPath[0]
       const criterias = []
       for (const r of rules) {
         const rule = this._convertTypeValueToFieldType(r, templateField)
@@ -328,42 +398,52 @@ export default class QueryPredicate {
         return Object.values(o)[0]
       })
 
-      for (const q of queries) {
-        if (Object.keys(q).includes('$ne')) {
-          if (!fieldMongoQuery['$nin']) {
-            fieldMongoQuery['$nin'] = []
+      if (groupCondition !== connectConditions.OR) {
+        for (const q of queries) {
+          if (Object.keys(q).includes('$ne')) {
+            if (!fieldMongoQuery['$nin']) {
+              fieldMongoQuery['$nin'] = []
+            }
+            fieldMongoQuery['$nin'].push(q['$ne'])
+          } else if (!(q instanceof Object) || Object.keys(q).length === 0) {
+            if (!fieldMongoQuery['$in']) {
+              fieldMongoQuery['$in'] = []
+            }
+            fieldMongoQuery['$in'].push(q)
+          } else {
+            fieldMongoQuery = Object.assign(fieldMongoQuery, q)
           }
-          fieldMongoQuery['$nin'].push(q['$ne'])
-        } else if (!(q instanceof Object) || Object.keys(q).length === 0) {
-          if (!fieldMongoQuery['$in']) {
-            fieldMongoQuery['$in'] = []
-          }
-          fieldMongoQuery['$in'].push(q)
-        } else {
-          fieldMongoQuery = Object.assign(fieldMongoQuery, q)
         }
+
+        const obj = {}
+
+        obj[fieldNameParsed] = fieldMongoQuery
+
+        return obj
+      }
+      fieldMongoQuery['$or'] = []
+      for (const q of queries) {
+        const objItem = {}
+        objItem[fieldNameParsed] = q
+        fieldMongoQuery['$or'].push(objItem)
       }
 
-      const obj = {}
-      const fieldNameParsed = isTypeDate(templateField) ? `__parsed_${fieldPath[0]}` : fieldPath[0]
-      obj[fieldNameParsed] = fieldMongoQuery
-
-      return obj
+      return fieldMongoQuery
     }
 
     const obj = {}
-    const subQuery = this._translateSubLevelMongoQuery(fieldPath.slice(1), rules, templateField)
-    const fieldNameParsed = isTypeDate(templateField) ? `__parsed_${fieldPath[0]}` : fieldPath[0]
+    const subQuery = this._translateSubLevelMongoQuery(fieldPath.slice(1), rules, templateField, groupCondition)
+    const fieldNameParsed = isTypeDate(templateField) ? `${fieldPath[0]}` : fieldPath[0]
     obj[fieldNameParsed] = { $elemMatch: subQuery }
 
     return obj
   }
 
-  _translateRulesToCriteriaMongoQuery(rules = []) {
+  _translateRulesToCriteriaMongoQuery(rules = [], groupCondition = '') {
     const rulesSubLevel = rules.filter((r) => r.field.includes('.'))
     const rulesFirstLevel = rules.filter((r) => !r.field.includes('.'))
     const criterias = []
-    const criteriasSubLevel = this._translateRulesSublevelToCriteriaMongoQuery(rulesSubLevel)
+    const criteriasSubLevel = this._translateRulesSublevelToCriteriaMongoQuery(rulesSubLevel, groupCondition)
     criterias.push(...criteriasSubLevel)
 
     for (let i = 0; i < rulesFirstLevel.length; i++) {
@@ -400,8 +480,23 @@ export default class QueryPredicate {
     if (isTypeDate(field)) {
       const valueDate = moment(rule.value).format(field.mask)
       criteria[rule.field] = valueDate
+    } else if (this._isSubField(rule.field)) {
+      criteria[rule.field] = { $eq: rule.value }
     } else {
       criteria[rule.field] = rule.value
+    }
+
+    return criteria
+  }
+
+  _buildEqualFilterMongoQuery(fieldname = '', rule = {}, field = {}) {
+    const criteria = {}
+
+    if (isTypeDate(field)) {
+      const valueDate = moment(rule.value).format(field.mask)
+      criteria['$eq'] = [`$$${rule.field}`, valueDate]
+    } else {
+      criteria['$eq'] = [`$$${rule.field}`, rule.value]
     }
 
     return criteria
@@ -432,9 +527,39 @@ export default class QueryPredicate {
     return criteria
   }
 
+  _buildEqualCalcFilterMongoQuery(fieldname = '', rule = {}, field = {}) {
+    const criteria = {}
+    if (isTypeDate(field)) {
+      const today = rule.base_date ? rule.base_date : moment()
+
+      let compDate = today
+      if (String(rule.value)[0] === '+') {
+        compDate = today.add(parseInt(rule.value.replace('+', '')), 'days')
+      } else if (String(rule.value)[0] === '-') {
+        compDate = today.subtract(parseInt(rule.value.replace('-', '')), 'days')
+      } else {
+        compDate = today.add(parseInt(rule.value), 'days')
+      }
+      compDate = new Date(today.format('YYYY-MM-DD')) // today.format(field.mask)
+
+      const criteria = {}
+      criteria['$eq'] = [`$$${fieldname}`, compDate]
+      return criteria
+    }
+
+    criteria['$eq'] = [`$$${rule.field}`, rule.value]
+    return criteria
+  }
+
   _buildDifferentCriteriaMongoQuery(rule = {}, field = {}) {
     const criteria = {}
     criteria[rule.field] = { $ne: rule.value }
+    return criteria
+  }
+
+  _buildDifferentFilterMongoQuery(fieldname = '', rule = {}, field = {}) {
+    const criteria = {}
+    criteria['$ne'] = [`$$${rule.field}`, rule.value]
     return criteria
   }
 
@@ -454,6 +579,18 @@ export default class QueryPredicate {
       criteria[fieldParsed] = this._buildGreaterThanDateStatement(rule, field)
     } else {
       criteria[rule.field] = { $gte: rule.value }
+    }
+
+    return criteria
+  }
+
+  _buildGreaterthanFilterMongoQuery(fieldname = '', rule = {}, field = {}) {
+    const criteria = {}
+
+    if (isTypeDate(field)) {
+      criteria['$gte'] = [`$$${fieldname}`, new Date(rule.value)]
+    } else {
+      criteria['$gte'] = [`$$${rule.field}`, rule.value]
     }
 
     return criteria
@@ -481,6 +618,28 @@ export default class QueryPredicate {
     return criteria
   }
 
+  _buildGreaterthanCalcFilterMongoQuery(fieldname = '', rule = {}, field = {}) {
+    const criteria = {}
+    if (isTypeDate(field)) {
+      const today = moment()
+      let compDate = today
+      if (String(rule.value)[0] === '+') {
+        compDate = today.add(parseInt(rule.value.replace('+', '')), 'days')
+      } else if (String(rule.value)[0] === '-') {
+        compDate = today.subtract(parseInt(rule.value.replace('-', '')), 'days')
+      } else {
+        compDate = today.add(parseInt(rule.value), 'days')
+      }
+      compDate = new Date(today.format('YYYY-MM-DD')) // today.format(field.mask)
+
+      criteria['$gte'] = [`$$${fieldname}`, compDate]
+      return criteria
+    }
+
+    criteria['$gte'] = [`$$${rule.field}`, rule.value]
+    return criteria
+  }
+
   _buildLessThanDateStatement(rule = {}, field = {}) {
     return { $lte: new Date(rule.value) }
   }
@@ -497,6 +656,18 @@ export default class QueryPredicate {
       criteria[fieldParsed] = this._buildLessThanDateStatement(rule, field)
     } else {
       criteria[rule.field] = { $lte: rule.value }
+    }
+
+    return criteria
+  }
+
+  _buildLessthanFilterMongoQuery(fieldname = '', rule = {}, field = {}) {
+    const criteria = {}
+
+    if (isTypeDate(field)) {
+      criteria['$lte'] = [`$$${fieldname}`, new Date(rule.value)]
+    } else {
+      criteria['$lte'] = [`$$${rule.field}`, rule.value]
     }
 
     return criteria
@@ -524,12 +695,34 @@ export default class QueryPredicate {
     return criteria
   }
 
+  _buildLessthanCalcFilterMongoQuery(fieldname = '', rule = {}, field = {}) {
+    const criteria = {}
+    if (isTypeDate(field)) {
+      const today = moment()
+      let compDate = today
+      if (String(rule.value)[0] === '+') {
+        compDate = today.add(parseInt(rule.value.replace('+', '')), 'days')
+      } else if (String(rule.value)[0] === '-') {
+        compDate = today.subtract(parseInt(rule.value.replace('-', '')), 'days')
+      } else if (parseInt(rule.value) > 0) {
+        compDate = today.add(parseInt(rule.value), 'days')
+      }
+      compDate = new Date(today.format('YYYY-MM-DD')) // today.format(field.mask)
+
+      criteria['$lte'] = [`$$${fieldname}`, compDate]
+      return criteria
+    }
+
+    criteria['$lte'] = [`$$${rule.field}`, rule.value]
+    return criteria
+  }
+
   _convertTypeValueToFieldType(rule = {}, field = {}) {
     if (isTypeInt(field) && typeof rule.value !== 'number') {
       rule.value = parseInt(rule.value)
     } else if (isTypeBoolean(field) && typeof rule.value !== 'boolean') {
       rule.value = String(rule.value) === 'true'
-    } else if (rule.condition === comparatorConditions.EQUAL && (isTypeString(field) || isTypeCep(field) || isTypePhoneNumber(field))) {
+    } else if (rule.condition === comparatorConditions.EQUAL && (isTypeString(field) || isTypeCep(field) || isTypePhoneNumber(field)) && !this._isSubField(rule.field)) {
       // rule.value = new RegExp('^' + String(rule.value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i')
       rule.value = { $regex: String(rule.value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' }
     } else if (rule.condition === comparatorConditions.CONTAINS) {

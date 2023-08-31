@@ -541,6 +541,8 @@ export default class BusinessRepository {
 
     const fieldParsers = queryPredicate.generateMongoQueryFieldParser()
 
+    const fieldsParsedToIgnore = queryPredicate.getFieldsParsedToIgnore()
+
     const businessIdActives = await this.getBusinessActiveId(companyToken, templateId)
 
     const fieldsProject = {
@@ -549,7 +551,7 @@ export default class BusinessRepository {
       businessCreatedAt: 0,
       businessUpdatedAt: 0
     }
-    for (const f of Object.keys(fieldParsers)) {
+    for (const f of fieldsParsedToIgnore) {
       fieldsProject[f] = 0
     }
 
@@ -616,6 +618,8 @@ export default class BusinessRepository {
 
     const fieldParsers = queryPredicate.generateMongoQueryFieldParser()
 
+    const fieldsParsedToIgnore = queryPredicate.getFieldsParsedToIgnore()
+
     const businessIdActives = await this.getBusinessActiveId(companyToken, templateId)
 
     const fieldsProject = {
@@ -624,7 +628,7 @@ export default class BusinessRepository {
       businessCreatedAt: 0,
       businessUpdatedAt: 0
     }
-    for (const f of Object.keys(fieldParsers)) {
+    for (const f of fieldsParsedToIgnore) {
       fieldsProject[f] = 0
     }
 
@@ -1349,6 +1353,8 @@ export default class BusinessRepository {
 
       const fieldParsers = queryPredicate.generateMongoQueryFieldParser()
 
+      const fieldsParsedToIgnore = queryPredicate.getFieldsParsedToIgnore()
+
       const business = await this.db.collection('business').findOne(
         { _id: new ObjectId(businessId), companyToken },
         {
@@ -1363,6 +1369,9 @@ export default class BusinessRepository {
         }
       } else {
         fieldsProject = { companyToken: 0, businessId: 0, templateId: 0 }
+        for (const f of fieldsParsedToIgnore) {
+          fieldsProject[f] = 0
+        }
       }
 
       const aggregateGroup = { $group: { _id: null, totalRows: { $sum: 1 } } }
