@@ -1,6 +1,7 @@
 import moment from 'moment'
-import { isTypeInt, isTypeBoolean, isTypeDecimal, isTypeString, isTypeCep, isTypePhoneNumber, isValidDate, isTypeDate } from '../helpers/field-methods.js'
+import { isTypeInt, isTypeBoolean, isTypeDecimal, isTypeString, isTypeCep, isTypePhoneNumber, isValidDate, isTypeDate, isTypeCpfCnpj } from '../helpers/field-methods.js'
 import QueryPredicateError from './query-predicate-error.js'
+import { clearCPFCNPJ } from '../helpers/formatters.js'
 
 const connectConditions = {
   AND: 'AND',
@@ -722,10 +723,16 @@ export default class QueryPredicate {
       rule.value = parseInt(rule.value)
     } else if (isTypeBoolean(field) && typeof rule.value !== 'boolean') {
       rule.value = String(rule.value) === 'true'
-    } else if (rule.condition === comparatorConditions.EQUAL && (isTypeString(field) || isTypeCep(field) || isTypePhoneNumber(field)) && !this._isSubField(rule.field)) {
-      // rule.value = new RegExp('^' + String(rule.value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i')
-      rule.value = { $regex: String(rule.value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' }
+    } else if (rule.condition === comparatorConditions.EQUAL && !this._isSubField(rule.field)) {
+      if (isTypeString(field) || isTypeCep(field) || isTypePhoneNumber(field)) {
+        rule.value = { $regex: String(rule.value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' }
+      } else if (isTypeCpfCnpj(field)) {
+        rule.value = clearCPFCNPJ(rule.value.trim())
+      }
     } else if (rule.condition === comparatorConditions.CONTAINS) {
+      if (typeof rule.value != 'object') {
+        rule.value = clearCPFCNPJ(rule.value.trim())
+      }
       rule.value = { $regex: String(rule.value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' }
     }
 
