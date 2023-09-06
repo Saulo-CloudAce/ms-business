@@ -1,6 +1,6 @@
 import { clearString } from '../helpers/formatters.js'
 import { isArrayElementSameTypes, isArrayOfObjects, isArrayWithEmptyElement } from '../helpers/validators.js'
-import { isTypeOptions, isTypeDate, isTypeMultipleOptions, isTypeArray, isTypeDocument, isTypeListDocument, isTypeTag, isTypeNumericCalc } from '../helpers/field-methods.js'
+import { isTypeOptions, isTypeDate, isTypeMultipleOptions, isTypeArray, isTypeDocument, isTypeListDocument, isTypeTag, isTypeNumericCalc, isTypePhoneNumber } from '../helpers/field-methods.js'
 
 const supportedTypes = ['text', 'string', 'int', 'array', 'boolean', 'cpfcnpj', 'cep', 'phone_number', 'decimal', 'email', 'options', 'date', 'timestamp', 'time', 'table', 'multiple_options', 'document', 'list_document', 'tag', 'responsible', 'cep_distance', 'register_active', 'opt_in', 'numeric_calc', 'percentual']
 const supportedKeys = ['customer_cpfcnpj', 'customer_name', 'customer_phone_number', 'customer_email', 'customer_email_address']
@@ -79,6 +79,10 @@ function formatField(f = {}, namesColumn = {}, namesData = {}) {
     delete f.formula
   }
 
+  if (isTypePhoneNumber(f) && !f.mask) {
+    f.mask = '(99) 99999-9999' // máscara padrão
+  }
+
   return { field: f, namesColumn, namesData }
 }
 
@@ -91,6 +95,26 @@ function formatFieldsOptions(fields) {
     namesData = result.namesData
     return result.field
   })
+}
+
+function validateFieldPhoneNumber(field) {
+  if (!Object.keys(field).includes('mask')) {
+    return {
+      error: 'Deve informar a máscara ou padrão de telefone. Ex.: (99) 99999-9999'
+    }
+  } else if (String(field.mask).length === 0) {
+    return {
+      error: 'Deve informar uma máscara válida de telefone. Ex.: (99) 99999-9999'
+    }
+  }
+  const digitsAllowed = ['9', '-', '(', ')', ' ']
+  const digitsDiff = field.mask.split('').filter((d) => !digitsAllowed.includes(d))
+  if (digitsDiff.length) {
+    return {
+      error: `A máscara deve conter apenas os caracteres ${digitsAllowed.join(',')}. Ex: (99) 99999-9999`
+    }
+  }
+  return {}
 }
 
 function validateFieldDate(field) {
@@ -274,6 +298,11 @@ function checkIfFieldIsvalid(field = {}, fields = [], errorsField = {}) {
 
     if (isTypeDate(field)) {
       const error = validateFieldDate(field)
+      if (Object.keys(error).length) errorsField.errors.push(error)
+    }
+
+    if (isTypePhoneNumber(field)) {
+      const error = validateFieldPhoneNumber(field)
       if (Object.keys(error).length) errorsField.errors.push(error)
     }
 
