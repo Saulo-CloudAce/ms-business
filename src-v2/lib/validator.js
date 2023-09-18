@@ -920,16 +920,18 @@ export default class Validator {
     const lineNumberOnFile = lineNumber + 1
     const lineErrors = { line: lineNumberOnFile, errors: [] }
 
-    Object.keys(data).forEach((k) => {
-      const el = data[k].value
-      const rules = data[k].rules
+    Object.keys(data)
+      .filter((f) => f !== '_id')
+      .forEach((k) => {
+        const el = data[k].value
+        const rules = data[k].rules
 
-      if (rules != undefined) {
-        lineErrors.errors = this._validateField(rules, el, lineErrors)
-      } else {
-        lineErrors.errors.push({ column: k, error: 'Este campo não está definido no template' })
-      }
-    })
+        if (rules != undefined) {
+          lineErrors.errors = this._validateField(rules, el, lineErrors)
+        } else {
+          lineErrors.errors.push({ column: k, error: 'Este campo não está definido no template' })
+        }
+      })
     return { valid: lineErrors.errors.length === 0, lineErrors }
   }
 
