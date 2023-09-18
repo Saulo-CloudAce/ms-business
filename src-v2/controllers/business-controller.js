@@ -21,6 +21,7 @@ import { sendToQueuePostProcess } from '../helpers/rabbit-helper.js'
 import { isTypeCepDistance, isTypeCpfCnpj, isTypeDecimal, isTypeNumericCalc, isTypeOptIn, isTypePercentual, isTypeRegisterActive } from '../helpers/field-methods.js'
 import QueryPredicate from '../repository/query-predicate.js'
 import { UserProfile } from '../../domain-v2/user-profile-enum.js'
+import CPCInfo from '../../domain-v2/CPCInfo.js'
 
 export default class BusinessController {
   constructor(businessService = {}) {
@@ -952,6 +953,97 @@ export default class BusinessController {
     }
   }
 
+  async updateCPCBusinessRegisterById(req, res) {
+    const companyToken = req.headers['token']
+    const templateId = req.headers['templateid']
+
+    if (!templateId) return res.status(400).send({ error: 'Informar o ID do tempolate no header' })
+
+    const registerId = req.params.registerId
+    if (!registerId) return res.status(400).send({ error: 'Informar o ID do registro que deseja alterar.' })
+
+    const businessId = req.params.businessId
+    if (!businessId) return res.status(400).send({ error: 'Informar o ID do lote que deseja alterar.' })
+
+    const fieldKey = req.body.field
+    const fieldValue = req.body.value
+    const userId = req.body.user_id
+    const username = req.body.username
+    const cpc = req.body.cpc
+
+    const updatedAt = moment().format()
+
+    try {
+      const { companyRepository, templateRepository, businessRepository } = this._getInstanceRepositories(req.app)
+      const newBusiness = this._getInstanceBusiness(req.app)
+
+      const company = await companyRepository.getByToken(companyToken)
+      if (!company) return res.status(400).send({ error: 'Company não identificada.' })
+
+      const template = await templateRepository.getByIdWithoutTags(templateId, companyToken)
+      if (!template) return res.status(400).send({ error: 'Template não identificado' })
+
+      let field
+      for (const f of template.fields) {
+        if (f.column === fieldKey) {
+          field = f
+        }
+      }
+
+      const businessList = await businessRepository.getDataByIdAndChildReference(companyToken, businessId)
+      if (!businessList) return res.status(400).send({ error: 'Business não identificado.' })
+
+      let register = await businessRepository.getRegisterByBusinessAndId(companyToken, businessId, registerId)
+      if (!register) return res.status(404).send({ error: 'Registro não encontrado' })
+
+      if (!register[fieldKey]) {
+        return res.status(400).send({ error: 'o campo informado não existe no mailing' })
+      }
+
+      if (register[fieldKey] !== fieldValue) {
+        return res.status(400).send({ error: 'o campo informado não corresponde ao value' })
+      }
+
+      const fieldKeyCPC = `__${fieldKey}_cpc`
+      let cpcValue = register[fieldKeyCPC]
+      if (!cpcValue) {
+        cpcValue = CPCInfo
+      }
+
+      cpcValue.cpc = cpc
+      cpcValue.user_id = userId
+      cpcValue.username = username
+      cpcValue.updated_at = updatedAt
+
+      register[fieldKeyCPC] = cpcValue
+
+      await newBusiness.updateDataBusiness(companyToken, businessId, register, userId)
+
+      register = await businessRepository.getRegisterByBusinessAndId(companyToken, businessId, registerId)
+
+      const fieldCPF = template.fields.find((f) => f.data === 'customer_cpfcnpj')
+
+      const cpfRegister = register[fieldCPF.column]
+      if (cpfRegister) {
+        const cpcData = {
+          cpc,
+          contact_type: field.type,
+          contact: fieldValue,
+          cpfcnpj: cpfRegister,
+          user_id: userId,
+          username,
+          updated_at: updatedAt
+        }
+        await crmService.updateCPFCustomer(cpcData, companyToken)
+      }
+
+      return res.status(200).send(register)
+    } catch (err) {
+      console.error(err)
+      return res.status(500).send({ error: 'Ocorreu erro ao atualizar o CPC do registro' })
+    }
+  }
+
   async updateBusinessRegisterById(req, res) {
     const companyToken = req.headers['token']
     const templateId = req.headers['templateid']
@@ -1573,6 +1665,75 @@ export default class BusinessController {
     }
 
     return items.join(' | ')
+  }
+
+  async queuePostProcessCPC(conn = {}, app = {}) {
+    const { templateRepository, businessRepository } = this._getInstanceRepositories(app)
+    conn.createChannel((err, ch) => {
+      if (err) console.log('Erro ao criar fila => ', err)
+
+      const queueName = `msbusiness:update_cpc_customer`
+
+      ch.assertQueue(queueName, { durable: true })
+      ch.prefetch(1)
+      ch.consume(
+        queueName,
+        (msg) => {
+          const obj = JSON.parse(msg.content.toString())
+          this.processCPC(templateRepository, businessRepository, obj).then(() => {
+            ch.ack(msg, false)
+          })
+        },
+        { noAck: false }
+      )
+    })
+  }
+
+  async processCPC(templateRepository = {}, businessRepository = {}, obj = {}) {
+    const template = await templateRepository.getByIdWithoutTags(obj.businessTemplateId, obj.companyToken)
+    const data = await businessRepository.getRegisterByBusinessAndId(obj.companyToken, obj.businessId, obj.registerId)
+
+    if (obj.contact_type === 'phone_number') {
+      const fieldsPhone = template.fields.filter((f) => f.type == 'phone_number').map((f) => f.column)
+      for (const fp of fieldsPhone) {
+        const fieldCpc = `__${fp}_cpc`
+        if (data[fp] === obj.contact) {
+          let cpcData = data[fieldCpc]
+          if (!cpcData) {
+            cpcData = CPCInfo
+          }
+          cpcData.cpc = obj.cpc
+          cpcData.user_id = obj.user_id
+          cpcData.username = obj.username
+          cpcData.updated_at = obj.updated_at
+
+          data[fieldCpc] = cpcData
+
+          await businessRepository.updateRegisterBusiness(obj.companyToken, obj.registerId, data)
+          console.log('cpc phone updated on businessId', obj.businessId, ' registerId', obj.registerId, ' company', obj.companyToken)
+        }
+      }
+    } else if (obj.contact_type === 'email') {
+      const fieldsEmail = template.fields.filter((f) => f.type == 'email').map((f) => f.column)
+      for (const fp of fieldsEmail) {
+        const fieldCpc = `__${fp}_cpc`
+        if (data[fp] === obj.contact) {
+          let cpcData = data[fieldCpc]
+          if (!cpcData) {
+            cpcData = CPCInfo
+          }
+          cpcData.cpc = obj.cpc
+          cpcData.user_id = obj.user_id
+          cpcData.username = obj.username
+          cpcData.updated_at = obj.updated_at
+
+          data[fieldCpc] = cpcData
+
+          await businessRepository.updateRegisterBusiness(obj.companyToken, obj.registerId, data)
+          console.log('cpc email updated on businessId', obj.businessId, ' registerId', obj.registerId, ' company', obj.companyToken)
+        }
+      }
+    }
   }
 
   async queuePostProcess(conn = {}, app = {}) {

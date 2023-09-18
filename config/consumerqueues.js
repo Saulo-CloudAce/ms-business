@@ -6,6 +6,7 @@ const businessController = new BusinessController(null)
 export async function startConsumersQueues(app = {}) {
   const connRabbit = await RabbitMQ.newConnection()
   RabbitMQ.addConsumer(businessController.queuePostProcess.bind(businessController))
+  RabbitMQ.addConsumer(businessController.queuePostProcessCPC.bind(businessController))
 
   RabbitMQ.startConsumers(connRabbit, app)
 }

@@ -9,6 +9,7 @@ import { isKey, isTypeDate, isTypeOptions, isTypeInt, isTypeDecimal, isTypeBoole
 import StorageService from '../services/storage-service.js'
 import { getGeolocationDataFromCEPs } from '../helpers/geolocation-getter.js'
 import { ObjectId } from 'mongodb'
+import CPCInfo from '../../domain-v2/CPCInfo.js'
 
 const storageService = new StorageService()
 
@@ -47,6 +48,7 @@ export default class Validator {
 
       const { valid, lineErrors } = this.validate(lineWithRulesFields, i, listBatches, fields)
       if (valid) {
+        line['_id'] = md5(new Date() + Math.random())
         const lineFormatted = await this.format(line, rulesByColumn)
         lineValids.push(lineFormatted)
         if (templateHasCepDistance) {
@@ -173,6 +175,7 @@ export default class Validator {
               const lineNumberAtFile = lineno - 1
               const { valid, lineErrors } = self.validate(lineWithRulesFields, lineNumberAtFile, listBatches, fields)
               if (valid) {
+                jsonData['_id'] = md5(new Date() + Math.random())
                 const dataFormatted = self.format(jsonData, rulesByColumn)
                 lineValids.push(dataFormatted)
                 const customerFormatted = self.formatCustomer(jsonData, rulesByColumn)
@@ -407,6 +410,7 @@ export default class Validator {
       const { valid, lineErrors } = self.validate(lineWithRulesFields, lineNumberAtFile, listBatches, fields)
 
       if (valid) {
+        jsonData['_id'] = md5(new Date() + Math.random())
         const dataFormatted = await self.format(jsonData, rulesByColumn)
         valids.push(dataFormatted)
         if (templateHasCepDistance) {
@@ -1186,7 +1190,7 @@ export default class Validator {
 
   async format(data, rules) {
     const formatted = {}
-    const fieldKeyList = Object.keys(data)
+    const fieldKeyList = Object.keys(data).filter((f) => f !== '_id')
 
     const numericCalcFields = this.#getFieldsNumericCalc(rules)
     fieldKeyList.push(...numericCalcFields.map((nf) => nf.column))
@@ -1197,10 +1201,15 @@ export default class Validator {
 
       let elText = el
 
+      const cpcFields = []
+
       if (isTypeCpfCnpj(fieldRules)) {
         elText = this._formatFieldCpfCnpj(elText)
       } else if (isTypePhoneNumber(fieldRules)) {
         elText = this._formatFieldPhoneNumber(elText)
+        cpcFields.push(this._addFieldCPC(fieldKey))
+      } else if (isTypeEmail(fieldRules)) {
+        cpcFields.push(this._addFieldCPC(fieldKey))
       } else if (isTypeCepDistance(fieldRules)) {
         elText = await this._formatFieldCepDistance(elText)
       } else if (isTypeCep(fieldRules)) {
@@ -1229,15 +1238,26 @@ export default class Validator {
         elText = this.#formatFieldNumericCalc(elText)
       }
       formatted[fieldRules.column] = elText
+
+      for (const f of cpcFields) {
+        formatted[f.key] = f.defaultValue
+      }
     }
 
-    formatted['_id'] = md5(new Date() + Math.random())
+    formatted['_id'] = data['_id']
     return formatted
+  }
+
+  _addFieldCPC(field = '') {
+    return {
+      key: `__${field}_cpc`,
+      defaultValue: CPCInfo
+    }
   }
 
   formatCustomer(data, rules) {
     const formatted = {}
-    const fieldKeyList = Object.keys(data)
+    const fieldKeyList = Object.keys(data).filter((f) => f !== '_id')
     for (const indexFieldKey in fieldKeyList) {
       const fieldKey = fieldKeyList[indexFieldKey]
 
@@ -1275,7 +1295,7 @@ export default class Validator {
       }
     }
 
-    formatted['_id'] = md5(new Date() + Math.random())
+    formatted['_id'] = data['_id']
     return formatted
   }
 

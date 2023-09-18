@@ -35,4 +35,5 @@ export default function businessRoute(app = {}) {
   app.put('/api/v2/business/:id/unmark_flow_passed', (req, res) => businessController.unmarkBusinessFlowPassed(req, res))
   app.put('/api/v2/business/:businessId/data/:registerId', (req, res) => businessController.updateBusinessRegisterById(req, res))
   app.post('/api/v2/business/full_search', (req, res) => businessController.searchDataInBusiness(req, res))
+  app.put('/api/v2/business/:businessId/data/:registerId/cpc', (req, res) => businessController.updateCPCBusinessRegisterById(req, res))
 }

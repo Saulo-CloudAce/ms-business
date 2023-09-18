@@ -29,6 +29,15 @@ export async function updateCustomer(customerId, data, companyToken) {
   }
 }
 
+export async function updateCPFCustomer(data = {}, companyToken = '') {
+  try {
+    return await getAxiosInstance(companyToken).put(`${process.env.CRM_URL}/customers/cpc`, data)
+  } catch (err) {
+    console.error(err)
+    return err
+  }
+}
+
 export async function createSingleCustomer(data, companyToken, prefixIndexElastic) {
   try {
     data.prefix_index_elastic = prefixIndexElastic
