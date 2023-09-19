@@ -1568,7 +1568,7 @@ export default class BusinessController {
         }
       }
 
-      const header = Object.keys(businessData[0]).map((k) => {
+      const header = Object.keys(templateFieldsIndexed).map((k) => {
         return { key: `${k}`, header: `${templateFieldsIndexed[k]}` }
       })
 

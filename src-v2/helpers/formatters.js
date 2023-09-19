@@ -1,3 +1,5 @@
+import slugify from 'slugify'
+
 export function clearString(texto) {
   texto = texto.replace(/ /g, '_')
   const charMap = {
@@ -1311,4 +1313,8 @@ export function clearFilename(filename = '') {
     .replace('.', '')
     .replace(/^\s+|\s+$|\s+(?=\s)/g, '')
     .trim()
+}
+
+export function sanitizeFilename(filename = '') {
+  return slugify(filename)
 }

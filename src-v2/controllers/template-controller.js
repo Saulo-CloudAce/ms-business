@@ -18,6 +18,7 @@ import ExcelJS from 'exceljs'
 import { getCustomerByIdList } from '../services/crm-service.js'
 import Business from '../../domain-v2/business.js'
 import { isTypeMultipleOptions, isTypeOptions } from '../helpers/field-methods.js'
+import { sanitizeFilename } from '../helpers/formatters.js'
 
 export default class TemplateController {
   _getInstanceRepositories(app) {
@@ -582,11 +583,11 @@ export default class TemplateController {
 
       templateFieldsIndexed = allFieldsIndexed
 
-      const header = Object.keys(records[0]).map((k) => {
+      const header = Object.keys(templateFieldsIndexed).map((k) => {
         return { key: `${k}`, header: `${templateFieldsIndexed[k]}` }
       })
 
-      const filename = `${template.name}.xlsx`
+      const filename = `${sanitizeFilename(template.name)}.xlsx`
       const filepath = `/tmp/${filename}`
 
       generateExcel(header, records, filepath).then(async () => {
@@ -656,11 +657,11 @@ export default class TemplateController {
 
       templateFieldsIndexed = allFieldsIndexed
 
-      const header = Object.keys(records[0]).map((k) => {
+      const header = Object.keys(templateFieldsIndexed).map((k) => {
         return { key: `${k}`, header: `${templateFieldsIndexed[k]}` }
       })
 
-      const filename = `${template.name}.xlsx`
+      const filename = `${sanitizeFilename(template.name)}.xlsx`
       const filepath = `/tmp/${filename}`
       console.log('generate file', filepath)
 

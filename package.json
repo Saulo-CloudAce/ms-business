@@ -43,6 +43,7 @@
     "object-to-csv": "1.0.5",
     "read-chunk": "4.0.2",
     "run.env": "1.1.0",
+    "slugify": "^1.6.6",
     "ssh2-sftp-client": "^9.0.4"
   },
   "devDependencies": {
