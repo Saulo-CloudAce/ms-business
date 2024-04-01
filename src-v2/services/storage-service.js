@@ -14,7 +14,7 @@ export default class StorageService {
     this._client = S3.newInstance()
   }
 
-  async upload(dirBucket, dirFile, fileName, bucket = bucketDefault, publicAccess = false) {
+  async upload(dirBucket, dirFile, fileName, bucket = bucketDefault, publicAccess = false, unlink = true) {
     return new Promise((resolve, reject) => {
       const currentDate = moment().format('YYYY-MM-DD')
       let fileKey = `${dirBucket}/${currentDate}/${fileName}`
@@ -29,7 +29,10 @@ export default class StorageService {
       const uploader = this._client
         .send(new PutObjectCommand(params))
         .then(() => {
-          fs.unlinkSync(dirFile)
+          if (unlink) {
+            fs.unlinkSync(dirFile)
+          }
+
           resolve(`https://${bucket}.s3.amazonaws.com/${fileKey}`)
         })
         .catch((err) => {

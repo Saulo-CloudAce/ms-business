@@ -22,11 +22,15 @@ import { isTypeCepDistance, isTypeCpfCnpj, isTypeDecimal, isTypeNumericCalc, isT
 import QueryPredicate from '../repository/query-predicate.js'
 import { UserProfile } from '../../domain-v2/user-profile-enum.js'
 import CPCInfo from '../../domain-v2/CPCInfo.js'
+import StorageService from '../services/storage-service.js'
+
+let storageService
 
 export default class BusinessController {
   constructor(businessService = {}) {
     this.businessService = businessService
     this.uploader = new Uploader(process.env.BUCKET)
+    storageService = new StorageService()
   }
 
   _getInstanceRepositories(app) {
@@ -1575,7 +1579,11 @@ export default class BusinessController {
       const filename = `${clearFilename(business.name)}_exported_${moment().format('YYYYMMDDHHMMSS')}.xlsx`
       const filepath = `/tmp/${filename}`
 
-      generateExcel(header, businessData, filepath).then(
+      let url
+
+      await generateExcel(header, businessData, filepath).then(async () => {
+        const urlPrivate = await storageService.upload(companyToken, filepath, filename, process.env.BUCKET, false, false)
+        url = await storageService.getSignedUrl(urlPrivate)
         setTimeout(() => {
           const result = sendEmail(email, filepath, filename)
           if (result.error) {
@@ -1588,9 +1596,9 @@ export default class BusinessController {
             else console.log('Arquivo CSV excluido.')
           })
         }, 5000)
-      )
+      })
 
-      return res.status(200).send({ warn: `Em instantes será enviado um e-mail para ${email} contendo o mailing solicitado.` })
+      return res.status(200).send({ url, warn: `Em instantes será enviado um e-mail para ${email} contendo o mailing solicitado.` })
     } catch (err) {
       console.error(err)
       return res.status(500).send({ error: 'Ocorreu erro ao exportar os dados do business' })
