@@ -770,7 +770,7 @@ export default class BusinessRepository {
             },
             {
               $group: {
-                _id: '$businessId',
+                _id: '$_id',
                 data: { $push: '$$ROOT' }
               }
             },
