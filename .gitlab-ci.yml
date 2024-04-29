@@ -55,7 +55,7 @@ integration:
       fi 
       
   only:
-    - master
+    - develop
   tags:
     - microservicos
 
@@ -75,7 +75,7 @@ quality:
     - sonar-scanner
   allow_failure: true
   only:
-    - master
+    - develop
   tags:
     - microservicos
 
@@ -136,7 +136,7 @@ build_homol:
       fi 
 
   only:
-   - master
+   - develop
   allow_failure: false
   needs: 
     - integration
@@ -212,7 +212,7 @@ deploy_homol:
       fi     
 
   only:
-   - master
+   - develop
   allow_failure: false
   needs: 
     - build_homol
@@ -331,7 +331,7 @@ deploy_prod:
       fi 
 
   only:
-    - tags
+    - master
   when: manual
   allow_failure: false
   tags:
@@ -393,7 +393,7 @@ check_prod:
       fi 
 
   only:
-    - tags
+    - master
   allow_failure: false
   needs: ['deploy_prod']
   tags:
@@ -457,7 +457,7 @@ deploy_ld:
       fi 
 
   only:
-    - tags
+    - master
   when: manual
   allow_failure: false
   tags:
@@ -519,7 +519,7 @@ check_ld:
       fi 
 
   only:
-    - tags
+    - master
   allow_failure: false
   needs: ['deploy_ld']
   tags:
