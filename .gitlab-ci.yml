@@ -265,11 +265,7 @@ create-release:
   only:
    - master
   when: manual
-  needs: 
-    - deploy_homol
   allow_failure: false
-  dependencies:
-    - deploy_homol
   tags:
     - microservicos
 
@@ -332,8 +328,8 @@ deploy_prod:
 
   only:
     - master
-  when: manual
   allow_failure: false
+  needs: ['create-release']
   tags:
     - microservicos
 
@@ -459,6 +455,7 @@ deploy_ld:
   only:
     - master
   when: manual
+  needs: ['create-release']
   allow_failure: false
   tags:
     - microservicos  
